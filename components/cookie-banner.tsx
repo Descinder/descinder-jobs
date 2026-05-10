@@ -30,13 +30,13 @@ export function CookieBanner() {
   if (hidden) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-50 w-[min(92vw,640px)] -translate-x-1/2 rounded-xl border border-border bg-card p-5 shadow-lg">
+    <div className="fixed bottom-4 left-1/2 z-50 w-[min(92vw,640px)] -translate-x-1/2 rounded-xl border border-border bg-card p-5 shadow-lg pointer-events-none">
       <p className="text-sm text-foreground">
         We use essential cookies to keep you signed in. With your permission, we also use analytics
         cookies (PostHog) to understand how the product is used. You can change your choice at any
         time in Settings.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2 pointer-events-auto">
         <Button onClick={() => persist(true)}>Accept all</Button>
         <Button variant="outline" onClick={() => persist(false)}>
           Essential only
