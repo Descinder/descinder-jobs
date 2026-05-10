@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<!--
+  Descinder Jobs · Jobs List v2
+  Design philosophy: Editorial / Magazine register
+  — Top filter bar (horizontal pills) instead of sidebar
+  — Larger job cards with photography accent, generous white space
+  — Company photo fills left column of card
+  — 120% moment: photo-left cards with overlay gradient for featured items
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs · descinder — v2 Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/shared.css">
+<style>
+/* ─── Hero search band ───────────────────────────────────────────────────── */
+.search-hero {
+  background: var(--navy);
+  padding: var(--sp-10) var(--sp-6) var(--sp-8);
+  text-align: center;
+}
+.search-hero h1 {
+  font-size: var(--type-xl);
+  font-weight: 700;
+  color: var(--ink-white);
+  margin-bottom: var(--sp-2);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.search-hero p {
+  font-size: var(--type-base);
+  color: oklch(0.93 0.01 264 / 70%);
+  margin-bottom: var(--sp-6);
+}
+.search-form {
+  display: flex;
+  max-width: 680px;
+  margin: 0 auto;
+  gap: 0;
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 24px oklch(0 0 0 / 25%);
+}
+.search-form .input {
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--border);
+  flex: 1;
+  font-size: var(--type-base);
+  padding: 13px 16px;
+}
+.search-form .input:focus { box-shadow: none; }
+.search-form .btn { border-radius: 0 var(--radius-lg) var(--radius-lg) 0; padding: 13px 24px; font-size: var(--type-base); }
+
+/* ─── Filter top bar ────────────────────────────────────────────────────── */
+.filter-topbar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-3) var(--sp-6);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 90;
+}
+.filter-topbar::-webkit-scrollbar { display: none; }
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+.filter-group-label {
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.filter-chip:hover { border-color: var(--border-mid); color: var(--navy); }
+.filter-chip.active { background: var(--navy); color: var(--ink-white); border-color: var(--navy); }
+.filter-chip svg { width: 12px; height: 12px; }
+.filter-divider-v { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+.filter-topbar .count-label {
+  margin-left: auto;
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Content area ──────────────────────────────────────────────────────── */
+.content-area {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.section-header h2 {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--ink);
+}
+.section-header .count {
+  font-family: var(--font-mono);
+  font-size: var(--type-sm);
+  color: var(--ink-faint);
+}
+.sort-area {
+  margin-left: auto;
+}
+
+/* ─── Job cards — editorial large ──────────────────────────────────────── */
+.job-card-editorial {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--sp-4);
+  overflow: hidden;
+  display: flex;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.job-card-editorial:hover {
+  border-color: var(--border-mid);
+  box-shadow: var(--shadow-hover);
+}
+.job-card-editorial.featured {
+  border-color: oklch(0.72 0.18 75 / 40%);
+}
+
+/* Photo/logo column */
+.card-photo-col {
+  width: 100px;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--sp-5) 0 0;
+}
+.card-photo-col img {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.card-photo-col .co-initials {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* Body */
+.card-body {
+  flex: 1;
+  padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-5);
+  min-width: 0;
+}
+.card-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.card-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  flex: 1;
+}
+.card-title:hover { color: var(--navy-mid); }
+.card-company-row {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  margin-bottom: var(--sp-3);
+  font-weight: 500;
+}
+.card-company-row strong { color: var(--navy-subtle); }
+.card-desc {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin-bottom: var(--sp-4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+}
+.card-meta-item svg { color: var(--ink-faint); }
+.card-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.card-posted {
+  font-family: var(--font-mono);
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+}
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<!-- Header -->
+<header class="site-header">
+  <span class="brand-wordmark">descinder</span>
+  <nav class="nav-links">
+    <a href="#" class="active">Jobs</a>
+    <a href="#">Companies</a>
+    <a href="#">Salary</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-secondary btn-sm">Log in</a>
+    <a href="#" class="btn btn-primary btn-sm">Sign up</a>
+    <a href="#" class="btn btn-amber btn-sm">Post a job</a>
+  </div>
+</header>
+
+<!-- Search hero -->
+<div class="search-hero">
+  <h1>Find your next role</h1>
+  <p>Serious opportunities for experienced professionals in the UK</p>
+  <div class="search-form">
+    <input class="input" type="text" placeholder="Job title, skills, or company…" value="Platform Engineer">
+    <input class="input" type="text" placeholder="London, Manchester, Remote…" value="Remote (UK)" style="max-width:220px;">
+    <button class="btn btn-primary">Search</button>
+  </div>
+</div>
+
+<!-- Filter top bar -->
+<div class="filter-topbar">
+  <div class="filter-group">
+    <span class="filter-group-label">Type</span>
+    <button class="filter-chip active">Full-time</button>
+    <button class="filter-chip">Part-time</button>
+    <button class="filter-chip">Contract</button>
+  </div>
+  <div class="filter-divider-v"></div>
+  <div class="filter-group">
+    <span class="filter-group-label">Mode</span>
+    <button class="filter-chip active">Remote</button>
+    <button class="filter-chip">Hybrid</button>
+    <button class="filter-chip">On-site</button>
+  </div>
+  <div class="filter-divider-v"></div>
+  <div class="filter-group">
+    <span class="filter-group-label">Salary</span>
+    <button class="filter-chip">£40k+</button>
+    <button class="filter-chip active">£60k+</button>
+    <button class="filter-chip">£80k+</button>
+    <button class="filter-chip">£100k+</button>
+  </div>
+  <div class="filter-divider-v"></div>
+  <div class="filter-group">
+    <span class="filter-group-label">Level</span>
+    <button class="filter-chip active">Senior</button>
+    <button class="filter-chip">Mid</button>
+    <button class="filter-chip">Staff/Principal</button>
+  </div>
+  <div class="filter-divider-v"></div>
+  <button class="filter-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    More filters
+  </button>
+  <div class="count-label"><strong>247</strong> jobs</div>
+</div>
+
+<!-- Content -->
+<div class="content-area">
+  <div class="section-header">
+    <h2>Featured roles</h2>
+    <span class="count">4 promoted listings</span>
+    <div class="sort-area">
+      <select class="select" style="font-size:var(--type-sm);">
+        <option>Most relevant</option>
+        <option>Most recent</option>
+        <option>Salary high → low</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Featured card 1 -->
+  <div class="job-card-editorial featured" onclick="window.location='job-detail.html'">
+    <div class="card-photo-col">
+      <div class="co-initials" style="background:oklch(0.22 0.08 264 / 8%);">FL</div>
+    </div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <div class="card-title">Senior Platform Engineer</div>
+        <span class="badge badge-featured">Featured</span>
+      </div>
+      <div class="card-company-row"><strong>Folio Labs</strong> · London, UK</div>
+      <p class="card-desc">Own the reliability and scale of Folio's core data platform serving 3.2M daily active users. Drive the migration from monolith to event-driven services and define the observability culture across six squads.</p>
+      <div class="card-footer">
+        <span class="card-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Hybrid · London
+        </span>
+        <span class="card-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Full-time
+        </span>
+        <span class="salary-range">£72,000 – £95,000</span>
+        <div class="card-actions">
+          <span class="card-posted">2d ago</span>
+          <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </button>
+          <button class="btn btn-primary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured card 2 -->
+  <div class="job-card-editorial featured" onclick="window.location='job-detail.html'">
+    <div class="card-photo-col">
+      <div class="co-initials" style="background:oklch(0.45 0.09 264 / 12%);">CC</div>
+    </div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <div class="card-title">Lead Data Scientist</div>
+        <span class="badge badge-featured">Featured</span>
+      </div>
+      <div class="card-company-row"><strong>Caelum Capital</strong> · Canary Wharf, London</div>
+      <p class="card-desc">Build quantitative models for a hedge fund managing £4.7B. You'll work alongside quant traders, owning the ML pipeline from raw market data to live signal generation. Python, PyTorch, SQL — serious depth required.</p>
+      <div class="card-footer">
+        <span class="card-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          On-site · Canary Wharf
+        </span>
+        <span class="card-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Full-time
+        </span>
+        <span class="salary-range">£88,000 – £120,000</span>
+        <div class="card-actions">
+          <span class="card-posted">1d ago</span>
+          <button class="bookmark-btn saved" onclick="event.stopPropagation();this.classList.toggle('saved')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </button>
+          <button class="btn btn-primary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider" style="margin:var(--sp-6) 0;"></div>
+
+  <div class="section-header">
+    <h2>All jobs</h2>
+    <span class="count">243 listings</span>
+  </div>
+
+  <!-- Regular card -->
+  <div class="job-card-editorial">
+    <div class="card-photo-col">
+      <div class="co-initials" style="background:oklch(0.40 0.12 320 / 10%);">PT</div>
+    </div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <div class="card-title">Founding Designer</div>
+      </div>
+      <div class="card-company-row"><strong>Pith</strong> · Remote (UK)</div>
+      <p class="card-desc">First design hire at a 14-person developer tools startup. End-to-end ownership: brand, product, motion, marketing. Looking for someone who has shipped a design system before and won't shy away from code.</p>
+      <div class="card-footer">
+        <span class="card-meta-item">Remote (UK)</span>
+        <span class="card-meta-item">Full-time</span>
+        <span class="salary-range">£65,000 – £80,000</span>
+        <div class="card-actions">
+          <span class="card-posted">3d ago</span>
+          <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></button>
+          <button class="btn btn-secondary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job-card-editorial">
+    <div class="card-photo-col">
+      <div class="co-initials" style="background:oklch(0.55 0.15 150 / 10%);">MS</div>
+    </div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <div class="card-title">Staff Backend Engineer — Payments</div>
+      </div>
+      <div class="card-company-row"><strong>Marrow Studios</strong> · Manchester, UK</div>
+      <p class="card-desc">Own the payments infrastructure for a growing B2B marketplace processing £180M annually. Rust, gRPC, Kafka. You'll define the technical direction for a team of 5 engineers across two time zones.</p>
+      <div class="card-footer">
+        <span class="card-meta-item">Hybrid · Manchester</span>
+        <span class="card-meta-item">Full-time</span>
+        <span class="salary-range">£90,000 – £115,000</span>
+        <div class="card-actions">
+          <span class="card-posted">4d ago</span>
+          <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></button>
+          <button class="btn btn-secondary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job-card-editorial">
+    <div class="card-photo-col">
+      <div class="co-initials" style="background:oklch(0.60 0.14 30 / 10%);">QN</div>
+    </div>
+    <div class="card-body">
+      <div class="card-header-row">
+        <div class="card-title">Senior Product Manager — Growth</div>
+      </div>
+      <div class="card-company-row"><strong>Quora Networks</strong> · London, UK</div>
+      <p class="card-desc">Drive user acquisition and activation for a B2C fintech product with 1.2M users. You'll partner with engineering, data, and marketing to run structured experiments and own the funnel.</p>
+      <div class="card-footer">
+        <span class="card-meta-item">Hybrid · London</span>
+        <span class="card-meta-item">Full-time</span>
+        <span class="salary-range">£75,000 – £95,000</span>
+        <div class="card-actions">
+          <span class="card-posted">5d ago</span>
+          <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></button>
+          <button class="btn btn-secondary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div style="display:flex;align-items:center;gap:8px;margin-top:var(--sp-8);padding-top:var(--sp-6);border-top:1px solid var(--border);justify-content:center;">
+    <button class="btn btn-ghost btn-sm" style="gap:6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Previous
+    </button>
+    <span style="font-size:var(--type-sm);color:var(--ink-muted);padding:0 var(--sp-4);font-family:var(--font-mono);">Page 1 of 21</span>
+    <button class="btn btn-secondary btn-sm" style="gap:6px;">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

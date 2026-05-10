@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<!--
+  Descinder Jobs · Jobs List v1
+  Design philosophy: Information-dense (Wellfound register)
+  — Left filter rail with checkbox groups
+  — Compact job cards, mono salary, tabular layout feel
+  — Navy header, white content, clear hierarchy
+  — 120% moment: company logo initials + filter active states
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs · descinder — v1 Dense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/shared.css">
+<style>
+/* ─── Page layout ─────────────────────────────────────────────────────────── */
+.jobs-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: calc(100vh - var(--header-h));
+}
+
+/* ─── Search bar ──────────────────────────────────────────────────────────── */
+.search-bar {
+  grid-column: 1 / -1;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-4) var(--sp-6);
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+}
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 520px;
+}
+.search-input-wrap svg {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.search-input-wrap .input { padding-left: 38px; }
+.search-meta {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  margin-left: auto;
+  font-family: var(--font-mono);
+}
+.search-meta strong { color: var(--ink); font-weight: 600; }
+
+/* ─── Filter sidebar ─────────────────────────────────────────────────────── */
+.filter-sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: var(--sp-5) var(--sp-5);
+  overflow-y: auto;
+  position: sticky;
+  top: calc(var(--header-h) + 57px);
+  height: calc(100vh - var(--header-h) - 57px);
+}
+.filter-section { margin-bottom: var(--sp-6); }
+.filter-section-title {
+  font-size: var(--type-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  margin-bottom: var(--sp-3);
+}
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 5px 0;
+  cursor: pointer;
+}
+.filter-option input[type="checkbox"] {
+  width: 15px; height: 15px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 3px;
+  cursor: pointer;
+  accent-color: var(--navy);
+  flex-shrink: 0;
+}
+.filter-option label {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex: 1;
+}
+.filter-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.filter-option input:checked + label { color: var(--navy); font-weight: 500; }
+
+/* Salary range slider visual */
+.salary-range-display {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.salary-range-display input[type="range"] {
+  flex: 1;
+  accent-color: var(--navy);
+  height: 4px;
+}
+.salary-range-display span {
+  font-family: var(--font-mono);
+  font-size: var(--type-xs);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  min-height: 46px;
+  align-items: center;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--navy);
+  color: var(--ink-white);
+  font-size: var(--type-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.filter-pill svg { opacity: 0.7; }
+.filter-pill:hover { background: var(--navy-hover); }
+.clear-all {
+  font-size: var(--type-xs);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: auto;
+}
+.clear-all:hover { color: var(--destructive); }
+
+/* ─── Jobs list ──────────────────────────────────────────────────────────── */
+.jobs-main {
+  padding: var(--sp-5) var(--sp-6);
+  min-width: 0;
+}
+.jobs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.jobs-toolbar .sort-label {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+.sort-select { width: auto; min-width: 160px; }
+
+/* Job card */
+.job-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5) var(--sp-5);
+  margin-bottom: var(--sp-3);
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 0 var(--sp-4);
+  align-items: start;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  cursor: pointer;
+  position: relative;
+}
+.job-card:hover {
+  border-color: var(--border-mid);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+.job-card.featured {
+  border-color: oklch(0.72 0.18 75 / 35%);
+  background: oklch(0.99 0.005 75);
+}
+.featured-ribbon {
+  position: absolute;
+  top: -1px; right: 16px;
+  padding: 3px 10px;
+  background: var(--amber);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+}
+
+.job-card-body { min-width: 0; }
+.job-title {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.job-company {
+  font-size: var(--type-sm);
+  font-weight: 500;
+  color: var(--navy-subtle);
+  margin-bottom: var(--sp-3);
+}
+.job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.job-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  padding-top: 2px;
+}
+.job-posted {
+  font-family: var(--font-mono);
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.bookmark-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.bookmark-btn:hover, .bookmark-btn.saved {
+  background: var(--bg-subtle);
+  color: var(--navy);
+  border-color: var(--border-mid);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--border);
+  justify-content: center;
+}
+.page-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--type-sm);
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.page-btn:hover { background: var(--bg-subtle); color: var(--navy); border-color: var(--border-mid); }
+.page-btn.active { background: var(--navy); color: var(--ink-white); border-color: var(--navy); }
+.page-ellipsis { color: var(--ink-faint); font-size: var(--type-sm); padding: 0 4px; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<!-- ─── Header ─────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <span class="brand-wordmark">descinder</span>
+  <nav class="nav-links">
+    <a href="#" class="active">Jobs</a>
+    <a href="#">Companies</a>
+    <a href="#">Salary</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-secondary btn-sm">Log in</a>
+    <a href="#" class="btn btn-primary btn-sm">Sign up</a>
+    <a href="#" class="btn btn-amber btn-sm">Post a job</a>
+  </div>
+</header>
+
+<!-- ─── Search bar ──────────────────────────────────────────────────────────── -->
+<div style="background:var(--bg); border-bottom:1px solid var(--border); padding:var(--sp-4) var(--sp-6); display:flex; gap:var(--sp-3); align-items:center;">
+  <div style="position:relative; flex:1; max-width:520px;">
+    <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="input" style="padding-left:38px;" type="text" placeholder="Job title, skills, or company…" value="Senior Engineer">
+  </div>
+  <div style="position:relative; width:200px;">
+    <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+    <input class="input" style="padding-left:32px;" type="text" placeholder="Location" value="London, UK">
+  </div>
+  <button class="btn btn-primary">Search</button>
+  <span style="font-size:var(--type-sm);color:var(--ink-muted);margin-left:auto;font-family:var(--font-mono);">
+    <strong style="color:var(--ink);">247</strong> results
+  </span>
+</div>
+
+<!-- ─── Active filters ───────────────────────────────────────────────────────── -->
+<div class="active-filters">
+  <span style="font-size:var(--type-xs);color:var(--ink-faint);font-weight:500;margin-right:4px;">Filters:</span>
+  <button class="filter-pill">
+    Full-time
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="filter-pill">
+    Remote (UK)
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="filter-pill">
+    £60k+
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="clear-all">Clear all</button>
+</div>
+
+<!-- ─── Main layout ──────────────────────────────────────────────────────────── -->
+<div class="jobs-layout">
+
+  <!-- Filter sidebar -->
+  <aside class="filter-sidebar">
+    <div class="filter-section">
+      <div class="filter-section-title">Employment Type</div>
+      <label class="filter-option"><input type="checkbox" checked> <label>Full-time</label><span class="filter-count">183</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Part-time</label><span class="filter-count">29</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Contract</label><span class="filter-count">41</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Freelance</label><span class="filter-count">17</span></label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Work Mode</div>
+      <label class="filter-option"><input type="checkbox" checked> <label>Remote (UK)</label><span class="filter-count">94</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Hybrid</label><span class="filter-count">112</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>On-site</label><span class="filter-count">41</span></label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Experience Level</div>
+      <label class="filter-option"><input type="checkbox"> <label>Junior (1–3 yrs)</label><span class="filter-count">38</span></label>
+      <label class="filter-option"><input type="checkbox" checked> <label>Mid-level (3–6 yrs)</label><span class="filter-count">89</span></label>
+      <label class="filter-option"><input type="checkbox" checked> <label>Senior (6+ yrs)</label><span class="filter-count">74</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Principal / Staff</label><span class="filter-count">22</span></label>
+      <label class="filter-option"><input type="checkbox"> <label>Director+</label><span class="filter-count">11</span></label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Salary Range</div>
+      <div style="padding:4px 0;">
+        <input type="range" style="width:100%;accent-color:var(--navy);" min="20" max="200" value="60">
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);">£20k</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);font-weight:500;">£60k+</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);">£200k</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Skills</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+        <span class="skill-tag active">Python</span>
+        <span class="skill-tag">React</span>
+        <span class="skill-tag">TypeScript</span>
+        <span class="skill-tag active">AWS</span>
+        <span class="skill-tag">Go</span>
+        <span class="skill-tag">Kubernetes</span>
+        <span class="skill-tag">PostgreSQL</span>
+        <span class="skill-tag">Rust</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Date Posted</div>
+      <label class="filter-option"><input type="radio" name="posted" checked> <label>Any time</label></label>
+      <label class="filter-option"><input type="radio" name="posted"> <label>Past 24 hours</label></label>
+      <label class="filter-option"><input type="radio" name="posted"> <label>Past week</label></label>
+      <label class="filter-option"><input type="radio" name="posted"> <label>Past month</label></label>
+    </div>
+  </aside>
+
+  <!-- Jobs list -->
+  <main class="jobs-main">
+    <div class="jobs-toolbar">
+      <span style="font-size:var(--type-sm);color:var(--ink-muted);">Showing <strong style="color:var(--ink);">1–12</strong> of 247 jobs</span>
+      <span style="margin-left:auto;font-size:var(--type-sm);color:var(--ink-muted);">Sort by</span>
+      <select class="select sort-select">
+        <option>Most relevant</option>
+        <option>Most recent</option>
+        <option>Salary: High to low</option>
+        <option>Salary: Low to high</option>
+      </select>
+    </div>
+
+    <!-- Featured job 1 -->
+    <div class="job-card featured" onclick="window.location='job-detail.html'">
+      <div class="featured-ribbon">Featured</div>
+      <div class="company-logo" style="background:oklch(0.22 0.08 264 / 10%);">FL</div>
+      <div class="job-card-body">
+        <div class="job-title">Senior Platform Engineer</div>
+        <div class="job-company">Folio Labs</div>
+        <div class="meta-row">
+          <span>London, UK</span>
+          <span class="dot">Hybrid</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range featured">£72,000 – £95,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Go</span>
+          <span class="skill-tag">Kubernetes</span>
+          <span class="skill-tag">AWS</span>
+          <span class="skill-tag">PostgreSQL</span>
+          <span class="badge badge-muted" style="font-size:11px;">Senior</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">2d ago</span>
+        <button class="btn btn-primary btn-sm">Apply</button>
+        <button class="bookmark-btn" title="Save job" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Featured job 2 -->
+    <div class="job-card featured" onclick="window.location='job-detail.html'">
+      <div class="featured-ribbon">Featured</div>
+      <div class="company-logo" style="background:oklch(0.45 0.09 264 / 15%);">CC</div>
+      <div class="job-card-body">
+        <div class="job-title">Lead Data Scientist</div>
+        <div class="job-company">Caelum Capital</div>
+        <div class="meta-row">
+          <span>Canary Wharf, London</span>
+          <span class="dot">On-site</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range featured">£88,000 – £120,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Python</span>
+          <span class="skill-tag">PyTorch</span>
+          <span class="skill-tag">SQL</span>
+          <span class="skill-tag">Spark</span>
+          <span class="badge badge-muted" style="font-size:11px;">Senior</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">1d ago</span>
+        <button class="btn btn-primary btn-sm">Apply</button>
+        <button class="bookmark-btn saved" title="Save job" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Regular jobs -->
+    <div class="job-card" onclick="window.location='job-detail.html'">
+      <div class="company-logo" style="background:oklch(0.40 0.12 320 / 12%);">PT</div>
+      <div class="job-card-body">
+        <div class="job-title">Founding Designer</div>
+        <div class="job-company">Pith</div>
+        <div class="meta-row">
+          <span>Remote (UK)</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£65,000 – £80,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Figma</span>
+          <span class="skill-tag">Design Systems</span>
+          <span class="skill-tag">Motion Design</span>
+          <span class="badge badge-muted" style="font-size:11px;">Senior</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">3d ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="company-logo" style="background:oklch(0.55 0.15 150 / 12%);">MS</div>
+      <div class="job-card-body">
+        <div class="job-title">Staff Backend Engineer — Payments</div>
+        <div class="job-company">Marrow Studios</div>
+        <div class="meta-row">
+          <span>Manchester, UK</span>
+          <span class="dot">Hybrid</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£90,000 – £115,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Rust</span>
+          <span class="skill-tag">gRPC</span>
+          <span class="skill-tag">Kafka</span>
+          <span class="badge badge-muted" style="font-size:11px;">Staff</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">4d ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="company-logo" style="background:oklch(0.60 0.14 30 / 12%);">QN</div>
+      <div class="job-card-body">
+        <div class="job-title">Senior Product Manager — Growth</div>
+        <div class="job-company">Quora Networks</div>
+        <div class="meta-row">
+          <span>London, UK</span>
+          <span class="dot">Hybrid</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£75,000 – £95,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Product Strategy</span>
+          <span class="skill-tag">A/B Testing</span>
+          <span class="skill-tag">SQL</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">5d ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="company-logo" style="background:oklch(0.35 0.07 264 / 12%);">VR</div>
+      <div class="job-card-body">
+        <div class="job-title">Engineering Manager — Infrastructure</div>
+        <div class="job-company">Vexor Rail</div>
+        <div class="meta-row">
+          <span>Edinburgh, UK</span>
+          <span class="dot">Hybrid</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£100,000 – £130,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">People management</span>
+          <span class="skill-tag">Terraform</span>
+          <span class="skill-tag">SRE</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">1w ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="company-logo" style="background:oklch(0.72 0.18 75 / 15%);">BV</div>
+      <div class="job-card-body">
+        <div class="job-title">Senior iOS Engineer</div>
+        <div class="job-company">Bloom Ventures</div>
+        <div class="meta-row">
+          <span>Remote (UK)</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£70,000 – £88,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">Swift</span>
+          <span class="skill-tag">SwiftUI</span>
+          <span class="skill-tag">CoreData</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">1w ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="company-logo" style="background:oklch(0.45 0.15 200 / 12%);">NX</div>
+      <div class="job-card-body">
+        <div class="job-title">Head of Security Engineering</div>
+        <div class="job-company">Nuvex Systems</div>
+        <div class="meta-row">
+          <span>London, UK</span>
+          <span class="dot">On-site</span>
+          <span class="dot">Full-time</span>
+          <span class="dot salary-range">£110,000 – £145,000</span>
+        </div>
+        <div class="job-tags">
+          <span class="skill-tag">SIEM</span>
+          <span class="skill-tag">Zero Trust</span>
+          <span class="skill-tag">Incident Response</span>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <span class="job-posted">2w ago</span>
+        <button class="btn btn-secondary btn-sm">Apply</button>
+        <button class="bookmark-btn" onclick="event.stopPropagation();this.classList.toggle('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="page-btn" disabled style="opacity:0.4;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">3</button>
+      <span class="page-ellipsis">…</span>
+      <button class="page-btn">21</button>
+      <button class="page-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </main>
+</div><!-- /jobs-layout -->
+
+</div><!-- /page-wrapper -->
+</body>
+</html>

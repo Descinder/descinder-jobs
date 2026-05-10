@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<!--
+  Descinder Jobs · Job Detail Page
+  Design: Confident and dense — two-column (content + sticky sidebar)
+  120% moment: sidebar apply CTA with salary highlighted in mono + company card
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senior Platform Engineer at Folio Labs · descinder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/shared.css">
+<style>
+/* ─── Breadcrumb ─────────────────────────────────────────────────────────── */
+.breadcrumb {
+  padding: var(--sp-4) var(--sp-6);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.breadcrumb a { color: var(--ink-muted); transition: color 0.12s; }
+.breadcrumb a:hover { color: var(--navy); }
+.breadcrumb svg { color: var(--ink-faint); }
+
+/* ─── Two-column layout ─────────────────────────────────────────────────── */
+.detail-layout {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6);
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--sp-8);
+  align-items: start;
+}
+
+/* ─── Main content ──────────────────────────────────────────────────────── */
+.job-header {
+  margin-bottom: var(--sp-7);
+}
+.job-header-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.job-header-body { flex: 1; min-width: 0; }
+.job-header-title {
+  font-size: var(--type-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: var(--sp-3);
+  text-wrap: balance;
+}
+.job-header-company {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.job-header-company .company-name {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  color: var(--navy-subtle);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: oklch(0.45 0.09 264 / 30%);
+  cursor: pointer;
+}
+.job-header-company .company-name:hover { color: var(--navy); text-decoration-color: var(--navy-subtle); }
+
+/* Meta info grid */
+.job-meta-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: var(--sp-6);
+}
+.meta-cell { flex: 1; min-width: 100px; }
+.meta-cell .meta-label {
+  font-size: var(--type-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.meta-cell .meta-value {
+  font-size: var(--type-sm);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.meta-cell .meta-value.salary {
+  font-family: var(--font-mono);
+  font-size: var(--type-base);
+  color: var(--navy-mid);
+}
+
+/* Skills section */
+.skills-section {
+  margin-bottom: var(--sp-6);
+}
+.skills-section h3 {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  margin-bottom: var(--sp-3);
+}
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Job description */
+.job-description h2 {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-4);
+  margin-top: var(--sp-7);
+  letter-spacing: -0.01em;
+}
+.job-description h2:first-child { margin-top: 0; }
+.job-description h3 {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.job-description p {
+  font-size: var(--type-base);
+  line-height: 1.7;
+  color: var(--ink-muted);
+  margin-bottom: var(--sp-4);
+  text-wrap: pretty;
+}
+.job-description ul {
+  padding-left: var(--sp-5);
+  margin-bottom: var(--sp-4);
+}
+.job-description ul li {
+  font-size: var(--type-base);
+  line-height: 1.65;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+  position: relative;
+}
+.job-description ul li::before {
+  content: '–';
+  position: absolute;
+  left: -18px;
+  color: var(--border-strong);
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--sp-7) 0;
+}
+
+/* Related jobs at bottom */
+.related-section { margin-top: var(--sp-8); }
+.related-section h2 {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  margin-bottom: var(--sp-5);
+  letter-spacing: -0.01em;
+}
+.related-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+.related-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+.related-card:hover { border-color: var(--border-mid); box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+.related-card-body { flex: 1; min-width: 0; }
+.related-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.related-company { font-size: var(--type-xs); color: var(--ink-muted); margin-bottom: var(--sp-2); }
+.related-salary { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+
+/* ─── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  position: sticky;
+  top: calc(var(--header-h) + var(--sp-8));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.apply-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.apply-card-header {
+  background: var(--navy);
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+.apply-card-header .salary-display {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink-white);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.apply-card-header .salary-sub {
+  font-size: var(--type-xs);
+  color: oklch(0.93 0.01 264 / 60%);
+}
+.apply-card-body {
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.apply-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+}
+.apply-card-meta svg { color: var(--ink-faint); flex-shrink: 0; }
+.apply-card-body .divider { margin: var(--sp-1) 0; }
+.applicants-note {
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.company-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-5);
+}
+.company-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.company-card-name {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--ink);
+}
+.company-card-sub {
+  font-size: var(--type-xs);
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+.company-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.company-stat .label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+.company-stat .value { font-size: var(--type-sm); font-weight: 500; color: var(--ink); }
+
+.sidebar-share {
+  display: flex;
+  gap: var(--sp-2);
+}
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<!-- Header -->
+<header class="site-header">
+  <span class="brand-wordmark">descinder</span>
+  <nav class="nav-links">
+    <a href="jobs-list-v1.html">Jobs</a>
+    <a href="#">Companies</a>
+    <a href="#">Salary</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-secondary btn-sm">Log in</a>
+    <a href="#" class="btn btn-primary btn-sm">Sign up</a>
+    <a href="post-a-job.html" class="btn btn-amber btn-sm">Post a job</a>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="jobs-list-v1.html">Jobs</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  <a href="#">Engineering</a>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  <span>Senior Platform Engineer</span>
+</div>
+
+<!-- Main layout -->
+<div class="detail-layout">
+
+  <!-- Left: main content -->
+  <div class="job-main">
+    <div class="job-header">
+      <div class="job-header-top">
+        <div class="company-logo xl" style="background:oklch(0.22 0.08 264 / 8%);">FL</div>
+        <div class="job-header-body">
+          <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2);">
+            <span class="badge badge-featured">Featured</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);">Posted 2 days ago · 47 applicants</span>
+          </div>
+          <h1 class="job-header-title">Senior Platform Engineer</h1>
+          <div class="job-header-company">
+            <span class="company-name" onclick="window.location='company-profile.html'">Folio Labs</span>
+            <span style="color:var(--ink-faint);">·</span>
+            <span style="font-size:var(--type-sm);color:var(--ink-muted);">Series B · London, UK</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meta grid -->
+    <div class="job-meta-grid">
+      <div class="meta-cell">
+        <div class="meta-label">Salary</div>
+        <div class="meta-value salary">£72,000 – £95,000</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Location</div>
+        <div class="meta-value">London, UK</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Work mode</div>
+        <div class="meta-value">Hybrid (3 days/wk)</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Employment</div>
+        <div class="meta-value">Full-time, permanent</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Experience</div>
+        <div class="meta-value">Senior (6+ years)</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Visa sponsorship</div>
+        <div class="meta-value">No</div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="skills-section">
+      <h3>Required skills</h3>
+      <div class="skills-list">
+        <span class="skill-tag">Go</span>
+        <span class="skill-tag">Kubernetes</span>
+        <span class="skill-tag">AWS</span>
+        <span class="skill-tag">PostgreSQL</span>
+        <span class="skill-tag">Terraform</span>
+        <span class="skill-tag">Prometheus</span>
+        <span class="skill-tag">gRPC</span>
+        <span class="skill-tag">Jaeger</span>
+        <span class="skill-tag">Python</span>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Full description -->
+    <div class="job-description">
+      <h2>About Folio Labs</h2>
+      <p>Folio Labs builds infrastructure for institutional capital markets. Our platform handles over £2.1B in daily transactions across 14 currencies for 340+ fund managers — from emerging market hedge funds to sovereign wealth vehicles. Founded in 2019, we're Series B (£38M, led by Balderton) and growing to 180 people across London and New York.</p>
+      <p>We believe financial infrastructure should be invisible — reliable to the point of being boring, performant to the point of being forgettable. The platform team is where that belief gets implemented.</p>
+
+      <h2>The role</h2>
+      <p>We're looking for a Senior Platform Engineer to own the reliability, scalability, and developer experience of Folio's core services. This is a senior IC role with genuine technical authority — you'll set direction for how our systems observe, scale, and recover from failure.</p>
+      <p>You'll be embedded in the Platform tribe (5 engineers), working directly with the CTO and squad leads across the product surface. There is a clear path to Staff Engineer for the right person.</p>
+
+      <h3>What you'll own</h3>
+      <ul>
+        <li>Operate and evolve our Kubernetes clusters (EKS) running 140+ microservices across three AWS regions (eu-west-1, us-east-1, ap-southeast-1)</li>
+        <li>Drive our observability maturity: Prometheus + Thanos, Grafana dashboards, distributed tracing via Jaeger, structured logging with Loki</li>
+        <li>Build internal developer tooling — golden path CI/CD, service scaffolding, database provisioning automation — that removes toil for 38 product engineers</li>
+        <li>Own incident response posture: runbooks, on-call rotation design, postmortem facilitation, and systematic reliability improvements</li>
+        <li>Partner with our security team on SOC 2 Type II certification (target: Q3 2026) — particularly around infrastructure controls, audit logging, and access management</li>
+        <li>Contribute meaningfully to our platform roadmap — we expect senior engineers to generate ideas, not just execute on them</li>
+      </ul>
+
+      <h3>What we're looking for</h3>
+      <ul>
+        <li>6+ years of production platform engineering or SRE experience — ideally in a fintech or high-stakes transactional context</li>
+        <li>Strong Go for tooling and services; Python is also welcome for automation</li>
+        <li>Deep AWS knowledge that goes beyond console familiarity: EKS internals, RDS multi-AZ, SQS dead-letter patterns, CloudFront behaviours</li>
+        <li>You've designed and operated an on-call rotation — and measurably improved it after joining</li>
+        <li>Comfortable with the ambiguity of a Series B: priorities shift, documentation lags, and you build the thing that makes both better</li>
+      </ul>
+
+      <h3>Nice to have</h3>
+      <ul>
+        <li>Experience with financial systems: FIX protocol, settlement flows, or regulatory reporting infrastructure</li>
+        <li>Familiarity with Crossplane or other infrastructure-as-code platforms at scale</li>
+        <li>Prior experience driving a DORA metrics improvement programme</li>
+      </ul>
+
+      <h2>What we offer</h2>
+      <ul>
+        <li>£72,000 – £95,000 base depending on experience, plus equity (0.1–0.25% on standard 4yr cliff/vest)</li>
+        <li>25 days holiday + bank holidays + 1 additional day per year of tenure (up to 30)</li>
+        <li>Private health insurance via Vitality (dental and optical included)</li>
+        <li>£2,000 per year learning budget, no approval required for items under £500</li>
+        <li>Hybrid: 3 days in our Shoreditch office, 2 from home — flexible on which days</li>
+        <li>Enhanced parental leave: 26 weeks full pay for primary carer, 12 weeks for secondary</li>
+      </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Related jobs -->
+    <div class="related-section">
+      <h2>Similar roles</h2>
+      <div class="related-grid">
+        <div class="related-card">
+          <div class="company-logo" style="background:oklch(0.55 0.15 150 / 10%);">MS</div>
+          <div class="related-card-body">
+            <div class="related-title">Staff Backend Engineer — Payments</div>
+            <div class="related-company">Marrow Studios · Manchester</div>
+            <div class="related-salary">£90,000 – £115,000</div>
+          </div>
+        </div>
+        <div class="related-card">
+          <div class="company-logo" style="background:oklch(0.35 0.07 264 / 12%);">VR</div>
+          <div class="related-card-body">
+            <div class="related-title">Engineering Manager — Infrastructure</div>
+            <div class="related-company">Vexor Rail · Edinburgh</div>
+            <div class="related-salary">£100,000 – £130,000</div>
+          </div>
+        </div>
+        <div class="related-card">
+          <div class="company-logo" style="background:oklch(0.30 0.08 200 / 10%);">AX</div>
+          <div class="related-card-body">
+            <div class="related-title">Principal ML Engineer</div>
+            <div class="related-company">Axon Bio · Cambridge</div>
+            <div class="related-salary">£95,000 – £125,000</div>
+          </div>
+        </div>
+        <div class="related-card">
+          <div class="company-logo" style="background:oklch(0.45 0.15 200 / 10%);">NX</div>
+          <div class="related-card-body">
+            <div class="related-title">Head of Security Engineering</div>
+            <div class="related-company">Nuvex Systems · London</div>
+            <div class="related-salary">£110,000 – £145,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: sidebar -->
+  <aside class="sidebar">
+
+    <!-- Apply card -->
+    <div class="apply-card">
+      <div class="apply-card-header">
+        <div class="salary-display">£72k – £95k</div>
+        <div class="salary-sub">per year, permanent</div>
+      </div>
+      <div class="apply-card-body">
+        <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">Apply directly</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Apply on company site
+        </button>
+
+        <div class="divider"></div>
+
+        <div class="apply-card-meta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          London, UK · Hybrid
+        </div>
+        <div class="apply-card-meta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Full-time
+        </div>
+        <div class="apply-card-meta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          6+ years required
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="display:flex;gap:var(--sp-2);">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            Save
+          </button>
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+            Share
+          </button>
+        </div>
+        <div class="applicants-note">47 people have applied · closes 14 Jun</div>
+      </div>
+    </div>
+
+    <!-- Company card -->
+    <div class="company-card">
+      <div class="company-card-header">
+        <div class="company-logo lg" style="background:oklch(0.22 0.08 264 / 8%);">FL</div>
+        <div>
+          <div class="company-card-name"><a href="company-profile.html">Folio Labs</a></div>
+          <div class="company-card-sub">Financial infrastructure · Series B</div>
+        </div>
+      </div>
+      <div class="company-stat-row">
+        <div class="company-stat">
+          <div class="label">Size</div>
+          <div class="value">101–200 people</div>
+        </div>
+        <div class="company-stat">
+          <div class="label">Stage</div>
+          <div class="value">Series B</div>
+        </div>
+        <div class="company-stat">
+          <div class="label">Founded</div>
+          <div class="value">2019</div>
+        </div>
+        <div class="company-stat">
+          <div class="label">Open roles</div>
+          <div class="value">7 on descinder</div>
+        </div>
+      </div>
+      <a href="company-profile.html" class="btn btn-secondary" style="width:100%;justify-content:center;font-size:var(--type-sm);">View company profile</a>
+    </div>
+
+    <!-- Flag / report -->
+    <div style="text-align:center;">
+      <button style="font-size:var(--type-xs);color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:2px;">
+        Report this listing
+      </button>
+    </div>
+  </aside>
+</div>
+
+</div>
+</body>
+</html>

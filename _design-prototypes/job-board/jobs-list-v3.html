@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<!--
+  Descinder Jobs · Jobs List v3
+  Design philosophy: Bento-shifted / Asymmetric tile layout
+  — Split-screen: narrow pinned sidebar with large active preview pane
+  — Job list is a narrow left column; clicking a job shows preview on the right
+  — No traditional "cards" — scannable table-like rows with right preview
+  — 120% moment: the preview panel — full job detail at a glance without leaving the list
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs · descinder — v3 Split Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/shared.css">
+<style>
+/* ─── Split layout ───────────────────────────────────────────────────────── */
+.split-layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  height: calc(100vh - var(--header-h));
+  overflow: hidden;
+}
+
+/* ─── Left panel ─────────────────────────────────────────────────────────── */
+.list-panel {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.list-panel-header {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.list-search {
+  position: relative;
+  margin-bottom: var(--sp-3);
+}
+.list-search svg {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--ink-faint); pointer-events: none;
+}
+.list-search .input { padding-left: 32px; }
+.filter-row {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.f-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  font-size: var(--type-xs);
+  color: var(--ink-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--bg);
+  transition: all 0.12s;
+}
+.f-chip.on { background: var(--navy); color: var(--ink-white); border-color: var(--navy); }
+.f-chip:hover:not(.on) { border-color: var(--border-mid); color: var(--navy); }
+
+/* Jobs list in left panel */
+.jobs-list {
+  overflow-y: auto;
+  flex: 1;
+}
+.job-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+}
+.job-row:hover { background: var(--bg-subtle); }
+.job-row.active {
+  background: var(--bg-subtle);
+  border-right: 2px solid var(--navy);
+}
+.job-row.featured { background: oklch(0.99 0.005 75); }
+.job-row.featured:hover { background: oklch(0.97 0.01 75); }
+
+.row-logo {
+  width: 36px; height: 36px;
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg);
+}
+.row-body { flex: 1; min-width: 0; }
+.row-title {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.row-company {
+  font-size: var(--type-xs);
+  color: var(--ink-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.row-salary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.row-posted {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.row-featured-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+  margin-right: -4px;
+}
+
+/* List footer */
+.list-footer {
+  padding: var(--sp-3) var(--sp-5);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.list-footer span {
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+}
+.list-footer .spacer { flex: 1; }
+
+/* ─── Right preview panel ────────────────────────────────────────────────── */
+.preview-panel {
+  overflow-y: auto;
+  background: var(--bg);
+}
+.preview-content {
+  max-width: 680px;
+  padding: var(--sp-8) var(--sp-8) var(--sp-12);
+}
+
+.preview-header {
+  margin-bottom: var(--sp-6);
+}
+.preview-featured-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--amber);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+  font-weight: 500;
+  margin-bottom: var(--sp-4);
+}
+.preview-title {
+  font-size: var(--type-xl);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: var(--sp-3);
+  text-wrap: balance;
+}
+.preview-company-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.preview-company-logo {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--navy);
+  background: oklch(0.22 0.08 264 / 8%);
+}
+.preview-company-info .name {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--navy-subtle);
+}
+.preview-company-info .sub {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+}
+
+.preview-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+  padding: var(--sp-5);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.preview-meta-item {}
+.preview-meta-item .label {
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.preview-meta-item .value {
+  font-size: var(--type-sm);
+  font-weight: 500;
+  color: var(--ink);
+}
+.preview-meta-item .value.salary {
+  font-family: var(--font-mono);
+  color: var(--navy-mid);
+}
+
+.preview-actions {
+  display: flex;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+  align-items: center;
+}
+.preview-posted {
+  font-family: var(--font-mono);
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  margin-left: auto;
+}
+
+.preview-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-6);
+}
+
+.preview-section-title {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+}
+.preview-body {
+  font-size: var(--type-sm);
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+.preview-body p { margin-bottom: var(--sp-4); }
+.preview-body ul { padding-left: var(--sp-5); margin-bottom: var(--sp-4); }
+.preview-body ul li { margin-bottom: 6px; position: relative; }
+.preview-body ul li::before { content: '—'; position: absolute; left: -20px; color: var(--border-strong); }
+</style>
+</head>
+<body>
+<div class="page-wrapper" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+
+<!-- Header -->
+<header class="site-header" style="flex-shrink:0;">
+  <span class="brand-wordmark">descinder</span>
+  <nav class="nav-links">
+    <a href="#" class="active">Jobs</a>
+    <a href="#">Companies</a>
+    <a href="#">Salary</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-secondary btn-sm">Log in</a>
+    <a href="#" class="btn btn-primary btn-sm">Sign up</a>
+    <a href="#" class="btn btn-amber btn-sm">Post a job</a>
+  </div>
+</header>
+
+<div class="split-layout">
+
+  <!-- Left: list panel -->
+  <div class="list-panel">
+    <div class="list-panel-header">
+      <div class="list-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="input input-sm" type="text" placeholder="Search jobs, skills, companies…" value="Platform Engineer">
+      </div>
+      <div class="filter-row">
+        <button class="f-chip on">Full-time</button>
+        <button class="f-chip on">Remote</button>
+        <button class="f-chip">£60k+</button>
+        <button class="f-chip on">Senior</button>
+        <button class="f-chip">Contract</button>
+        <button class="f-chip">London</button>
+      </div>
+    </div>
+
+    <div class="jobs-list">
+      <!-- featured -->
+      <div class="job-row featured active" onclick="return false;">
+        <div class="row-featured-dot"></div>
+        <div class="row-logo" style="background:oklch(0.22 0.08 264 / 8%);">FL</div>
+        <div class="row-body">
+          <div class="row-title">Senior Platform Engineer</div>
+          <div class="row-company">Folio Labs · London</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£72–95k</span>
+          <span class="row-posted">2d ago</span>
+        </div>
+      </div>
+
+      <div class="job-row featured" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-featured-dot"></div>
+        <div class="row-logo" style="background:oklch(0.45 0.09 264 / 12%);">CC</div>
+        <div class="row-body">
+          <div class="row-title">Lead Data Scientist</div>
+          <div class="row-company">Caelum Capital · Canary Wharf</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£88–120k</span>
+          <span class="row-posted">1d ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.40 0.12 320 / 10%);">PT</div>
+        <div class="row-body">
+          <div class="row-title">Founding Designer</div>
+          <div class="row-company">Pith · Remote (UK)</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£65–80k</span>
+          <span class="row-posted">3d ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.55 0.15 150 / 10%);">MS</div>
+        <div class="row-body">
+          <div class="row-title">Staff Backend Engineer</div>
+          <div class="row-company">Marrow Studios · Manchester</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£90–115k</span>
+          <span class="row-posted">4d ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.60 0.14 30 / 10%);">QN</div>
+        <div class="row-body">
+          <div class="row-title">Senior Product Manager — Growth</div>
+          <div class="row-company">Quora Networks · London</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£75–95k</span>
+          <span class="row-posted">5d ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.35 0.07 264 / 12%);">VR</div>
+        <div class="row-body">
+          <div class="row-title">Engineering Manager — Infra</div>
+          <div class="row-company">Vexor Rail · Edinburgh</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£100–130k</span>
+          <span class="row-posted">1w ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.72 0.18 75 / 12%);">BV</div>
+        <div class="row-body">
+          <div class="row-title">Senior iOS Engineer</div>
+          <div class="row-company">Bloom Ventures · Remote</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£70–88k</span>
+          <span class="row-posted">1w ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.45 0.15 200 / 10%);">NX</div>
+        <div class="row-body">
+          <div class="row-title">Head of Security Engineering</div>
+          <div class="row-company">Nuvex Systems · London</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£110–145k</span>
+          <span class="row-posted">2w ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.30 0.08 200 / 10%);">AX</div>
+        <div class="row-body">
+          <div class="row-title">Principal ML Engineer</div>
+          <div class="row-company">Axon Bio · Cambridge</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£95–125k</span>
+          <span class="row-posted">2w ago</span>
+        </div>
+      </div>
+
+      <div class="job-row" onclick="this.closest('.jobs-list').querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));this.classList.add('active');">
+        <div class="row-logo" style="background:oklch(0.50 0.10 290 / 10%);">KW</div>
+        <div class="row-body">
+          <div class="row-title">DevOps / Platform Engineer</div>
+          <div class="row-company">Kestrel Works · Bristol</div>
+        </div>
+        <div class="row-meta">
+          <span class="row-salary">£60–80k</span>
+          <span class="row-posted">2w ago</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-footer">
+      <span>1–10 of 247</span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" disabled style="opacity:0.4;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: preview panel -->
+  <div class="preview-panel">
+    <div class="preview-content">
+      <div class="preview-header">
+        <div class="preview-featured-tag">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Featured listing
+        </div>
+        <h1 class="preview-title">Senior Platform Engineer</h1>
+        <div class="preview-company-row">
+          <div class="preview-company-logo">FL</div>
+          <div class="preview-company-info">
+            <div class="name">Folio Labs</div>
+            <div class="sub">Series B · 120 employees · fintech infrastructure</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-meta-grid">
+        <div class="preview-meta-item">
+          <div class="label">Location</div>
+          <div class="value">London, UK (Hybrid, 3 days/wk)</div>
+        </div>
+        <div class="preview-meta-item">
+          <div class="label">Employment</div>
+          <div class="value">Full-time, permanent</div>
+        </div>
+        <div class="preview-meta-item">
+          <div class="label">Salary</div>
+          <div class="value salary">£72,000 – £95,000</div>
+        </div>
+        <div class="preview-meta-item">
+          <div class="label">Experience</div>
+          <div class="value">Senior (6+ years)</div>
+        </div>
+      </div>
+
+      <div class="preview-actions">
+        <button class="btn btn-primary btn-lg" onclick="window.location='job-detail.html'">Apply now</button>
+        <button class="btn btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          Save
+        </button>
+        <button class="btn btn-ghost">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+          Share
+        </button>
+        <span class="preview-posted">Posted 2d ago · 47 applicants</span>
+      </div>
+
+      <div class="preview-skills">
+        <span class="skill-tag">Go</span>
+        <span class="skill-tag">Kubernetes</span>
+        <span class="skill-tag">AWS</span>
+        <span class="skill-tag">PostgreSQL</span>
+        <span class="skill-tag">Terraform</span>
+        <span class="skill-tag">Prometheus</span>
+        <span class="skill-tag">gRPC</span>
+      </div>
+
+      <p class="preview-section-title">About the role</p>
+      <div class="preview-body">
+        <p>Folio Labs is building the infrastructure that powers capital markets for fund managers. We process over £2.1B in daily transactions across 14 currencies, and our platform team is the backbone that makes this possible.</p>
+        <p>We're looking for a Senior Platform Engineer who can own the reliability and observability of our core systems — someone who's done this before, who writes the runbook and then deletes it once the system is self-healing.</p>
+        <p><strong>What you'll own</strong></p>
+        <ul>
+          <li>Design and operate Kubernetes clusters running 140+ microservices across three AWS regions</li>
+          <li>Drive our observability maturity: Prometheus, Grafana, distributed tracing with Jaeger</li>
+          <li>Build internal tooling that removes friction for 30+ engineers — golden paths, not guardrails</li>
+          <li>Partner with security to achieve SOC 2 Type II by Q3 2026</li>
+          <li>Lead incident response and postmortem culture — blameless, systemic</li>
+        </ul>
+        <p><strong>What we're looking for</strong></p>
+        <ul>
+          <li>6+ years of production platform or SRE experience</li>
+          <li>Strong Go or Python for tooling and automation</li>
+          <li>Deep AWS knowledge (EKS, RDS, SQS, CloudFront) — not just certifications</li>
+          <li>You've led an on-call rotation and improved it</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /split-layout -->
+</div>
+</body>
+</html>
