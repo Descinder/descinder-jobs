@@ -13,8 +13,13 @@ export default async function CompanyPage() {
     .maybeSingle();
   if (!membership?.companies) redirect("/onboarding/company");
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-semibold tracking-tight">Company</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Company</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          How your organisation appears on listings and intern profiles.
+        </p>
+      </div>
       <CompanyForm company={membership.companies} />
     </div>
   );

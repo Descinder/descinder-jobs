@@ -12,8 +12,15 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {user.role === "job_seeker"
+            ? "How startups and institutions see you."
+            : "Your account identity."}
+        </p>
+      </div>
       <ProfileForm
         userId={user.id}
         name={user.name ?? ""}
