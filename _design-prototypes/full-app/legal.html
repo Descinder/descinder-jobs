@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    legal.html — Template for Privacy Policy / Terms of Service / Cookie Policy
+    Position four questions:
+    - Narrative role: reference / compliance — users skim structure first, read if needed
+    - Viewer distance: 60–80cm, reading-mode — comfortable line length (~65–70ch)
+    - Visual temperature: flat, professional, minimal decoration
+    - Capacity: two-column — sticky ToC left, prose right
+
+    Template indicators are shown in [ square brackets ].
+  -->
+  <style>
+    .legal-header-band {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-6) 0;
+    }
+
+    .legal-header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+    }
+
+    .legal-page-type {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: var(--space-2);
+    }
+
+    /* Page switcher pills */
+    .legal-tabs {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+
+    .legal-tab {
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: var(--ink-muted);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+    }
+    .legal-tab:hover { border-color: var(--navy-mid); color: var(--navy); }
+    .legal-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+    /* Updated date badge */
+    .update-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-top: var(--space-3);
+    }
+
+    /* ToC active state highlight */
+    .legal-toc a.active {
+      color: var(--navy);
+      border-left-color: var(--navy);
+    }
+
+    /* Template notice banner */
+    .template-notice {
+      background: oklch(0.97 0.03 75);
+      border: 1px solid oklch(0.85 0.08 75);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--type-sm);
+      color: oklch(0.42 0.10 75);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    @media (max-width: 768px) {
+      .legal-tabs { flex-wrap: wrap; }
+      .legal-header-inner { padding: 0 var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="header-nav">
+        <a href="home.html" class="nav-link">Jobs</a>
+        <a href="company-profile.html" class="nav-link">Companies</a>
+        <a href="#" class="nav-link">About</a>
+      </nav>
+      <div class="header-actions">
+        <a href="log-in.html" class="btn btn-ghost btn-md">Sign in</a>
+        <a href="sign-up.html" class="btn btn-primary btn-md">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Legal header ── -->
+  <div class="legal-header-band">
+    <div class="legal-header-inner">
+      <p class="legal-page-type">Legal</p>
+      <h1 style="font-size:var(--type-xl);font-weight:800;letter-spacing:-0.02em;color:var(--ink)">Privacy Policy</h1>
+      <div class="update-badge">
+        Last updated: [ YYYY-MM-DD ]
+      </div>
+      <div class="legal-tabs">
+        <a href="#" class="legal-tab active">Privacy Policy</a>
+        <a href="#" class="legal-tab">Terms of Service</a>
+        <a href="#" class="legal-tab">Cookie Policy</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Legal body ── -->
+  <div class="legal-layout page-enter">
+
+    <!-- Sticky ToC -->
+    <nav class="legal-toc" aria-label="On this page">
+      <p class="legal-toc-title">On this page</p>
+      <a href="#introduction" class="active">Introduction</a>
+      <a href="#data-we-collect">Data we collect</a>
+      <a href="#how-we-use">How we use your data</a>
+      <a href="#sharing">Sharing and disclosure</a>
+      <a href="#retention">Retention</a>
+      <a href="#your-rights">Your rights</a>
+      <a href="#security">Security</a>
+      <a href="#cookies">Cookies</a>
+      <a href="#contact">Contact us</a>
+    </nav>
+
+    <!-- Prose content -->
+    <main class="legal-content">
+
+      <div class="template-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+        This is a design template. The text below is placeholder prose indicating the structure and format of Descinder's legal pages. Actual legal text must be drafted by qualified counsel before publication.
+      </div>
+
+      <section id="introduction">
+        <h2>Introduction</h2>
+        <p>Descinder Ltd ("Descinder", "we", "our", or "us") operates the Descinder Jobs platform, accessible at <strong>[ your domain ]</strong>. This Privacy Policy explains how we collect, use, disclose, and safeguard your personal data when you use our services.</p>
+        <p>We take privacy seriously. Our platform connects experienced professionals with employers — and both groups trust us with personal and commercially sensitive information. This policy describes how we honour that trust, and what rights you have over your data.</p>
+        <p>By creating an account or using the platform, you agree to the terms described in this policy. If you disagree with anything here, please stop using our services and contact us to delete your data.</p>
+      </section>
+
+      <section id="data-we-collect">
+        <h2>Data we collect</h2>
+        <p>We collect data you provide directly, data generated through your use of the platform, and limited data from third parties where necessary for the service to function.</p>
+        <h3>Data you provide</h3>
+        <ul>
+          <li>Account registration information — name, email address, password (stored as a hashed value)</li>
+          <li>Profile information — professional history, skills, location, work preferences</li>
+          <li>Application data — CVs, cover letters, and other documents you submit when applying to roles</li>
+          <li>Communication data — messages between employers and candidates via the platform</li>
+          <li>Payment information — processed by our payment provider [ provider name ] and not stored on our servers</li>
+        </ul>
+        <h3>Data generated automatically</h3>
+        <ul>
+          <li>Usage data — pages visited, features used, time on site</li>
+          <li>Device and browser information — IP address, browser type, operating system</li>
+          <li>Cookie data — see our Cookie Policy for full details</li>
+        </ul>
+      </section>
+
+      <section id="how-we-use">
+        <h2>How we use your data</h2>
+        <p>We use your personal data only where we have a lawful basis to do so — principally performance of contract, legitimate interest, or explicit consent.</p>
+        <ul>
+          <li>To provide and improve the Descinder Jobs service</li>
+          <li>To match you with relevant roles or candidates (where you have enabled this)</li>
+          <li>To send transactional emails (application confirmations, role alerts, account notifications)</li>
+          <li>To send marketing emails — only with your explicit opt-in, unsubscribable at any time</li>
+          <li>To investigate fraud, abuse, or violations of our Terms of Service</li>
+          <li>To comply with applicable laws and respond to lawful requests from authorities</li>
+        </ul>
+        <p>[ Additional use cases specific to your product should be listed here. ]</p>
+      </section>
+
+      <section id="sharing">
+        <h2>Sharing and disclosure</h2>
+        <p>We do not sell your personal data. We share it only in the following circumstances:</p>
+        <ul>
+          <li><strong>With employers</strong> — when you apply to a role or allow employers to contact you, we share your profile and application materials with that employer</li>
+          <li><strong>With service providers</strong> — our data processors help us operate the platform (hosting, email delivery, analytics). They are bound by data processing agreements</li>
+          <li><strong>Legal obligations</strong> — we may disclose data if required by law, court order, or to protect the rights of our users or the public</li>
+          <li><strong>Business transfers</strong> — if Descinder is acquired or merges with another entity, your data may transfer as part of the transaction. We will notify you in advance</li>
+        </ul>
+      </section>
+
+      <section id="retention">
+        <h2>Retention</h2>
+        <p>We retain your personal data for as long as your account is active or as needed to provide our services. If you close your account, we delete or anonymise your personal data within <strong>[ X days ]</strong>, except where retention is required by law or legitimate business need (for example, financial records we are legally required to keep for 7 years).</p>
+        <p>[ Specify exact retention periods per data category. ]</p>
+      </section>
+
+      <section id="your-rights">
+        <h2>Your rights</h2>
+        <p>If you are in the UK or EEA, you have the following rights under applicable data protection law:</p>
+        <ul>
+          <li><strong>Access</strong> — request a copy of the personal data we hold about you</li>
+          <li><strong>Rectification</strong> — correct inaccurate or incomplete data</li>
+          <li><strong>Erasure</strong> — request deletion of your personal data ("right to be forgotten"), subject to legal requirements</li>
+          <li><strong>Restriction</strong> — ask us to limit the processing of your data in certain circumstances</li>
+          <li><strong>Portability</strong> — receive your data in a structured, machine-readable format</li>
+          <li><strong>Objection</strong> — object to processing based on legitimate interests</li>
+          <li><strong>Withdraw consent</strong> — where processing is based on consent, withdraw it at any time</li>
+        </ul>
+        <p>To exercise any of these rights, contact us at <strong>[ privacy@yourdomain.com ]</strong>. We will respond within 30 days.</p>
+      </section>
+
+      <section id="security">
+        <h2>Security</h2>
+        <p>We take reasonable technical and organisational measures to protect your personal data against unauthorised access, alteration, disclosure, or destruction. These include [ describe specific measures: encryption at rest and in transit, access controls, audit logging, etc. ].</p>
+        <p>No system is completely secure. If you suspect a security incident, contact us immediately at <strong>[ security@yourdomain.com ]</strong>.</p>
+      </section>
+
+      <section id="cookies">
+        <h2>Cookies</h2>
+        <p>We use cookies and similar tracking technologies to operate and improve the platform. Our Cookie Policy explains in detail what cookies we set, what they do, and how you can control them. You can manage cookie preferences via the banner shown on first visit.</p>
+        <p>Essential cookies cannot be disabled — they are necessary for the platform to function. Analytics and marketing cookies are optional and require your consent.</p>
+      </section>
+
+      <section id="contact">
+        <h2>Contact us</h2>
+        <p>If you have questions about this Privacy Policy or your personal data, please contact our Data Protection contact:</p>
+        <ul>
+          <li>Email: <strong>[ privacy@yourdomain.com ]</strong></li>
+          <li>Post: Descinder Ltd, [ Address ], London, United Kingdom</li>
+        </ul>
+        <p>You also have the right to lodge a complaint with the UK Information Commissioner's Office (ICO) at <strong>ico.org.uk</strong> if you believe we have not handled your data lawfully.</p>
+      </section>
+
+    </main>
+  </div><!-- .legal-layout -->
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="wordmark" style="font-size:15px">descinder</span>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+        <a href="legal.html" class="footer-link">Cookies</a>
+        <a href="#" class="footer-link">Contact</a>
+      </div>
+      <span class="footer-copy">© 2026 Descinder Ltd.</span>
+    </div>
+  </footer>
+
+  <script>
+    // Highlight active ToC section on scroll
+    const sections = document.querySelectorAll('.legal-content section[id]');
+    const tocLinks = document.querySelectorAll('.legal-toc a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(l => l.classList.remove('active'));
+          const target = document.querySelector(`.legal-toc a[href="#${entry.target.id}"]`);
+          if (target) target.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0% -60% 0%' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>

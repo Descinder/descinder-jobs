@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descinder Jobs — Design Prototypes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    index.html — Stakeholder gallery
+    Stakeholders open this first. It must communicate:
+    - What is here (screens, dispatch scope)
+    - How to use it (double-click, no server)
+    - Visual register at a glance
+  -->
+  <style>
+    .gallery-header {
+      background: var(--navy);
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .gallery-header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+    }
+
+    .gallery-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: white;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-4);
+      display: block;
+    }
+
+    .gallery-title {
+      font-size: var(--type-2xl);
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      margin-bottom: var(--space-3);
+    }
+
+    .gallery-title em {
+      font-style: normal;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .gallery-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      flex-wrap: wrap;
+    }
+
+    .gallery-meta-item {
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.55);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dispatch-badge {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--amber-light);
+      border: 1px solid oklch(0.82 0.10 75);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+
+    /* Content area */
+    .gallery-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+
+    /* Instructions strip */
+    .instructions-strip {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .instructions-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--navy);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .instructions-text {
+      flex: 1;
+    }
+
+    .instructions-title {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+    }
+
+    .instructions-body {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
+    /* Section headers */
+    .screen-section {
+      margin-bottom: var(--space-8);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-name {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .section-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+    }
+
+    /* Screen cards grid */
+    .screens-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+
+    .screen-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen-card:hover {
+      border-color: var(--navy-mid);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    /* Preview area — colour-coded by screen type */
+    .screen-preview {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-public  { background: var(--navy); }
+    .preview-auth    { background: oklch(0.28 0.09 264); }
+    .preview-legal   { background: var(--bg-subtle); }
+
+    .preview-label {
+      font-family: 'Geist', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: rgba(255,255,255,0.12);
+      user-select: none;
+      position: absolute;
+      bottom: 8px;
+      right: 14px;
+    }
+
+    /* Miniature screen illustration using pure CSS grid */
+    .mini-screen {
+      width: 120px;
+      height: 80px;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mini-header {
+      height: 10px;
+      background: oklch(0.22 0.08 264);
+      flex-shrink: 0;
+    }
+
+    .mini-body {
+      flex: 1;
+      padding: 5px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .mini-sidebar {
+      width: 22px;
+      background: oklch(0.97 0.01 264);
+      border-radius: 2px;
+    }
+
+    .mini-feed {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mini-card {
+      height: 9px;
+      background: oklch(0.95 0.01 264);
+      border-radius: 1px;
+      border: 0.5px solid oklch(0.90 0.02 264);
+    }
+
+    .mini-card.featured {
+      border-color: oklch(0.82 0.10 75);
+      background: oklch(0.99 0.005 75);
+    }
+
+    /* Auth mini */
+    .mini-auth {
+      width: 120px;
+      height: 80px;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+    }
+
+    .mini-auth-panel {
+      width: 45px;
+      background: var(--navy);
+    }
+
+    .mini-auth-form {
+      flex: 1;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .mini-field {
+      height: 5px;
+      background: oklch(0.95 0.01 264);
+      border: 0.5px solid oklch(0.90 0.02 264);
+      border-radius: 1px;
+    }
+
+    .mini-btn {
+      height: 7px;
+      background: var(--navy);
+      border-radius: 1px;
+      margin-top: 2px;
+    }
+
+    /* Detail mini */
+    .mini-detail {
+      width: 120px;
+      height: 80px;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mini-detail-header {
+      height: 18px;
+      background: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .mini-detail-body {
+      flex: 1;
+      display: flex;
+      padding: 5px;
+      gap: 3px;
+    }
+
+    .mini-prose {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mini-line {
+      height: 2px;
+      background: oklch(0.90 0.02 264);
+      border-radius: 1px;
+    }
+
+    .mini-line.wide { width: 90%; }
+    .mini-line.mid { width: 65%; }
+    .mini-line.short { width: 40%; }
+
+    .mini-apply-col {
+      width: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .mini-apply-card {
+      flex: 1;
+      background: oklch(0.97 0.01 264);
+      border: 0.5px solid oklch(0.90 0.02 264);
+      border-radius: 2px;
+    }
+
+    /* Legal mini */
+    .mini-legal {
+      width: 120px;
+      height: 80px;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mini-legal-band {
+      height: 18px;
+      background: oklch(0.97 0.01 264);
+      border-bottom: 0.5px solid oklch(0.90 0.02 264);
+    }
+
+    .mini-legal-body {
+      flex: 1;
+      display: flex;
+      padding: 5px;
+      gap: 4px;
+    }
+
+    .mini-toc {
+      width: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-top: 2px;
+    }
+
+    .mini-toc-item {
+      height: 2px;
+      background: oklch(0.90 0.02 264);
+      border-radius: 1px;
+    }
+
+    .mini-toc-item.active { background: var(--navy); width: 70%; }
+
+    /* Card info */
+    .screen-info {
+      padding: var(--space-4) var(--space-4) var(--space-4);
+    }
+
+    .screen-name {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+    }
+
+    .screen-desc {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      line-height: 1.5;
+      margin-bottom: var(--space-3);
+    }
+
+    .screen-filename {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-faint);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Dispatch 2 placeholder */
+    .d2-section { opacity: 0.5; }
+
+    .coming-soon-chip {
+      font-size: var(--type-xs);
+      font-weight: 500;
+      color: var(--ink-faint);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      margin-left: var(--space-2);
+    }
+
+    /* Shared tokens callout */
+    .tokens-callout {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-top: var(--space-8);
+    }
+
+    .tokens-title {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .token-swatches {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .token-swatch {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .swatch-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .swatch-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .swatch-name {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      color: var(--ink-faint);
+    }
+
+    .swatch-value {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      color: var(--ink-muted);
+    }
+
+    @media (max-width: 900px) {
+      .screens-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .screens-grid { grid-template-columns: 1fr; }
+      .gallery-title { font-size: var(--type-xl); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Gallery header ── -->
+  <div class="gallery-header">
+    <div class="gallery-header-inner">
+      <span class="gallery-wordmark">descinder</span>
+      <h1 class="gallery-title">Design Prototypes<br><em>Full App — Dispatch 1 of 2</em></h1>
+      <div class="gallery-meta">
+        <span class="dispatch-badge">Dispatch 1 of 2</span>
+        <span class="gallery-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="4" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          Updated 2026-05-10
+        </span>
+        <span class="gallery-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          8 screens · 9 files
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="gallery-content page-enter">
+
+    <!-- Instructions strip -->
+    <div class="instructions-strip">
+      <div class="instructions-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <div class="instructions-text">
+        <div class="instructions-title">How to use these prototypes</div>
+        <div class="instructions-body">
+          All screens are self-contained HTML files — <strong>double-click any card to open it in your browser</strong>. No server or build step required. Navigation links between screens are wired. Best viewed at 1440px width in Chrome or Safari.
+          Design tokens and base styles live in <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px">assets/shared.css</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Public screens ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Public surfaces</span>
+        <span class="section-count">3 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <!-- Home / Jobs list -->
+        <a href="home.html" class="screen-card">
+          <div class="screen-preview preview-public">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div class="mini-card featured"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card featured"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Home</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Jobs List — Homepage</div>
+            <div class="screen-desc">The homepage IS the job board. Search band, collapsible sidebar filters (salary with explicit apply), job feed with Featured badges, pagination.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              home.html
+            </div>
+          </div>
+        </a>
+
+        <!-- Job detail -->
+        <a href="job-detail.html" class="screen-card">
+          <div class="screen-preview preview-public">
+            <div class="mini-detail">
+              <div class="mini-detail-header"></div>
+              <div class="mini-detail-body">
+                <div class="mini-prose">
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line mid"></div>
+                  <div class="mini-line wide" style="margin-top:3px"></div>
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line short"></div>
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line mid"></div>
+                </div>
+                <div class="mini-apply-col">
+                  <div class="mini-apply-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Detail</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Job Detail</div>
+            <div class="screen-desc">Full job description, sticky apply sidebar with salary and stats, skills tags, about-the-company card, similar roles at the bottom.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              job-detail.html
+            </div>
+          </div>
+        </a>
+
+        <!-- Company profile -->
+        <a href="company-profile.html" class="screen-card">
+          <div class="screen-preview preview-public">
+            <div class="mini-screen">
+              <div class="mini-header" style="height:22px"></div>
+              <div class="mini-body">
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;padding:2px 0">
+                  <div class="mini-line wide" style="height:3px;margin-bottom:3px"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+                <div class="mini-sidebar" style="width:28px"></div>
+              </div>
+            </div>
+            <div class="preview-label">Company</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Company Profile</div>
+            <div class="screen-desc">Navy hero with logo, name, tagline, location, size, website. About section. Open roles list. Info sidebar. No fabricated funding or investor data.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              company-profile.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── Auth screens ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Authentication</span>
+        <span class="section-count">4 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <!-- Sign up -->
+        <a href="sign-up.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form">
+                <div class="mini-field" style="height:7px;background:oklch(0.88 0.02 264)"></div>
+                <div class="mini-field"></div>
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="preview-label">Sign up</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Create account</div>
+            <div class="screen-desc">Role selector cards (Job seeker / Employer), full registration form, terms acceptance, optional marketing opt-in. Navy brand panel.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              sign-up.html
+            </div>
+          </div>
+        </a>
+
+        <!-- Log in -->
+        <a href="log-in.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form">
+                <div class="mini-field"></div>
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+                <div style="height:3px;background:oklch(0.85 0.02 264);border-radius:1px;margin:2px 0"></div>
+                <div class="mini-field" style="background:oklch(0.95 0.01 264)"></div>
+              </div>
+            </div>
+            <div class="preview-label">Login</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Sign in</div>
+            <div class="screen-desc">Email + password form, "Forgot?" link, divider, "Send me a magic link" alternative. Live role stats in brand panel.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              log-in.html
+            </div>
+          </div>
+        </a>
+
+        <!-- Forgot password -->
+        <a href="forgot-password.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form" style="justify-content:center">
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="preview-label">Forgot</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Forgot password</div>
+            <div class="screen-desc">Email input, "Send reset link" submit. In-page sent-confirmation state (no redirect, no over-animation). Retry option if not received.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              forgot-password.html
+            </div>
+          </div>
+        </a>
+
+        <!-- Reset password -->
+        <a href="reset-password.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form">
+                <div class="mini-field"></div>
+                <div style="height:2px;background:oklch(0.52 0.14 155);border-radius:1px;width:60%"></div>
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="preview-label">Reset</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Reset password</div>
+            <div class="screen-desc">New password + confirm fields, live strength indicator (Weak/Fair/Strong), success confirmation state with redirect note.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              reset-password.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── Legal ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Legal</span>
+        <span class="section-count">1 template</span>
+      </div>
+      <div class="screens-grid">
+
+        <a href="legal.html" class="screen-card">
+          <div class="screen-preview preview-legal">
+            <div class="mini-legal">
+              <div class="mini-legal-band"></div>
+              <div class="mini-legal-body">
+                <div class="mini-toc">
+                  <div class="mini-toc-item active"></div>
+                  <div class="mini-toc-item"></div>
+                  <div class="mini-toc-item"></div>
+                  <div class="mini-toc-item"></div>
+                  <div class="mini-toc-item"></div>
+                </div>
+                <div class="mini-prose">
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line mid"></div>
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line short"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Legal</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Legal page template</div>
+            <div class="screen-desc">Reusable layout for Privacy Policy, Terms of Service, Cookie Policy. Sticky table of contents with active-section highlight. Tab switcher between legal pages.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              legal.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── Dispatch 2 preview ── -->
+    <div class="screen-section d2-section">
+      <div class="section-header">
+        <span class="section-name">Authenticated app — coming in Dispatch 2</span>
+        <span class="coming-soon-chip">Pending</span>
+      </div>
+      <div class="screens-grid">
+        <div class="screen-card" style="cursor:default;pointer-events:none">
+          <div class="screen-preview preview-public" style="opacity:0.4">
+            <div class="mini-screen"><div class="mini-header"></div></div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Dashboard</div>
+            <div class="screen-desc">Job seeker and employer views. Saved roles, activity feed, quick actions.</div>
+          </div>
+        </div>
+        <div class="screen-card" style="cursor:default;pointer-events:none">
+          <div class="screen-preview preview-public" style="opacity:0.4">
+            <div class="mini-screen"><div class="mini-header"></div></div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Profile editor</div>
+            <div class="screen-desc">Job seeker profile — work history, skills, preferences, CV upload.</div>
+          </div>
+        </div>
+        <div class="screen-card" style="cursor:default;pointer-events:none">
+          <div class="screen-preview preview-public" style="opacity:0.4">
+            <div class="mini-screen"><div class="mini-header"></div></div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Post a job</div>
+            <div class="screen-desc">Multi-step wizard for employers — role details, salary, requirements, preview.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Brand tokens callout ── -->
+    <div class="tokens-callout">
+      <div class="tokens-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+        Shared design tokens (from production globals.css)
+      </div>
+      <div class="token-swatches">
+        <div class="token-swatch">
+          <div class="swatch-dot" style="background:oklch(0.22 0.08 264)"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">--navy</span>
+            <span class="swatch-value">oklch(0.22 0.08 264)</span>
+          </div>
+        </div>
+        <div class="token-swatch">
+          <div class="swatch-dot" style="background:oklch(0.72 0.18 75)"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">--amber (sparse)</span>
+            <span class="swatch-value">oklch(0.72 0.18 75)</span>
+          </div>
+        </div>
+        <div class="token-swatch">
+          <div class="swatch-dot" style="background:oklch(1 0 0);border-color:var(--border-mid)"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">--bg</span>
+            <span class="swatch-value">oklch(1 0 0)</span>
+          </div>
+        </div>
+        <div class="token-swatch">
+          <div class="swatch-dot" style="background:oklch(0.97 0.01 264)"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">--bg-subtle</span>
+            <span class="swatch-value">oklch(0.97 0.01 264)</span>
+          </div>
+        </div>
+        <div class="token-swatch">
+          <div class="swatch-dot" style="background:oklch(0.50 0.03 264)"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">--ink-muted</span>
+            <span class="swatch-value">oklch(0.50 0.03 264)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .gallery-content -->
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer" style="margin-top:var(--space-8)">
+    <div class="footer-inner">
+      <span class="wordmark" style="font-size:15px">descinder</span>
+      <span class="footer-copy" style="font-family:'Geist Mono',monospace;font-size:10px">Design prototypes · Dispatch 1 of 2 · 2026-05-10</span>
+      <a href="home.html" class="btn btn-secondary btn-sm">Open home.html</a>
+    </div>
+  </footer>
+
+</body>
+</html>

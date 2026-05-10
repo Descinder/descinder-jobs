@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folio Labs · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    company-profile.html
+    Position four questions:
+    - Narrative role: company identity + open roles — trust-building page
+    - Viewer distance: 60–80cm, reading-mode
+    - Visual temperature: calm, professional — navy hero strip, white body
+    - Capacity: single column hero + two-section (about / jobs list)
+
+    Fields shown: name, logo, website, location, size, description, open jobs.
+    NO: funding rounds, investors, daily tx volume, year founded stats.
+
+    Deliberate motion: page-enter on main content.
+  -->
+  <style>
+    .company-hero {
+      background: var(--navy);
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .company-hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-5);
+    }
+
+    .company-hero-text { flex: 1; min-width: 0; }
+
+    .company-hero-name {
+      font-size: var(--type-2xl);
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: var(--space-2);
+    }
+
+    .company-hero-tagline {
+      font-size: var(--type-base);
+      color: rgba(255,255,255,0.65);
+      margin-bottom: var(--space-4);
+    }
+
+    .company-hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .company-hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.6);
+    }
+
+    .hero-website-link {
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color var(--transition);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 1px;
+    }
+    .hero-website-link:hover { color: white; }
+
+    /* Main content */
+    .company-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: var(--space-7) var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    .about-section { }
+
+    .section-title {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: var(--space-4);
+    }
+
+    .about-text p {
+      font-size: var(--type-base);
+      color: var(--ink-muted);
+      line-height: 1.75;
+      margin-bottom: var(--space-4);
+    }
+
+    /* Jobs list section */
+    .company-jobs { }
+
+    .jobs-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-left: var(--space-2);
+      font-weight: 400;
+    }
+
+    .company-job-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+
+    /* Company info sidebar */
+    .company-info-sidebar {
+      position: sticky;
+      top: 72px;
+    }
+
+    .company-info-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border);
+      gap: var(--space-3);
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .info-value {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .info-value a {
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .info-value a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .company-hero-inner { flex-direction: column; align-items: flex-start; }
+      .company-content { grid-template-columns: 1fr; }
+      .company-info-sidebar { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="header-nav">
+        <a href="home.html" class="nav-link">Jobs</a>
+        <a href="company-profile.html" class="nav-link active">Companies</a>
+        <a href="#" class="nav-link">About</a>
+      </nav>
+      <div class="header-actions">
+        <a href="log-in.html" class="btn btn-ghost btn-md">Sign in</a>
+        <a href="sign-up.html" class="btn btn-primary btn-md">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Company hero ── -->
+  <div class="company-hero">
+    <div class="company-hero-inner">
+      <div class="company-mono company-mono-xl mono-slate" style="flex-shrink:0">FL</div>
+      <div class="company-hero-text">
+        <h1 class="company-hero-name">Folio Labs</h1>
+        <p class="company-hero-tagline">Infrastructure and tooling for creative collaboration at scale.</p>
+        <div class="company-hero-meta">
+          <span class="company-hero-meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            London, UK
+          </span>
+          <span class="company-hero-meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            11–50 people
+          </span>
+          <a href="https://folio.example.com" class="hero-website-link" onclick="return false">
+            folio.example.com
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="company-content page-enter">
+
+    <!-- Left: About + Open jobs -->
+    <div>
+
+      <div class="about-section">
+        <p class="section-title">About</p>
+        <div class="about-text">
+          <p>Folio Labs builds the infrastructure layer that creative teams depend on to work together at scale. Our products are used by design-led organisations across media, architecture, and gaming — spanning teams from three people in a studio to hundreds across a global enterprise.</p>
+          <p>We are a remote-first engineering organisation with an optional office in Shoreditch. Our platform handles hundreds of millions of operations daily, and we hold ourselves to high standards of reliability and performance. The engineering team is small, senior, and deeply collaborative. We write a lot, move deliberately, and ship things that last.</p>
+          <p>We are a company that measures its success by the depth of trust our customers place in our infrastructure — not by vanity metrics or growth-at-any-cost.</p>
+        </div>
+      </div>
+
+      <hr class="divider" style="margin-top:var(--space-6)">
+
+      <!-- Open jobs at Folio Labs -->
+      <div class="company-jobs">
+        <p class="section-title">Open roles <span class="jobs-count">4 open</span></p>
+        <div class="company-job-list">
+
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="job-card-body">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                  <h2 class="job-title">Senior Platform Engineer</h2>
+                  <span class="badge-featured">Featured</span>
+                </div>
+                <div class="job-company">London, UK · Remote-first</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Full-time</span>
+              <span class="tag">Senior</span>
+              <span class="tag-navy tag">TypeScript</span>
+              <span class="tag-navy tag">Kubernetes</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£80,000 – £110,000</span>
+              <span class="job-time">1d ago</span>
+            </div>
+          </a>
+
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="job-card-body">
+                <h2 class="job-title">Staff Engineer — Storage Systems</h2>
+                <div class="job-company">London, UK · Remote-first</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Full-time</span>
+              <span class="tag">Staff</span>
+              <span class="tag-navy tag">Rust</span>
+              <span class="tag-navy tag">PostgreSQL</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£100,000 – £135,000</span>
+              <span class="job-time">4d ago</span>
+            </div>
+          </a>
+
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="job-card-body">
+                <h2 class="job-title">Product Designer — Core Experience</h2>
+                <div class="job-company">London, UK (Hybrid)</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Hybrid</span>
+              <span class="tag">Senior</span>
+              <span class="tag-navy tag">Figma</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£65,000 – £80,000</span>
+              <span class="job-time">1w ago</span>
+            </div>
+          </a>
+
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="job-card-body">
+                <h2 class="job-title">Technical Writer</h2>
+                <div class="job-company">Remote</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Remote</span>
+              <span class="tag">Contract</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£350 – £450 / day</span>
+              <span class="job-time">1w ago</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Company info sidebar -->
+    <aside class="company-info-sidebar">
+      <div class="company-info-card">
+        <div class="info-row">
+          <span class="info-label">Location</span>
+          <span class="info-value">London, UK</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Company size</span>
+          <span class="info-value">11–50 people</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Website</span>
+          <span class="info-value">
+            <a href="https://folio.example.com" onclick="return false">folio.example.com</a>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Open roles</span>
+          <span class="info-value">
+            <span class="job-salary">4</span>
+          </span>
+        </div>
+      </div>
+    </aside>
+
+  </div><!-- .company-content -->
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="wordmark" style="font-size:15px">descinder</span>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+        <a href="legal.html" class="footer-link">Cookies</a>
+        <a href="#" class="footer-link">Contact</a>
+      </div>
+      <span class="footer-copy">© 2026 Descinder Ltd.</span>
+    </div>
+  </footer>
+
+</body>
+</html>

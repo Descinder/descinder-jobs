@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create account · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    sign-up.html
+    Position four questions:
+    - Narrative role: conversion — first commitment from a new user
+    - Viewer distance: 60–80cm, form-filling mode, focused
+    - Visual temperature: confident but welcoming — navy brand panel, white form
+    - Capacity: 2-column asymmetric (navy panel left 45%, form right 55%)
+
+    Deliberate motion: single form fade-in on load. Brand panel is static.
+    The 120% detail: role selector cards (job seeker / employer) with visual state.
+  -->
+  <style>
+    body { overflow: hidden; }
+
+    @media (max-width: 768px) {
+      body { overflow: auto; }
+    }
+
+    .auth-layout {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+    }
+
+    /* ─ Brand panel (left) ─ */
+    .auth-panel {
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, oklch(0.32 0.09 264 / 60%) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .panel-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      color: white;
+      text-decoration: none;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-tagline {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      color: white;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-5);
+    }
+
+    .panel-tagline em {
+      font-style: normal;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* Role category list — the deliberate 120% moment */
+    .panel-role-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      list-style: none;
+    }
+
+    .panel-role-item {
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .panel-role-item::before {
+      content: '';
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+
+    .panel-bottom-note {
+      margin-top: var(--space-6);
+      padding-top: var(--space-5);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: var(--type-xs);
+      color: rgba(255,255,255,0.35);
+      line-height: 1.6;
+    }
+
+    /* ─ Form side ─ */
+    .auth-form-side {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: var(--space-8) var(--space-8);
+    }
+
+    .form-top {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: var(--space-8);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      gap: var(--space-2);
+    }
+
+    .auth-form-inner {
+      max-width: 420px;
+      width: 100%;
+      margin: auto;
+    }
+
+    .form-heading {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-subhead {
+      font-size: var(--type-base);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Role selector */
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+
+    .role-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      background: var(--bg);
+    }
+
+    .role-card:hover {
+      border-color: var(--navy-mid);
+    }
+
+    .role-card.selected {
+      border-color: var(--navy);
+      background: var(--bg-subtle);
+    }
+
+    .role-card-label {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .role-card-desc {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    .role-card-radio {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: var(--space-2);
+    }
+
+    .role-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-mid);
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
+    }
+
+    .role-card.selected .role-dot {
+      border-color: var(--navy);
+      background: var(--navy);
+    }
+
+    .role-card.selected .role-dot::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    /* Section divider label */
+    .section-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: var(--space-3);
+    }
+
+    .form-fields {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
+    }
+
+    .form-name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: var(--space-2);
+    }
+
+    .form-footer-note {
+      text-align: center;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-top: var(--space-4);
+    }
+
+    .form-footer-note a { color: var(--navy); }
+    .form-footer-note a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      body { overflow: auto; }
+      .auth-layout {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .auth-panel { display: none; }
+      .auth-form-side { padding: var(--space-6) var(--space-5); }
+      .form-top { justify-content: flex-end; }
+      .form-name-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="auth-layout">
+
+  <!-- ── Brand panel ── -->
+  <div class="auth-panel">
+    <a href="home.html" class="panel-wordmark">descinder</a>
+    <div class="panel-body">
+      <h2 class="panel-tagline">Hire smarter.<br><em>Find better.</em></h2>
+      <ul class="panel-role-list">
+        <li class="panel-role-item">Senior engineers &amp; architects</li>
+        <li class="panel-role-item">Product leads &amp; designers</li>
+        <li class="panel-role-item">Data &amp; ML specialists</li>
+        <li class="panel-role-item">Engineering managers</li>
+        <li class="panel-role-item">Technical founders</li>
+      </ul>
+      <div class="panel-bottom-note">
+        A job board for experienced professionals.<br>No noise. No fluff.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form side ── -->
+  <div class="auth-form-side">
+    <div class="form-top">
+      Already have an account? <a href="log-in.html" class="btn btn-secondary btn-sm">Sign in</a>
+    </div>
+
+    <div class="auth-form-inner page-enter">
+      <h1 class="form-heading">Create your account</h1>
+      <p class="form-subhead">Join thousands of professionals finding their next role.</p>
+
+      <!-- Role selector -->
+      <p class="section-label">I am joining as</p>
+      <div class="role-selector">
+        <div class="role-card selected" onclick="selectRole(this)">
+          <div class="role-card-radio"><div class="role-dot"></div></div>
+          <div class="role-card-label">Job seeker</div>
+          <div class="role-card-desc">Looking for my next role</div>
+        </div>
+        <div class="role-card" onclick="selectRole(this)">
+          <div class="role-card-radio"><div class="role-dot"></div></div>
+          <div class="role-card-label">Employer</div>
+          <div class="role-card-desc">Posting roles and hiring</div>
+        </div>
+      </div>
+
+      <form onsubmit="return false">
+        <!-- Name row -->
+        <div class="form-fields">
+          <div class="form-name-row">
+            <div class="form-group">
+              <label class="label" for="fname">First name</label>
+              <input class="input" id="fname" type="text" placeholder="Elena" autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label class="label" for="lname">Last name</label>
+              <input class="input" id="lname" type="text" placeholder="Marsh" autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="email">Work email</label>
+            <input class="input" id="email" type="email" placeholder="elena@example.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" type="password" placeholder="8+ characters" autocomplete="new-password">
+            <span class="form-hint">Minimum 8 characters. We do not store it in plain text.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="source">How did you hear about us?</label>
+            <select class="input select" id="source">
+              <option value="">Select — optional</option>
+              <option>LinkedIn</option>
+              <option>Twitter / X</option>
+              <option>Word of mouth</option>
+              <option>Search engine</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Checkboxes -->
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-5)">
+          <label class="checkbox-group">
+            <input type="checkbox" id="terms">
+            <span class="checkbox-label">
+              I agree to descinder's <a href="legal.html" style="color:var(--navy)">Terms of Service</a> and <a href="legal.html" style="color:var(--navy)">Privacy Policy</a>. <span style="color:oklch(0.55 0.15 25)">*</span>
+            </span>
+          </label>
+
+          <label class="checkbox-group">
+            <input type="checkbox" id="marketing">
+            <span class="checkbox-label">
+              Send me occasional product updates and role recommendations by email. You can unsubscribe at any time.
+            </span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary btn-lg submit-btn">Create account</button>
+      </form>
+
+      <p class="form-footer-note">
+        By continuing, you confirm you are 18 or older and eligible to work in your intended jurisdiction.
+      </p>
+    </div>
+  </div>
+
+</div><!-- .auth-layout -->
+
+<script>
+  function selectRole(el) {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+</body>
+</html>
