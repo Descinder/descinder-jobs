@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     user_id: user?.id ?? null,
     event_type: event_type as "terms_accepted" | "privacy_accepted" | "marketing_opt_in" | "cookie_analytics_opt_in",
     policy_version: policy_version ?? null,
-    metadata: metadata ?? null,
+    metadata: (metadata ?? null) as any,
   });
 
   if (error) {
