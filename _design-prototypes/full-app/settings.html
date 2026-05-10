@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    settings.html
+    Position four questions:
+    - Narrative role: account settings — email, notifications, privacy, danger zone
+    - Viewer distance: 60–80cm, careful settings management
+    - Visual temperature: calm, structured — sections with clear hierarchy
+    - Capacity: single-column centred content with sectioned layout
+
+    Deliberate motion: toggle switch knob transition. Save state on email form.
+    120% detail: custom toggle component (not a raw checkbox) with animated knob.
+    Danger zone: tinted but restrained — no garish red headers, just a subtle border.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Layout */
+    .settings-layout {
+      max-width: 840px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-8) var(--space-6);
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+
+    /* Left nav */
+    .settings-nav {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .settings-nav-item {
+      display: block;
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+    }
+
+    .settings-nav-item:hover {
+      background: var(--bg-subtle);
+      color: var(--ink);
+    }
+
+    .settings-nav-item.active {
+      color: var(--navy);
+      font-weight: 600;
+      background: var(--bg-subtle);
+      border-left-color: var(--navy);
+    }
+
+    .settings-nav-group-title {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      padding: var(--space-2) var(--space-3);
+      margin-top: var(--space-3);
+    }
+
+    .settings-nav-group-title:first-child { margin-top: 0; }
+
+    /* Right: sections */
+    .settings-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .settings-section {
+      padding: var(--space-7) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-section:last-child { border-bottom: none; }
+    .settings-section:first-child { padding-top: 0; }
+
+    .section-head {
+      margin-bottom: var(--space-5);
+    }
+
+    .section-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+    }
+
+    .section-sub {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    /* Email section */
+    .email-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .current-email {
+      flex: 1;
+      font-size: var(--type-base);
+      color: var(--ink);
+      padding: var(--space-2) 0;
+    }
+
+    /* Toggle rows */
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-5);
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-info { flex: 1; min-width: 0; }
+    .toggle-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .toggle-desc { font-size: var(--type-xs); color: var(--ink-muted); line-height: 1.5; }
+
+    /* Custom toggle switch */
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input { display: none; }
+
+    .toggle-track {
+      width: 40px;
+      height: 22px;
+      background: var(--border-mid);
+      border-radius: 22px;
+      position: relative;
+      transition: background 200ms ease;
+      flex-shrink: 0;
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px oklch(0 0 0 / 20%);
+      transition: transform 200ms ease;
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+      background: var(--navy);
+    }
+
+    .toggle-switch input:checked + .toggle-track .toggle-knob {
+      transform: translateX(18px);
+    }
+
+    /* Privacy section */
+    .privacy-links {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .privacy-link-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .privacy-link-item:last-child { border-bottom: none; }
+
+    .privacy-link-info { flex: 1; }
+    .privacy-link-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); }
+    .privacy-link-desc { font-size: var(--type-xs); color: var(--ink-muted); margin-top: 1px; }
+
+    .arriving-label {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-faint);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    /* Danger zone */
+    .danger-zone {
+      border: 1.5px solid oklch(0.88 0.04 20);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      background: oklch(0.995 0.005 20);
+    }
+
+    .danger-zone-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(0.52 0.14 20);
+      margin-bottom: var(--space-4);
+    }
+
+    .danger-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-5);
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid oklch(0.93 0.02 20);
+    }
+
+    .danger-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .danger-item-info { flex: 1; }
+    .danger-item-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .danger-item-desc { font-size: var(--type-xs); color: var(--ink-muted); line-height: 1.5; }
+
+    .btn-danger {
+      background: transparent;
+      color: oklch(0.45 0.14 20);
+      border: 1.5px solid oklch(0.82 0.08 20);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-danger:hover {
+      background: oklch(0.97 0.02 20);
+      border-color: oklch(0.70 0.10 20);
+    }
+
+    @media (max-width: 768px) {
+      .settings-layout { grid-template-columns: 1fr; padding: var(--space-5) var(--space-4); }
+      .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+      .settings-nav-group-title { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- ── Header ── -->
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="home.html" class="wordmark">descinder</a>
+        <nav class="app-nav">
+          <a href="home.html" class="app-nav-link">Browse Jobs</a>
+          <a href="dashboard-seeker.html" class="app-nav-link">Dashboard</a>
+          <a href="profile-editor.html" class="app-nav-link">Profile</a>
+          <a href="#" class="app-nav-link active">Settings</a>
+        </nav>
+        <div class="app-header-right">
+          <span class="role-badge">Job seeker</span>
+          <div class="avatar-dropdown">
+            <div class="avatar" onclick="toggleDropdown()">RH</div>
+            <div class="dropdown-menu" id="dropdown">
+              <a href="profile-editor.html" class="dropdown-item">View profile</a>
+              <a href="settings.html" class="dropdown-item">Settings</a>
+              <hr class="dropdown-sep">
+              <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Settings layout ── -->
+    <div class="settings-layout page-enter">
+
+      <!-- Left nav -->
+      <nav class="settings-nav">
+        <span class="settings-nav-group-title">Account</span>
+        <a href="#account" class="settings-nav-item active">Account</a>
+        <a href="#notifications" class="settings-nav-item">Notifications</a>
+        <span class="settings-nav-group-title">Data</span>
+        <a href="#privacy" class="settings-nav-item">Privacy &amp; data</a>
+        <a href="#danger" class="settings-nav-item" style="color:oklch(0.52 0.14 20)">Danger zone</a>
+      </nav>
+
+      <!-- Right: content -->
+      <div class="settings-sections">
+
+        <!-- ── Account ── -->
+        <section class="settings-section" id="account">
+          <div class="section-head">
+            <div class="section-title">Account</div>
+            <div class="section-sub">Manage your login credentials and email address.</div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group" style="margin-bottom:var(--space-5)">
+            <label class="label">Email address</label>
+            <div class="email-row">
+              <input class="input" id="email" type="email" value="r.huang@example.com">
+              <button class="btn btn-secondary btn-md" onclick="handleEmailSave(this)" style="white-space:nowrap">Change email</button>
+            </div>
+            <span class="form-hint" id="emailHint">We'll send a verification link to your new address.</span>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label class="label">Password</label>
+            <div class="email-row">
+              <input class="input" type="password" value="••••••••••••">
+              <button class="btn btn-secondary btn-md" style="white-space:nowrap">Change password</button>
+            </div>
+            <span class="form-hint">Last changed 3 months ago.</span>
+          </div>
+        </section>
+
+        <!-- ── Notifications ── -->
+        <section class="settings-section" id="notifications">
+          <div class="section-head">
+            <div class="section-title">Notifications</div>
+            <div class="section-sub">Choose how and when descinder contacts you.</div>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Application status updates</div>
+              <div class="toggle-desc">Emails when an employer views or changes the status of your application.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Job alert matches</div>
+              <div class="toggle-desc">Email digests when new jobs match your saved searches.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Profile views</div>
+              <div class="toggle-desc">Weekly summary of who looked at your profile.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Tips &amp; product news</div>
+              <div class="toggle-desc">Occasional emails about new features on descinder. No sales emails.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+        </section>
+
+        <!-- ── Privacy ── -->
+        <section class="settings-section" id="privacy">
+          <div class="section-head">
+            <div class="section-title">Privacy &amp; data</div>
+            <div class="section-sub">Control your personal data and how it's used.</div>
+          </div>
+
+          <div class="toggle-row" style="margin-bottom:var(--space-5)">
+            <div class="toggle-info">
+              <div class="toggle-title">Profile visibility</div>
+              <div class="toggle-desc">When on, employers can discover your profile in search. When off, only employers you apply to can see you.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+          <div class="privacy-links">
+            <div class="privacy-link-item">
+              <div class="privacy-link-info">
+                <div class="privacy-link-title">Download your data</div>
+                <div class="privacy-link-desc">Export a copy of everything descinder holds about you in JSON format.</div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Request export</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Danger zone ── -->
+        <section class="settings-section" id="danger">
+          <div class="section-head">
+            <div class="section-title">Danger zone</div>
+            <div class="section-sub">Irreversible actions. Read carefully.</div>
+          </div>
+
+          <div class="danger-zone">
+            <div class="danger-zone-label">Destructive actions</div>
+
+            <div class="danger-item">
+              <div class="danger-item-info">
+                <div class="danger-item-title">Deactivate account</div>
+                <div class="danger-item-desc">Hides your profile from employers and pauses all alerts. You can reactivate any time by signing in.</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Deactivate</button>
+            </div>
+
+            <div class="danger-item">
+              <div class="danger-item-info">
+                <div class="danger-item-title">Delete account permanently</div>
+                <div class="danger-item-desc">Removes your account, profile, applications and all stored data. This cannot be undone.</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Delete account</button>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="home.html" class="wordmark" style="font-size:16px">descinder</a>
+        <div class="footer-links">
+          <a href="legal.html" class="footer-link">Privacy</a>
+          <a href="legal.html" class="footer-link">Terms</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      document.getElementById('dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.avatar-dropdown')) {
+        document.getElementById('dropdown').classList.remove('open');
+      }
+    });
+
+    // Toggle knob — CSS does the work, this is just for completeness
+    function toggleKnob(input) {
+      // CSS :checked handles visual state
+    }
+
+    function handleEmailSave(btn) {
+      const hint = document.getElementById('emailHint');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Change email';
+        hint.textContent = 'Verification link sent. Check your inbox.';
+        hint.style.color = 'oklch(0.40 0.12 155)';
+        setTimeout(() => {
+          hint.textContent = "We'll send a verification link to your new address.";
+          hint.style.color = '';
+        }, 4000);
+      }, 1000);
+    }
+
+    // Simple scroll-based active nav
+    const navItems = document.querySelectorAll('.settings-nav-item[href^="#"]');
+    const sections = document.querySelectorAll('section[id]');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 100) current = s.id;
+      });
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + current);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -189,6 +189,8 @@
     .preview-public  { background: var(--navy); }
     .preview-auth    { background: oklch(0.28 0.09 264); }
     .preview-legal   { background: var(--bg-subtle); }
+    .preview-authed  { background: oklch(0.24 0.07 264); }
+    .preview-editor  { background: var(--bg-subtle); }
 
     .preview-label {
       font-family: 'Geist', sans-serif;
@@ -501,9 +503,9 @@
   <div class="gallery-header">
     <div class="gallery-header-inner">
       <span class="gallery-wordmark">descinder</span>
-      <h1 class="gallery-title">Design Prototypes<br><em>Full App — Dispatch 1 of 2</em></h1>
+      <h1 class="gallery-title">Design Prototypes<br><em>Full App — Complete (Dispatch 1 + 2)</em></h1>
       <div class="gallery-meta">
-        <span class="dispatch-badge">Dispatch 1 of 2</span>
+        <span class="dispatch-badge">Complete · 16 screens</span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect width="18" height="18" x="3" y="4" rx="2"/>
@@ -516,7 +518,14 @@
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
-          8 screens · 9 files
+          16 screens · 17 files
+        </span>
+        <span class="gallery-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          Geist Sans + Geist Mono · Navy + Amber
         </span>
       </div>
     </div>
@@ -790,40 +799,277 @@
       </div>
     </div>
 
-    <!-- ── Dispatch 2 preview ── -->
-    <div class="screen-section d2-section">
+    <!-- ── Dispatch 2 divider ── -->
+    <div style="display:flex;align-items:center;gap:var(--space-4);margin:var(--space-8) 0 var(--space-6)">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap">Dispatch 2 · Authenticated app</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- ── Onboarding ── -->
+    <div class="screen-section">
       <div class="section-header">
-        <span class="section-name">Authenticated app — coming in Dispatch 2</span>
-        <span class="coming-soon-chip">Pending</span>
+        <span class="section-name">Onboarding</span>
+        <span class="section-count">2 screens</span>
       </div>
       <div class="screens-grid">
-        <div class="screen-card" style="cursor:default;pointer-events:none">
-          <div class="screen-preview preview-public" style="opacity:0.4">
-            <div class="mini-screen"><div class="mini-header"></div></div>
+
+        <a href="seeker-onboarding.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form">
+                <div class="mini-field" style="height:7px;background:oklch(0.88 0.02 264)"></div>
+                <div class="mini-field"></div>
+                <div style="display:flex;gap:2px;margin:1px 0">
+                  <div style="height:6px;flex:1;background:oklch(0.22 0.08 264/15%);border:0.5px solid oklch(0.22 0.08 264/30%);border-radius:1px"></div>
+                  <div style="height:6px;flex:1;background:oklch(0.22 0.08 264/15%);border:0.5px solid oklch(0.22 0.08 264/30%);border-radius:1px"></div>
+                </div>
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="preview-label">Seeker</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Dashboard</div>
-            <div class="screen-desc">Job seeker and employer views. Saved roles, activity feed, quick actions.</div>
+            <div class="screen-name">Seeker onboarding</div>
+            <div class="screen-desc">Single-step profile setup after registration. Headline, location, skill chip input, bio with char count. Panel preview shows how profile appears to employers.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              seeker-onboarding.html
+            </div>
           </div>
-        </div>
-        <div class="screen-card" style="cursor:default;pointer-events:none">
-          <div class="screen-preview preview-public" style="opacity:0.4">
-            <div class="mini-screen"><div class="mini-header"></div></div>
+        </a>
+
+        <a href="employer-onboarding.html" class="screen-card">
+          <div class="screen-preview preview-auth">
+            <div class="mini-auth">
+              <div class="mini-auth-panel"></div>
+              <div class="mini-auth-form">
+                <div class="mini-field" style="height:7px;background:oklch(0.88 0.02 264)"></div>
+                <div style="display:flex;gap:2px">
+                  <div class="mini-field" style="flex:1"></div>
+                  <div class="mini-field" style="flex:1"></div>
+                </div>
+                <div class="mini-field"></div>
+                <div class="mini-field"></div>
+                <div class="mini-btn"></div>
+              </div>
+            </div>
+            <div class="preview-label">Employer</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Employer onboarding</div>
+            <div class="screen-desc">Company profile setup. Name, website, location, size, industry, description. Right panel previews how the company appears in job listing cards.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              employer-onboarding.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── Authed app (Seeker) ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Authenticated app — Job seeker</span>
+        <span class="section-count">3 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <a href="dashboard-seeker.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.24 0.07 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div style="height:6px;background:oklch(0.90 0.02 264);border-radius:1px;margin-bottom:3px"></div>
+                  <div class="mini-card featured"></div>
+                  <div class="mini-card featured"></div>
+                  <div class="mini-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Dashboard</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Seeker dashboard</div>
+            <div class="screen-desc">Calm personalised home. Profile completeness sidebar, matched job cards (with amber "New today" badge), applications status table, saved searches list.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              dashboard-seeker.html
+            </div>
+          </div>
+        </a>
+
+        <a href="profile-editor.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-feed" style="flex:2">
+                  <div style="height:3px;background:oklch(0.22 0.08 264);border-radius:1px;width:60%;margin-bottom:4px"></div>
+                  <div class="mini-field" style="height:5px;background:oklch(0.95 0.01 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div class="mini-field" style="height:5px;background:oklch(0.95 0.01 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div class="mini-card" style="height:12px;margin-top:3px"></div>
+                </div>
+                <div class="mini-apply-col" style="width:30px">
+                  <div class="mini-apply-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Profile</div>
           </div>
           <div class="screen-info">
             <div class="screen-name">Profile editor</div>
-            <div class="screen-desc">Job seeker profile — work history, skills, preferences, CV upload.</div>
+            <div class="screen-desc">Section-divided (not card-in-card). Identity, Professional (with skill chips), Links, CV upload (3-slot, mark-primary). Live preview card + completeness checklist on the right.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              profile-editor.html
+            </div>
           </div>
-        </div>
-        <div class="screen-card" style="cursor:default;pointer-events:none">
-          <div class="screen-preview preview-public" style="opacity:0.4">
-            <div class="mini-screen"><div class="mini-header"></div></div>
+        </a>
+
+        <a href="settings.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div style="height:3px;background:oklch(0.22 0.08 264);border-radius:1px;width:50%;margin-bottom:4px"></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+                    <div style="height:2px;width:55%;background:oklch(0.90 0.02 264);border-radius:1px"></div>
+                    <div style="width:10px;height:6px;background:oklch(0.22 0.08 264);border-radius:4px"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+                    <div style="height:2px;width:55%;background:oklch(0.90 0.02 264);border-radius:1px"></div>
+                    <div style="width:10px;height:6px;background:oklch(0.85 0.03 264);border-radius:4px"></div>
+                  </div>
+                  <div style="margin-top:4px;height:10px;border:0.5px solid oklch(0.88 0.04 20);border-radius:2px;background:oklch(0.995 0.005 20)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Settings</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Account settings</div>
+            <div class="screen-desc">Sticky left nav. Account (email/password), Notifications (custom animated toggle switches), Privacy (visibility + data export), Danger zone (destructive-tinted, restrained).</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              settings.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── Authed app (Employer) ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Authenticated app — Employer</span>
+        <span class="section-count">3 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <a href="dashboard-employer.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.24 0.07 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div style="height:6px;background:oklch(0.90 0.02 264);border-radius:1px;margin-bottom:3px"></div>
+                  <div style="height:8px;border:0.5px solid oklch(0.90 0.02 264);border-radius:1px;margin-bottom:2px;display:flex;align-items:center;padding:0 2px"><div style="width:4px;height:4px;background:oklch(0.52 0.14 155);border-radius:50%;margin-right:2px"></div><div style="flex:1;height:2px;background:oklch(0.90 0.02 264);border-radius:1px"></div></div>
+                  <div style="height:8px;border:0.5px solid oklch(0.90 0.02 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div style="height:8px;border:0.5px solid oklch(0.90 0.02 264);border-radius:1px;margin-bottom:2px"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Dashboard</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Employer dashboard</div>
+            <div class="screen-desc">Company sidebar with active job count. Active listings (with edit/view actions), recent applications table with status pills. Post a job CTA in header.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              dashboard-employer.html
+            </div>
+          </div>
+        </a>
+
+        <a href="company-editor.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-feed" style="flex:2">
+                  <div style="height:3px;background:oklch(0.22 0.08 264);border-radius:1px;width:55%;margin-bottom:4px"></div>
+                  <div style="height:8px;border:1px dashed oklch(0.85 0.03 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div class="mini-field" style="height:5px;background:oklch(0.95 0.01 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div class="mini-field" style="height:5px;background:oklch(0.95 0.01 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div class="mini-card" style="height:16px;margin-top:2px"></div>
+                </div>
+                <div class="mini-apply-col" style="width:28px">
+                  <div class="mini-apply-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Company</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Company editor</div>
+            <div class="screen-desc">Logo upload, name, slug (readonly), description, website, location, size, industry. Right panel shows live listing preview + quick links. Save state with checkmark.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              company-editor.html
+            </div>
+          </div>
+        </a>
+
+        <a href="post-a-job.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-feed" style="flex:2">
+                  <!-- Step bar -->
+                  <div style="display:flex;align-items:center;gap:2px;margin-bottom:4px">
+                    <div style="width:7px;height:7px;border-radius:50%;background:oklch(0.22 0.08 264)"></div>
+                    <div style="flex:1;height:0.5px;background:oklch(0.22 0.08 264)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:oklch(0.90 0.02 264);border:0.5px solid oklch(0.84 0.03 264)"></div>
+                    <div style="flex:1;height:0.5px;background:oklch(0.90 0.02 264)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:oklch(0.90 0.02 264);border:0.5px solid oklch(0.84 0.03 264)"></div>
+                  </div>
+                  <div class="mini-field" style="height:5px;background:oklch(0.95 0.01 264);border-radius:1px;margin-bottom:2px"></div>
+                  <div style="display:flex;gap:2px;margin-bottom:2px">
+                    <div class="mini-field" style="flex:1;height:5px;background:oklch(0.95 0.01 264);border-radius:1px"></div>
+                    <div class="mini-field" style="flex:1;height:5px;background:oklch(0.95 0.01 264);border-radius:1px"></div>
+                  </div>
+                  <!-- Featured add-on amber -->
+                  <div style="height:8px;border:0.5px solid oklch(0.82 0.10 75);border-radius:1px;background:oklch(0.99 0.005 75);margin-top:3px"></div>
+                </div>
+                <div class="mini-apply-col" style="width:26px">
+                  <div class="mini-apply-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Post job</div>
           </div>
           <div class="screen-info">
             <div class="screen-name">Post a job</div>
-            <div class="screen-desc">Multi-step wizard for employers — role details, salary, requirements, preview.</div>
+            <div class="screen-desc">7-step wizard (Basics → Description → Skills → Salary → Apply → Featured → Publish). Markdown description editor. Amber-accented Featured add-on at £49/30 days. Live preview panel.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              post-a-job.html
+            </div>
           </div>
-        </div>
+        </a>
+
       </div>
     </div>
 

@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post a job · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    post-a-job.html
+    Position four questions:
+    - Narrative role: employer creating a new job listing — high-intent action
+    - Viewer distance: 60–80cm, careful form-filling
+    - Visual temperature: focused, task-driven — no celebration until publish
+    - Capacity: scrollable single-page with section dividers + sticky live preview panel
+
+    Steps: Basics → Description → Skills & Experience → Salary → Apply method → Featured add-on → Preview
+    Deliberate motion: step indicator progress only. Nothing else moves.
+    120% detail: live preview card on right updates with form data. Featured add-on is amber-accented.
+
+    NOTE: Stepped wizard UI is shown via tabs — all content is on one page for prototype purposes.
+    The step indicator shows active step; clicking steps switches visible section.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Page */
+    .post-job-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-7) var(--space-6);
+    }
+
+    .post-job-title-row {
+      margin-bottom: var(--space-6);
+    }
+
+    .post-job-title {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-2);
+    }
+
+    .post-job-subtitle {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    /* Step indicator */
+    .step-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-7);
+      overflow-x: auto;
+      gap: 0;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .step-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      cursor: pointer;
+      background: none;
+      border: none;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition);
+    }
+
+    .step-btn:hover { background: var(--bg-subtle); }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border-mid);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+      transition: border-color var(--transition), background var(--transition), color var(--transition);
+    }
+
+    .step-name {
+      font-size: var(--type-xs);
+      font-weight: 500;
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    .step-item.active .step-num {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: white;
+    }
+
+    .step-item.active .step-name { color: var(--navy); font-weight: 600; }
+
+    .step-item.done .step-num {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: white;
+    }
+
+    .step-item.done .step-name { color: var(--ink-muted); }
+
+    .step-connector {
+      height: 1px;
+      width: 28px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .step-item.done + .step-item .step-connector,
+    .step-connector.done { background: var(--navy); }
+
+    /* Main layout */
+    .post-job-body {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    /* Section panels */
+    .form-panel {
+      display: none;
+    }
+
+    .form-panel.active { display: block; }
+
+    .panel-title {
+      font-size: var(--type-lg);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--space-2);
+    }
+
+    .panel-sub {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+
+    /* Markdown editor */
+    .md-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: var(--space-2) var(--space-3);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-subtle);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .md-tool {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      border: none;
+      background: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .md-tool:hover { background: var(--bg); color: var(--ink); }
+    .md-sep { width: 1px; height: 16px; background: var(--border); margin: 0 3px; }
+
+    .md-area {
+      width: 100%;
+      min-height: 260px;
+      padding: var(--space-4);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-base);
+      line-height: 1.7;
+      color: var(--ink);
+      background: var(--bg);
+      border: none;
+      outline: none;
+      resize: vertical;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .md-wrap {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      margin-top: var(--space-2);
+    }
+
+    .md-wrap:focus-within {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px var(--navy-6);
+    }
+
+    /* Salary section */
+    .salary-type-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+
+    .salary-type-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .salary-type-card.selected {
+      border-color: var(--navy);
+      background: oklch(0.22 0.08 264 / 4%);
+    }
+
+    .salary-type-card-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); }
+    .salary-type-card-desc { font-size: var(--type-xs); color: var(--ink-muted); margin-top: 2px; }
+
+    .salary-symbol {
+      position: relative;
+    }
+
+    .salary-symbol-char {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-sm);
+      color: var(--ink-faint);
+      pointer-events: none;
+    }
+
+    .salary-symbol input { padding-left: 26px; font-family: 'Geist Mono', monospace; }
+
+    /* Apply method */
+    .apply-method-options {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .apply-option {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+
+    .apply-option.selected { border-color: var(--navy); }
+
+    .apply-option input[type="radio"] { margin-top: 2px; accent-color: var(--navy); }
+    .apply-option-info { flex: 1; }
+    .apply-option-title { font-size: var(--type-sm); font-weight: 600; color: var(--ink); }
+    .apply-option-desc { font-size: var(--type-xs); color: var(--ink-muted); margin-top: 2px; }
+
+    /* Featured add-on */
+    .featured-addon {
+      border: 1.5px solid oklch(0.82 0.10 75);
+      background: oklch(0.99 0.005 75);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-5);
+    }
+
+    .featured-addon-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .featured-addon-badge {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(0.45 0.14 75);
+      background: var(--amber-light);
+      border: 1px solid oklch(0.82 0.10 75);
+      border-radius: 4px;
+      padding: 2px 8px;
+      display: inline-block;
+      margin-bottom: var(--space-2);
+    }
+
+    .featured-addon-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .featured-addon-price {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .featured-price-num {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-lg);
+      font-weight: 600;
+      color: var(--navy);
+      display: block;
+    }
+
+    .featured-price-period {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    .featured-addon-perks {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+
+    .featured-perk {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    .featured-perk svg { flex-shrink: 0; color: oklch(0.45 0.14 75); }
+
+    .featured-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg);
+      border: 1.5px solid oklch(0.82 0.10 75);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    .featured-checkbox-row input { accent-color: var(--amber); width: 16px; height: 16px; }
+    .featured-checkbox-label { font-size: var(--type-sm); font-weight: 600; color: var(--ink); }
+
+    /* Nav buttons */
+    .step-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-7);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Preview panel */
+    .preview-panel-sticky {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .preview-panel {
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .preview-panel-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: var(--space-4);
+    }
+
+    /* Live job card preview */
+    .preview-job-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .pjc-featured-band {
+      display: none;
+      background: var(--amber-light);
+      border-bottom: 1px solid oklch(0.82 0.10 75);
+      padding: var(--space-2) var(--space-4);
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(0.45 0.14 75);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-4) calc(-1 * var(--space-4));
+    }
+
+    .pjc-featured-band.visible { display: block; }
+
+    .pjc-top {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .pjc-title {
+      font-size: var(--type-md);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .pjc-company {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    .pjc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: var(--space-3);
+    }
+
+    .pjc-salary {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    @media (max-width: 900px) {
+      .post-job-body { grid-template-columns: 1fr; }
+      .preview-panel-sticky { position: static; }
+      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+      .step-bar { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- ── Header ── -->
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="home.html" class="wordmark">descinder</a>
+        <nav class="app-nav">
+          <a href="dashboard-employer.html" class="app-nav-link">Dashboard</a>
+          <a href="#" class="app-nav-link">Jobs</a>
+          <a href="#" class="app-nav-link active">Post a job</a>
+        </nav>
+        <div class="app-header-right">
+          <span class="role-badge">Employer</span>
+          <div class="avatar-dropdown">
+            <div class="avatar" onclick="toggleDropdown()">FL</div>
+            <div class="dropdown-menu" id="dropdown">
+              <a href="company-editor.html" class="dropdown-item">Company settings</a>
+              <a href="settings.html" class="dropdown-item">Account settings</a>
+              <hr class="dropdown-sep">
+              <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="post-job-main page-enter">
+
+      <!-- Title row -->
+      <div class="post-job-title-row">
+        <h1 class="post-job-title">Post a new job</h1>
+        <p class="post-job-subtitle">Your listing will go live on descinder immediately after publishing.</p>
+      </div>
+
+      <!-- Step bar -->
+      <div class="step-bar" role="tablist">
+        <div class="step-item active" id="sitem-1">
+          <button class="step-btn" onclick="goStep(1)">
+            <div class="step-num">1</div>
+            <span class="step-name">Basics</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-1"></div>
+        <div class="step-item" id="sitem-2">
+          <button class="step-btn" onclick="goStep(2)">
+            <div class="step-num">2</div>
+            <span class="step-name">Description</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-2"></div>
+        <div class="step-item" id="sitem-3">
+          <button class="step-btn" onclick="goStep(3)">
+            <div class="step-num">3</div>
+            <span class="step-name">Skills</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-3"></div>
+        <div class="step-item" id="sitem-4">
+          <button class="step-btn" onclick="goStep(4)">
+            <div class="step-num">4</div>
+            <span class="step-name">Salary</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-4"></div>
+        <div class="step-item" id="sitem-5">
+          <button class="step-btn" onclick="goStep(5)">
+            <div class="step-num">5</div>
+            <span class="step-name">Apply</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-5"></div>
+        <div class="step-item" id="sitem-6">
+          <button class="step-btn" onclick="goStep(6)">
+            <div class="step-num">6</div>
+            <span class="step-name">Featured</span>
+          </button>
+        </div>
+        <div class="step-connector" id="conn-6"></div>
+        <div class="step-item" id="sitem-7">
+          <button class="step-btn" onclick="goStep(7)">
+            <div class="step-num">7</div>
+            <span class="step-name">Publish</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main body -->
+      <div class="post-job-body">
+
+        <!-- Left: form panels -->
+        <div>
+
+          <!-- Step 1: Basics -->
+          <div class="form-panel active" id="panel-1">
+            <div class="panel-title">Basic details</div>
+            <p class="panel-sub">The essentials that help candidates decide if they want to apply.</p>
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+              <div class="form-group">
+                <label class="label" for="jobTitle">Job title</label>
+                <input class="input input-lg" id="jobTitle" type="text" placeholder="e.g. Senior Backend Engineer" oninput="updatePreviewTitle(this)">
+                <span class="form-hint">Be specific. "Senior Backend Engineer" attracts better candidates than "Engineer".</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="label" for="jobType">Job type</label>
+                  <select class="input select" id="jobType">
+                    <option selected>Full-time</option>
+                    <option>Part-time</option>
+                    <option>Contract</option>
+                    <option>Freelance</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="label" for="workMode">Work mode</label>
+                  <select class="input select" id="workMode">
+                    <option>On-site</option>
+                    <option selected>Hybrid</option>
+                    <option>Remote</option>
+                    <option>Remote-friendly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="jobLocation">Location</label>
+                <input class="input" id="jobLocation" type="text" placeholder="e.g. London, UK" value="London, UK">
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="dept">Department <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+                <input class="input" id="dept" type="text" placeholder="e.g. Engineering, Design, Product">
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <span></span>
+              <button class="btn btn-primary btn-md" onclick="goStep(2)">
+                Next: Description
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Description -->
+          <div class="form-panel" id="panel-2">
+            <div class="panel-title">Job description</div>
+            <p class="panel-sub">Describe what this role involves day-to-day. Markdown formatting is supported.</p>
+
+            <div class="form-group">
+              <label class="label">Description</label>
+              <div class="md-wrap">
+                <div class="md-toolbar">
+                  <button class="md-tool" title="Bold">B</button>
+                  <button class="md-tool" style="font-style:italic">I</button>
+                  <div class="md-sep"></div>
+                  <button class="md-tool" title="Heading">H1</button>
+                  <button class="md-tool" title="Heading 2">H2</button>
+                  <div class="md-sep"></div>
+                  <button class="md-tool" title="Bulleted list">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  </button>
+                  <button class="md-tool" title="Numbered list">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+                  </button>
+                  <div class="md-sep"></div>
+                  <button class="md-tool" title="Link">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  </button>
+                </div>
+                <textarea class="md-area" id="description" placeholder="## About the role&#10;&#10;What you'll be doing day-to-day...&#10;&#10;## What we're looking for&#10;&#10;- Requirement one&#10;- Requirement two&#10;&#10;## What we offer&#10;&#10;- Benefit one&#10;- Benefit two"></textarea>
+              </div>
+              <span class="form-hint">Listings with structured descriptions (headings + bullets) get significantly more applications.</span>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary btn-md" onclick="goStep(1)">← Back</button>
+              <button class="btn btn-primary btn-md" onclick="goStep(3)">
+                Next: Skills
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Skills -->
+          <div class="form-panel" id="panel-3">
+            <div class="panel-title">Skills &amp; experience</div>
+            <p class="panel-sub">Help candidates self-qualify and improve how descinder matches people to this role.</p>
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+              <div class="form-group">
+                <label class="label">Required skills</label>
+                <div class="chip-input-wrap" id="reqSkillsWrap" onclick="document.getElementById('reqSkillInput').focus()">
+                  <span class="chip">TypeScript <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <span class="chip">Node.js <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <span class="chip">PostgreSQL <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <input class="chip-input" id="reqSkillInput" type="text" placeholder="Add required skill…">
+                </div>
+                <span class="form-hint">These will be shown as required tags on the listing.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="label">Nice-to-have skills <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+                <div class="chip-input-wrap" id="niceSkillsWrap" onclick="document.getElementById('niceSkillInput').focus()">
+                  <input class="chip-input" id="niceSkillInput" type="text" placeholder="e.g. Rust, Go, GraphQL…">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="expLevel">Experience level</label>
+                <select class="input select" id="expLevel">
+                  <option>Entry level (0–2 years)</option>
+                  <option>Mid level (2–5 years)</option>
+                  <option selected>Senior (5–8 years)</option>
+                  <option>Lead / Principal (8+ years)</option>
+                  <option>Director / VP</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary btn-md" onclick="goStep(2)">← Back</button>
+              <button class="btn btn-primary btn-md" onclick="goStep(4)">
+                Next: Salary
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 4: Salary -->
+          <div class="form-panel" id="panel-4">
+            <div class="panel-title">Salary &amp; compensation</div>
+            <p class="panel-sub">Listings that show salary get 3× more applications. Be specific.</p>
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+              <div class="salary-type-cards">
+                <div class="salary-type-card selected" onclick="selectSalaryType(this)">
+                  <div class="salary-type-card-title">Annual salary range</div>
+                  <div class="salary-type-card-desc">e.g. £75,000 – £95,000</div>
+                </div>
+                <div class="salary-type-card" onclick="selectSalaryType(this)">
+                  <div class="salary-type-card-title">Daily rate</div>
+                  <div class="salary-type-card-desc">e.g. £550 – £700 per day</div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="label" for="salaryMin">Minimum</label>
+                  <div class="salary-symbol">
+                    <span class="salary-symbol-char">£</span>
+                    <input class="input" id="salaryMin" type="number" placeholder="75000" min="0">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="label" for="salaryMax">Maximum</label>
+                  <div class="salary-symbol">
+                    <span class="salary-symbol-char">£</span>
+                    <input class="input" id="salaryMax" type="number" placeholder="95000" min="0">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="currency">Currency</label>
+                <select class="input select" id="currency" style="max-width:200px">
+                  <option selected>GBP (£)</option>
+                  <option>EUR (€)</option>
+                  <option>USD ($)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="extras">Additional compensation <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+                <input class="input" id="extras" type="text" placeholder="e.g. equity, pension, health insurance">
+                <span class="form-hint">Candidates factor extras into their decision. Be explicit.</span>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary btn-md" onclick="goStep(3)">← Back</button>
+              <button class="btn btn-primary btn-md" onclick="goStep(5)">
+                Next: Apply method
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 5: Apply -->
+          <div class="form-panel" id="panel-5">
+            <div class="panel-title">Application method</div>
+            <p class="panel-sub">How should candidates apply for this role?</p>
+
+            <div class="apply-method-options">
+              <label class="apply-option selected">
+                <input type="radio" name="applyMethod" value="descinder" checked>
+                <div class="apply-option-info">
+                  <div class="apply-option-title">Apply via descinder</div>
+                  <div class="apply-option-desc">Candidates apply directly through descinder. Applications appear in your dashboard.</div>
+                </div>
+              </label>
+
+              <label class="apply-option">
+                <input type="radio" name="applyMethod" value="email">
+                <div class="apply-option-info">
+                  <div class="apply-option-title">Apply by email</div>
+                  <div class="apply-option-desc">Candidates send their CV and cover letter to an email address you specify.</div>
+                </div>
+              </label>
+
+              <label class="apply-option">
+                <input type="radio" name="applyMethod" value="url">
+                <div class="apply-option-info">
+                  <div class="apply-option-title">Apply via external URL</div>
+                  <div class="apply-option-desc">Redirect candidates to your own ATS or careers page.</div>
+                </div>
+              </label>
+            </div>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary btn-md" onclick="goStep(4)">← Back</button>
+              <button class="btn btn-primary btn-md" onclick="goStep(6)">
+                Next: Featured add-on
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 6: Featured -->
+          <div class="form-panel" id="panel-6">
+            <div class="panel-title">Boost this listing</div>
+            <p class="panel-sub">Optional. Featured listings get more visibility across descinder.</p>
+
+            <div class="featured-addon">
+              <div class="featured-addon-top">
+                <div>
+                  <div class="featured-addon-badge">Add-on</div>
+                  <div class="featured-addon-title">Featured listing</div>
+                </div>
+                <div class="featured-addon-price">
+                  <span class="featured-price-num">£49</span>
+                  <span class="featured-price-period">/ 30 days</span>
+                </div>
+              </div>
+
+              <div class="featured-addon-perks">
+                <div class="featured-perk">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Pinned to the top of relevant search results
+                </div>
+                <div class="featured-perk">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Amber "Featured" badge on your listing card
+                </div>
+                <div class="featured-perk">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Included in weekly job alert emails to matched candidates
+                </div>
+                <div class="featured-perk">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Average 3× more profile views vs. standard listing
+                </div>
+              </div>
+
+              <label class="featured-checkbox-row">
+                <input type="checkbox" id="featuredOpt" onchange="toggleFeaturedPreview(this)">
+                <span class="featured-checkbox-label">Add Featured listing for £49 · charged on publish</span>
+              </label>
+            </div>
+
+            <p style="font-size:var(--type-xs);color:var(--ink-faint)">You can also add Featured after publishing from your job management dashboard. No commitment required now.</p>
+
+            <div class="step-nav">
+              <button class="btn btn-secondary btn-md" onclick="goStep(5)">← Back</button>
+              <button class="btn btn-primary btn-md" onclick="goStep(7)">
+                Preview &amp; publish
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 7: Preview & Publish -->
+          <div class="form-panel" id="panel-7">
+            <div class="panel-title">Preview &amp; publish</div>
+            <p class="panel-sub">Review how your listing will appear to candidates. Make any final edits, then publish.</p>
+
+            <div class="job-card" style="margin-bottom:var(--space-5);cursor:default">
+              <div class="job-card-top">
+                <div class="company-mono mono-mid">FL</div>
+                <div class="job-card-body">
+                  <div class="job-title" id="finalTitle">[Job title]</div>
+                  <div class="job-company">Folio Labs · London, UK</div>
+                </div>
+              </div>
+              <div class="job-meta">
+                <span class="tag">Full-time</span>
+                <span class="tag">Hybrid</span>
+                <span class="tag">Senior</span>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-salary">Salary visible after entering in step 4</span>
+                <span class="job-time">Just now</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:var(--space-3)">
+              <button class="btn btn-secondary btn-md" onclick="goStep(1)">Edit listing</button>
+              <button class="btn btn-ghost btn-md" onclick="handleDraft()">Save as draft</button>
+              <button class="btn btn-primary btn-md" style="flex:1" onclick="handlePublish(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Publish job listing
+              </button>
+            </div>
+
+            <div style="margin-top:var(--space-7);padding-top:var(--space-5);border-top:1px solid var(--border)">
+              <button class="btn btn-secondary btn-md" onclick="goStep(6)">← Back to Featured</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: live preview panel -->
+        <div class="preview-panel-sticky">
+          <div class="preview-panel">
+            <div class="preview-panel-label">Live listing preview</div>
+            <div class="preview-job-card">
+              <div class="pjc-featured-band" id="featuredBand">★ Featured</div>
+              <div class="pjc-top">
+                <div class="company-mono mono-mid" style="width:36px;height:36px;font-size:13px">FL</div>
+                <div>
+                  <div class="pjc-title" id="previewTitle">Job title</div>
+                  <div class="pjc-company">Folio Labs · London, UK</div>
+                </div>
+              </div>
+              <div class="pjc-tags">
+                <span class="tag">Full-time</span>
+                <span class="tag">Hybrid</span>
+                <span class="tag">Senior</span>
+              </div>
+              <div class="pjc-salary">Salary: add in step 4</div>
+            </div>
+          </div>
+
+          <div class="preview-panel" style="background:var(--bg)">
+            <div class="preview-panel-label">Progress</div>
+            <div class="completeness-bar" style="margin-bottom:var(--space-2)">
+              <div class="completeness-bar-fill" id="progressBar" style="width:14%"></div>
+            </div>
+            <div style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint)">Step <span id="stepNum">1</span> of 7</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="home.html" class="wordmark" style="font-size:16px">descinder</a>
+        <div class="footer-links">
+          <a href="legal.html" class="footer-link">Privacy</a>
+          <a href="legal.html" class="footer-link">Terms</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 7;
+
+    function goStep(n) {
+      // Hide current panel
+      document.getElementById('panel-' + currentStep).classList.remove('active');
+      document.getElementById('sitem-' + currentStep).classList.remove('active');
+      document.getElementById('sitem-' + currentStep).classList.add('done');
+
+      // If going back, undo done state
+      if (n < currentStep) {
+        for (let i = n; i <= currentStep; i++) {
+          document.getElementById('sitem-' + i).classList.remove('done');
+        }
+      }
+
+      currentStep = n;
+      document.getElementById('panel-' + n).classList.add('active');
+      document.getElementById('sitem-' + n).classList.remove('done');
+      document.getElementById('sitem-' + n).classList.add('active');
+
+      // Update progress
+      document.getElementById('progressBar').style.width = (n / totalSteps * 100) + '%';
+      document.getElementById('stepNum').textContent = n;
+
+      // Sync final title
+      const titleInput = document.getElementById('jobTitle');
+      if (titleInput && titleInput.value) {
+        document.getElementById('finalTitle').textContent = titleInput.value;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updatePreviewTitle(input) {
+      const val = input.value || 'Job title';
+      document.getElementById('previewTitle').textContent = val;
+      document.getElementById('finalTitle').textContent = val;
+    }
+
+    function selectSalaryType(card) {
+      document.querySelectorAll('.salary-type-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    }
+
+    function toggleFeaturedPreview(checkbox) {
+      const band = document.getElementById('featuredBand');
+      if (checkbox.checked) {
+        band.classList.add('visible');
+        document.querySelector('.preview-job-card').style.borderColor = 'oklch(0.82 0.10 75)';
+      } else {
+        band.classList.remove('visible');
+        document.querySelector('.preview-job-card').style.borderColor = '';
+      }
+    }
+
+    function handleDraft() {
+      alert('Saved as draft. You can publish it from your Jobs dashboard.');
+    }
+
+    function handlePublish(btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Publishing…';
+      setTimeout(() => {
+        window.location.href = 'dashboard-employer.html';
+      }, 1200);
+    }
+
+    // Chip inputs
+    function setupChipInput(wrapId, inputId) {
+      const wrap = document.getElementById(wrapId);
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.addEventListener('keydown', function(e) {
+        if (e.key === ',' || e.key === 'Enter') {
+          e.preventDefault();
+          const val = this.value.trim().replace(/,$/, '');
+          if (val) {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.innerHTML = val + '<span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span>';
+            wrap.insertBefore(chip, input);
+          }
+          this.value = '';
+        }
+      });
+    }
+
+    setupChipInput('reqSkillsWrap', 'reqSkillInput');
+    setupChipInput('niceSkillsWrap', 'niceSkillInput');
+
+    function removeChip(el) { el.closest('.chip').remove(); }
+
+    // Apply option styling
+    document.querySelectorAll('.apply-option input[type="radio"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        document.querySelectorAll('.apply-option').forEach(o => o.classList.remove('selected'));
+        this.closest('.apply-option').classList.add('selected');
+      });
+    });
+
+    // Dropdown
+    function toggleDropdown() {
+      document.getElementById('dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.avatar-dropdown')) {
+        document.getElementById('dropdown').classList.remove('open');
+      }
+    });
+
+    document.head.insertAdjacentHTML('beforeend',
+      '<style>@keyframes spin { to { transform: rotate(360deg); } }</style>');
+  </script>
+</body>
+</html>

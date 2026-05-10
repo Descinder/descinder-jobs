@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up your company · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    employer-onboarding.html
+    Position four questions:
+    - Narrative role: first-time company profile setup
+    - Viewer distance: 60–80cm, focused form-filling mode
+    - Visual temperature: same navy shell, employer-specific copy
+    - Capacity: 2-column auth shell
+
+    Deliberate motion: single form fade-in. Static brand panel.
+    120% detail: live listing preview in the panel showing how a job listing card will look.
+  -->
+  <style>
+    body { overflow: hidden; }
+    @media (max-width: 768px) { body { overflow: auto; } }
+
+    .auth-layout {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+    }
+
+    .auth-panel {
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 80%, oklch(0.32 0.09 264 / 55%) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .panel-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      color: white;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-step-label {
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: var(--space-3);
+    }
+
+    .panel-tagline {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      color: white;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-4);
+    }
+
+    .panel-sub {
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      max-width: 300px;
+      margin-bottom: var(--space-6);
+    }
+
+    /* Preview listing card */
+    .listing-preview {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .listing-preview-heading {
+      font-size: var(--type-xs);
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+
+    .listing-card-mock {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .listing-top {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-2);
+    }
+
+    .listing-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: oklch(0.42 0.09 264);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    .listing-job-title {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .listing-company-name {
+      font-size: var(--type-xs);
+      color: rgba(255,255,255,0.45);
+    }
+
+    .listing-meta-row {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .listing-meta-chip {
+      font-size: 10px;
+      color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'Geist Mono', monospace;
+    }
+
+    /* Form side */
+    .auth-form-side {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8);
+      overflow-y: auto;
+    }
+
+    .auth-form-inner {
+      max-width: 480px;
+      width: 100%;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      animation: page-enter 0.3s ease both;
+    }
+
+    .form-heading h1 {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-2);
+    }
+
+    .form-heading p {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .helper-note {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .helper-note svg { flex-shrink: 0; margin-top: 1px; }
+
+    @media (max-width: 768px) {
+      .auth-layout { grid-template-columns: 1fr; }
+      .auth-panel { display: none; }
+      .auth-form-side { padding: var(--space-6) var(--space-5); }
+      .form-row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-layout">
+
+    <!-- ── Brand panel ── -->
+    <div class="auth-panel">
+      <a href="home.html" class="panel-wordmark">descinder</a>
+
+      <div class="panel-body">
+        <div class="panel-step-label">Step 1 of 1 · Employer</div>
+        <h2 class="panel-tagline">Set up your<br>company.</h2>
+        <p class="panel-sub">This is what candidates see when they look at your jobs. A strong profile attracts better applicants.</p>
+
+        <!-- Preview of a listing card -->
+        <div class="listing-preview">
+          <div class="listing-preview-heading">How your jobs appear</div>
+          <div class="listing-card-mock">
+            <div class="listing-top">
+              <div class="listing-logo">FL</div>
+              <div>
+                <div class="listing-job-title">Senior Backend Engineer</div>
+                <div class="listing-company-name">Folio Labs · London, UK</div>
+              </div>
+            </div>
+            <div class="listing-meta-row">
+              <span class="listing-meta-chip">Full-time</span>
+              <span class="listing-meta-chip">£75k – £95k</span>
+              <span class="listing-meta-chip">51–200 people</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Form side ── -->
+    <div class="auth-form-side">
+      <div class="auth-form-inner">
+
+        <div class="form-heading">
+          <h1>Set up your company</h1>
+          <p>This is what candidates will see when they look at your jobs. You can always refine it later.</p>
+        </div>
+
+        <!-- Company name -->
+        <div class="form-group">
+          <label class="label" for="companyName">Company name</label>
+          <input class="input" id="companyName" type="text" placeholder="e.g. Folio Labs" autocomplete="organization" oninput="updatePreview(this)">
+        </div>
+
+        <!-- Website + Location -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="label" for="website">Website <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+            <input class="input" id="website" type="url" placeholder="https://…" autocomplete="url">
+          </div>
+          <div class="form-group">
+            <label class="label" for="companyLocation">Location</label>
+            <input class="input" id="companyLocation" type="text" placeholder="e.g. London, UK">
+          </div>
+        </div>
+
+        <!-- Company size -->
+        <div class="form-group">
+          <label class="label" for="companySize">Company size</label>
+          <select class="input select" id="companySize">
+            <option value="" disabled selected>Select size…</option>
+            <option value="1-10">1–10 people</option>
+            <option value="11-50">11–50 people</option>
+            <option value="51-200">51–200 people</option>
+            <option value="201-500">201–500 people</option>
+            <option value="501+">501+ people</option>
+          </select>
+        </div>
+
+        <!-- Industry -->
+        <div class="form-group">
+          <label class="label" for="industry">Industry</label>
+          <select class="input select" id="industry">
+            <option value="" disabled selected>Select industry…</option>
+            <option>Software &amp; Technology</option>
+            <option>Design &amp; Creative</option>
+            <option>Finance &amp; Fintech</option>
+            <option>Healthcare &amp; Biotech</option>
+            <option>Marketing &amp; Advertising</option>
+            <option>E-commerce &amp; Retail</option>
+            <option>Education &amp; Training</option>
+            <option>Consulting &amp; Professional Services</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="label" for="companyDesc">What does your company do? <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+          <textarea class="input" id="companyDesc" rows="4" placeholder="A short paragraph about your company, what you build, and who you are. Candidates will read this before applying."></textarea>
+          <span class="form-hint">2–4 sentences. Specific beats generic every time.</span>
+        </div>
+
+        <!-- Helper note -->
+        <div class="helper-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="var(--ink-faint)">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          This information is visible to all candidates who view your job listings. You can update it any time from Company Settings.
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary btn-lg" style="width:100%" onclick="handleContinue(this)">
+          Continue to your dashboard
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <!-- Skip -->
+        <div style="text-align:center">
+          <a href="dashboard-employer.html" style="font-size:var(--type-sm);color:var(--ink-faint)">Skip for now, set up later</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function handleContinue(btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…';
+      setTimeout(() => {
+        window.location.href = 'dashboard-employer.html';
+      }, 900);
+    }
+
+    document.head.insertAdjacentHTML('beforeend',
+      '<style>@keyframes spin { to { transform: rotate(360deg); } }</style>');
+  </script>
+</body>
+</html>

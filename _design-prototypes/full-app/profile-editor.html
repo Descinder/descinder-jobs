@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit profile · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    profile-editor.html
+    Position four questions:
+    - Narrative role: profile editing — the seeker improves their listing over time
+    - Viewer distance: 60–80cm, careful form-filling mode
+    - Visual temperature: calm, structured — not a modal, not a wizard
+    - Capacity: 2-column (main form + sticky preview card)
+
+    Layout: border-t section dividers, NOT card-in-card stacking.
+    Deliberate motion: save state button transitions (idle → spinner → checkmark).
+    120% detail: live preview card on the right reflects the editing session.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Page */
+    .page-main {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-7) var(--space-6);
+    }
+
+    .page-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-7);
+    }
+
+    .page-title {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    /* Save state */
+    .save-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .save-status {
+      font-size: var(--type-sm);
+      color: var(--ink-faint);
+      transition: opacity 0.2s;
+    }
+
+    .save-status.saved {
+      color: oklch(0.40 0.12 155);
+    }
+
+    /* Editor layout */
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    /* Section */
+    .editor-section {
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--border);
+    }
+
+    .editor-section:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .section-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-5);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    /* Photo upload */
+    .photo-upload {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      border: 1.5px dashed var(--border-mid);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .photo-upload:hover {
+      border-color: var(--navy);
+      background: var(--bg-subtle);
+    }
+
+    .photo-placeholder {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--bg-subtle);
+      border: 2px dashed var(--border-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+    }
+
+    .photo-upload-text { flex: 1; }
+    .photo-upload-title {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .photo-upload-hint { font-size: var(--type-xs); color: var(--ink-faint); }
+
+    /* CV upload */
+    .cv-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .cv-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .cv-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cv-info { flex: 1; min-width: 0; }
+    .cv-name {
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cv-meta { font-size: var(--type-xs); color: var(--ink-faint); margin-top: 1px; }
+
+    .cv-primary-badge {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: oklch(0.22 0.08 264 / 8%);
+      border: 1px solid oklch(0.22 0.08 264 / 20%);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    .cv-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .cv-upload-trigger {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border: 1.5px dashed var(--border-mid);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .cv-upload-trigger:hover {
+      border-color: var(--navy);
+      background: var(--bg-subtle);
+    }
+
+    .cv-upload-text {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    /* Right: Preview card */
+    .preview-sticky {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .preview-panel {
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .preview-panel-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: var(--space-4);
+    }
+
+    /* Profile card preview */
+    .profile-card-preview {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .pc-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: var(--space-3);
+    }
+
+    .pc-name {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .pc-headline {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    .pc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      margin-bottom: var(--space-3);
+    }
+
+    .pc-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Completeness */
+    .completeness-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .completeness-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .completeness-check {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    .check-icon { color: oklch(0.52 0.14 155); }
+    .check-icon.missing { color: var(--border-mid); }
+
+    @media (max-width: 900px) {
+      .editor-grid { grid-template-columns: 1fr; }
+      .preview-sticky { position: static; }
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- ── Header ── -->
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="home.html" class="wordmark">descinder</a>
+        <nav class="app-nav">
+          <a href="home.html" class="app-nav-link">Browse Jobs</a>
+          <a href="dashboard-seeker.html" class="app-nav-link">Dashboard</a>
+          <a href="#" class="app-nav-link active">Profile</a>
+        </nav>
+        <div class="app-header-right">
+          <span class="role-badge">Job seeker</span>
+          <div class="avatar-dropdown">
+            <div class="avatar" onclick="toggleDropdown()">RH</div>
+            <div class="dropdown-menu" id="dropdown">
+              <a href="profile-editor.html" class="dropdown-item">View profile</a>
+              <a href="settings.html" class="dropdown-item">Settings</a>
+              <hr class="dropdown-sep">
+              <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Main ── -->
+    <div class="page-main page-enter">
+
+      <div class="page-title-row">
+        <h1 class="page-title">Edit profile</h1>
+        <div class="save-row">
+          <span class="save-status" id="saveStatus">All changes saved.</span>
+          <button class="btn btn-primary btn-md" id="saveBtn" onclick="handleSave(this)">Save changes</button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+
+        <!-- Left: form sections -->
+        <div class="editor-sections">
+
+          <!-- Identity -->
+          <div class="editor-section">
+            <div class="section-title">Identity</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+
+              <!-- Photo -->
+              <div class="form-group">
+                <label class="label">Profile photo</label>
+                <div class="photo-upload">
+                  <div class="photo-placeholder">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div class="photo-upload-text">
+                    <div class="photo-upload-title">Upload a photo</div>
+                    <div class="photo-upload-hint">JPG or PNG, max 5 MB. Square images work best.</div>
+                  </div>
+                  <button class="btn btn-secondary btn-sm">Browse</button>
+                </div>
+              </div>
+
+              <!-- Name -->
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="label" for="firstName">First name</label>
+                  <input class="input" id="firstName" type="text" value="Rachel">
+                </div>
+                <div class="form-group">
+                  <label class="label" for="lastName">Last name</label>
+                  <input class="input" id="lastName" type="text" value="Huang">
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Professional -->
+          <div class="editor-section">
+            <div class="section-title">Professional</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+
+              <div class="form-group">
+                <label class="label" for="headline">Headline</label>
+                <input class="input" id="headline" type="text" value="Senior Product Designer" placeholder="e.g. Senior Product Designer, 6 yrs exp.">
+                <span class="form-hint">Appears directly under your name in search results.</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="label" for="location">Location</label>
+                  <input class="input" id="location" type="text" value="London, UK">
+                </div>
+                <div class="form-group">
+                  <label class="label" for="experience">Years of experience</label>
+                  <select class="input select" id="experience">
+                    <option>1–2 years</option>
+                    <option>3–5 years</option>
+                    <option selected>6–9 years</option>
+                    <option>10–15 years</option>
+                    <option>15+ years</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Skills chip -->
+              <div class="form-group">
+                <label class="label">Skills</label>
+                <div class="chip-input-wrap" id="skillsWrap" onclick="document.getElementById('skillInput').focus()">
+                  <span class="chip">Figma <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <span class="chip">Design Systems <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <span class="chip">User Research <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <span class="chip">Prototyping <span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span></span>
+                  <input class="chip-input" id="skillInput" type="text" placeholder="Add skill…">
+                </div>
+              </div>
+
+              <!-- Bio -->
+              <div class="form-group">
+                <label class="label" for="bio">Bio</label>
+                <textarea class="input" id="bio" rows="5" oninput="updateCount(this)">Senior product designer with 7 years across B2B SaaS and consumer apps. I lead design from research through to shipping, with particular strength in complex information architectures and design systems that scale. Based in London, open to hybrid or remote roles.</textarea>
+                <div style="display:flex;justify-content:flex-end">
+                  <span class="char-count" id="charCount" style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint)">323 / 500</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div class="editor-section">
+            <div class="section-title">Links</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+              <div class="form-group">
+                <label class="label" for="portfolio">Portfolio URL</label>
+                <input class="input" id="portfolio" type="url" placeholder="https://rachelhuang.design">
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="label" for="github">GitHub</label>
+                  <input class="input" id="github" type="text" placeholder="github.com/username">
+                </div>
+                <div class="form-group">
+                  <label class="label" for="linkedin">LinkedIn</label>
+                  <input class="input" id="linkedin" type="text" placeholder="linkedin.com/in/username">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CVs -->
+          <div class="editor-section">
+            <div class="section-title">CVs &amp; documents</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <div class="cv-list">
+                <div class="cv-item">
+                  <div class="cv-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <div class="cv-info">
+                    <div class="cv-name">Rachel-Huang-CV-2026.pdf</div>
+                    <div class="cv-meta">PDF · 284 KB · Added 2 Mar 2026</div>
+                  </div>
+                  <span class="cv-primary-badge">Primary</span>
+                  <div class="cv-actions">
+                    <button class="btn btn-ghost btn-sm">Delete</button>
+                  </div>
+                </div>
+                <div class="cv-item">
+                  <div class="cv-icon" style="background:var(--navy-mid)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <div class="cv-info">
+                    <div class="cv-name">Rachel-Huang-Design-Portfolio-2026.pdf</div>
+                    <div class="cv-meta">PDF · 4.1 MB · Added 2 Mar 2026</div>
+                  </div>
+                  <div class="cv-actions">
+                    <button class="btn btn-ghost btn-sm">Set primary</button>
+                    <button class="btn btn-ghost btn-sm">Delete</button>
+                  </div>
+                </div>
+              </div>
+              <div class="cv-upload-trigger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="var(--ink-faint)"><path d="M12 5v14M5 12h14"/></svg>
+                <span class="cv-upload-text">Upload another CV (PDF, max 10 MB) — 1 of 3 slots remaining</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom save -->
+          <div style="padding-top:var(--space-6);border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:var(--space-3)">
+            <button class="btn btn-secondary btn-md" onclick="window.location.href='dashboard-seeker.html'">Discard changes</button>
+            <button class="btn btn-primary btn-md" onclick="handleSave(this)">Save changes</button>
+          </div>
+
+        </div>
+
+        <!-- Right: preview -->
+        <div class="preview-sticky">
+          <div class="preview-panel">
+            <div class="preview-panel-label">Profile preview</div>
+            <div class="profile-card-preview">
+              <div class="pc-avatar">RH</div>
+              <div class="pc-name">Rachel Huang</div>
+              <div class="pc-headline">Senior Product Designer · London</div>
+              <div class="pc-tags">
+                <span class="tag tag-navy">Figma</span>
+                <span class="tag tag-navy">Design Systems</span>
+                <span class="tag tag-navy">User Research</span>
+                <span class="tag">+1</span>
+              </div>
+              <div class="pc-meta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                2 CVs uploaded
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-panel">
+            <div class="preview-panel-label">Profile completeness</div>
+            <div class="completeness-row" style="margin-bottom:var(--space-2)">
+              <span style="font-size:var(--type-sm);font-weight:600;color:var(--ink)">72%</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint)">4 of 7 sections</span>
+            </div>
+            <div class="completeness-bar" style="margin-bottom:var(--space-4)">
+              <div class="completeness-bar-fill" style="width:72%"></div>
+            </div>
+            <div class="completeness-section">
+              <div class="completeness-check">
+                <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                Name &amp; photo
+              </div>
+              <div class="completeness-check">
+                <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                Headline
+              </div>
+              <div class="completeness-check">
+                <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                Skills
+              </div>
+              <div class="completeness-check">
+                <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                CV uploaded
+              </div>
+              <div class="completeness-check" style="color:var(--ink-faint)">
+                <svg class="check-icon missing" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                Work history
+              </div>
+              <div class="completeness-check" style="color:var(--ink-faint)">
+                <svg class="check-icon missing" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                Portfolio link
+              </div>
+              <div class="completeness-check" style="color:var(--ink-faint)">
+                <svg class="check-icon missing" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                Bio
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="home.html" class="wordmark" style="font-size:16px">descinder</a>
+        <div class="footer-links">
+          <a href="legal.html" class="footer-link">Privacy</a>
+          <a href="legal.html" class="footer-link">Terms</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Dropdown
+    function toggleDropdown() {
+      document.getElementById('dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.avatar-dropdown')) {
+        document.getElementById('dropdown').classList.remove('open');
+      }
+    });
+
+    // Chip input
+    const skillInput = document.getElementById('skillInput');
+    const skillsWrap = document.getElementById('skillsWrap');
+    skillInput.addEventListener('keydown', function(e) {
+      if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault();
+        const val = this.value.trim().replace(/,$/, '');
+        if (val) addChip(val);
+        this.value = '';
+      }
+      if (e.key === 'Backspace' && !this.value) {
+        const chips = skillsWrap.querySelectorAll('.chip');
+        if (chips.length) chips[chips.length-1].remove();
+      }
+    });
+    function addChip(text) {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = text + '<span class="chip-remove" onclick="removeChip(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg></span>';
+      skillsWrap.insertBefore(chip, skillInput);
+    }
+    function removeChip(el) { el.closest('.chip').remove(); }
+
+    // Char count
+    function updateCount(el) {
+      document.getElementById('charCount').textContent = el.value.length + ' / 500';
+    }
+
+    // Save state
+    function handleSave(btn) {
+      const status = document.getElementById('saveStatus');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      status.textContent = 'Saving…';
+      status.classList.remove('saved');
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Saved';
+        status.textContent = 'All changes saved.';
+        status.classList.add('saved');
+
+        setTimeout(() => {
+          btn.textContent = 'Save changes';
+          status.classList.remove('saved');
+        }, 2500);
+      }, 800);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build your profile · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    seeker-onboarding.html
+    Position four questions:
+    - Narrative role: first-time profile setup — the user just created their account
+    - Viewer distance: 60–80cm, focused form-filling mode
+    - Visual temperature: welcoming but confident — same navy panel / white form as auth
+    - Capacity: 2-column auth shell, single-step, generous vertical breathing room
+
+    Deliberate motion: single form fade-in on load. One moment, not a parade.
+    The 120% detail: chip input for skills — type a skill, press comma or Enter to add.
+  -->
+  <style>
+    body { overflow: hidden; }
+
+    @media (max-width: 768px) {
+      body { overflow: auto; }
+    }
+
+    .auth-layout {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+    }
+
+    /* Brand panel */
+    .auth-panel {
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, oklch(0.32 0.09 264 / 60%) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .panel-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      color: white;
+      text-decoration: none;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-step-label {
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: var(--space-3);
+    }
+
+    .panel-tagline {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      color: white;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-5);
+    }
+
+    .panel-sub {
+      font-size: var(--type-sm);
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      max-width: 320px;
+    }
+
+    /* What employers see card */
+    .panel-preview-card {
+      margin-top: var(--space-6);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .preview-card-heading {
+      font-size: var(--type-xs);
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+
+    .preview-profile-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .preview-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: oklch(0.42 0.09 264);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .preview-name {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .preview-headline-text {
+      font-size: var(--type-xs);
+      color: rgba(255,255,255,0.45);
+      margin-top: 1px;
+    }
+
+    .preview-chip-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .preview-chip {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    /* Form side */
+    .auth-form-side {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8);
+      overflow-y: auto;
+    }
+
+    .auth-form-inner {
+      max-width: 480px;
+      width: 100%;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      animation: page-enter 0.3s ease both;
+    }
+
+    .form-heading {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .form-heading h1 {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .form-heading p {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .char-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      text-align: right;
+      margin-top: var(--space-1);
+    }
+
+    .helper-note {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .helper-note svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* Chip input preview */
+    .skills-chips-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+      min-height: 0;
+    }
+
+    /* Step dots */
+    .step-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .step-dot-item {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border-mid);
+    }
+
+    .step-dot-item.active {
+      background: var(--navy);
+      width: 20px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .auth-layout { grid-template-columns: 1fr; }
+      .auth-panel { display: none; }
+      .auth-form-side { padding: var(--space-6) var(--space-5); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-layout">
+
+    <!-- ── Brand panel ── -->
+    <div class="auth-panel">
+      <a href="home.html" class="panel-wordmark">descinder</a>
+
+      <div class="panel-body">
+        <div class="panel-step-label">Step 1 of 1 · Job seeker</div>
+        <h2 class="panel-tagline">Tell us<br>about yourself.</h2>
+        <p class="panel-sub">Your profile is how employers find and evaluate you. A complete profile gets significantly more views.</p>
+
+        <!-- Preview of what profile looks like -->
+        <div class="panel-preview-card">
+          <div class="preview-card-heading">How employers see you</div>
+          <div class="preview-profile-row">
+            <div class="preview-avatar">RH</div>
+            <div>
+              <div class="preview-name">Rachel Huang</div>
+              <div class="preview-headline-text">Senior Product Designer · London</div>
+            </div>
+          </div>
+          <div class="preview-chip-row">
+            <span class="preview-chip">Figma</span>
+            <span class="preview-chip">Design Systems</span>
+            <span class="preview-chip">Research</span>
+            <span class="preview-chip">+3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Form side ── -->
+    <div class="auth-form-side">
+      <div class="auth-form-inner">
+
+        <div class="form-heading">
+          <h1>Build your profile</h1>
+          <p>You can edit any of this later from your profile settings.</p>
+        </div>
+
+        <!-- Step dots -->
+        <div class="step-dots">
+          <div class="step-dot-item active"></div>
+          <div class="step-dot-item"></div>
+          <div class="step-dot-item"></div>
+        </div>
+
+        <!-- Full name (pre-filled from signup) -->
+        <div class="form-group">
+          <label class="label" for="fullname">Full name</label>
+          <input class="input" id="fullname" type="text" value="Rachel Huang" autocomplete="name">
+        </div>
+
+        <!-- Headline -->
+        <div class="form-group">
+          <label class="label" for="headline">Professional headline</label>
+          <input class="input" id="headline" type="text" placeholder="e.g. Senior Product Designer, 6 yrs exp." maxlength="100">
+          <span class="form-hint">Appears under your name in search results. Keep it direct and specific.</span>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label class="label" for="location">Location</label>
+          <input class="input" id="location" type="text" placeholder="e.g. London, UK" autocomplete="address-level2">
+        </div>
+
+        <!-- Skills chip input -->
+        <div class="form-group">
+          <label class="label">Skills</label>
+          <div class="chip-input-wrap" id="skillsWrap" onclick="document.getElementById('skillInput').focus()">
+            <span class="chip">
+              Figma
+              <span class="chip-remove" onclick="removeChip(this)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </span>
+            </span>
+            <span class="chip">
+              Design Systems
+              <span class="chip-remove" onclick="removeChip(this)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </span>
+            </span>
+            <span class="chip">
+              User Research
+              <span class="chip-remove" onclick="removeChip(this)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </span>
+            </span>
+            <input class="chip-input" id="skillInput" type="text" placeholder="Type a skill, press comma or Enter…">
+          </div>
+          <span class="form-hint">Separate skills with a comma or Enter key. Employers filter candidates by these.</span>
+        </div>
+
+        <!-- Bio -->
+        <div class="form-group">
+          <label class="label" for="bio">Brief bio <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+          <textarea class="input" id="bio" rows="4" placeholder="A short paragraph about your background, what you're looking for, and what you bring to a team." maxlength="500" oninput="updateCharCount(this)"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="form-hint">Optional, but candidates with bios get 2× more profile views.</span>
+            <span class="char-count" id="charCount">0 / 500</span>
+          </div>
+        </div>
+
+        <!-- Helper note -->
+        <div class="helper-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="var(--ink-faint)">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          You can edit any of this later from Settings. This information is visible to employers who view your profile.
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary btn-lg" style="width:100%" onclick="handleContinue(this)">
+          Continue to your dashboard
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <!-- Skip -->
+        <div style="text-align:center">
+          <a href="dashboard-seeker.html" style="font-size:var(--type-sm);color:var(--ink-faint)">Skip for now, I'll fill this in later</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Chip input behaviour
+    const skillInput = document.getElementById('skillInput');
+    const skillsWrap = document.getElementById('skillsWrap');
+
+    skillInput.addEventListener('keydown', function(e) {
+      if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault();
+        const val = this.value.trim().replace(/,$/, '');
+        if (val) addChip(val);
+        this.value = '';
+      }
+      if (e.key === 'Backspace' && !this.value) {
+        const chips = skillsWrap.querySelectorAll('.chip');
+        if (chips.length) chips[chips.length - 1].remove();
+      }
+    });
+
+    function addChip(text) {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = text +
+        '<span class="chip-remove" onclick="removeChip(this)">' +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+        '</span>';
+      skillsWrap.insertBefore(chip, skillInput);
+    }
+
+    function removeChip(el) {
+      el.closest('.chip').remove();
+    }
+
+    // Char counter
+    function updateCharCount(el) {
+      document.getElementById('charCount').textContent = el.value.length + ' / 500';
+    }
+
+    // Continue button
+    function handleContinue(btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…';
+      setTimeout(() => {
+        window.location.href = 'dashboard-seeker.html';
+      }, 900);
+    }
+
+    document.head.insertAdjacentHTML('beforeend',
+      '<style>@keyframes spin { to { transform: rotate(360deg); } }</style>');
+  </script>
+</body>
+</html>

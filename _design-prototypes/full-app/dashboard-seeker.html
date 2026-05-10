@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    dashboard-seeker.html
+    Position four questions:
+    - Narrative role: logged-in home — personalised hub, not a landing page
+    - Viewer distance: 60–80cm laptop, scanning mode
+    - Visual temperature: calm, focused — no celebration, no confetti
+    - Capacity: 3 focused sections max. No 5-card Bento.
+
+    Deliberate motion: job card hover translateY(-1px) only. Nothing loops.
+    The 120% detail: "New today" amber dot badge on jobs posted in last 24h.
+
+    Layout: narrow sidebar (user summary) + wide main content
+    Sections:
+      1. Matched jobs (4 job cards — reuses .job-card)
+      2. Applications status table
+      3. Saved searches / alerts
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    /* Authed header */
+    .app-header { background: var(--bg); }
+
+    .avatar-dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-2);
+      min-width: 180px;
+      z-index: 200;
+      display: none;
+    }
+
+    .dropdown-menu.open { display: block; }
+
+    .dropdown-item {
+      display: block;
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .dropdown-item:hover {
+      background: var(--bg-subtle);
+      color: var(--ink);
+    }
+
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+
+    .dropdown-sep {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: var(--space-2) 0;
+    }
+
+    /* Page layout */
+    .dashboard-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-7) var(--space-6);
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    /* Left sidebar — profile summary */
+    .user-sidebar {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    .user-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+
+    .user-card-top {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .user-avatar-lg {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .user-name {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .user-headline {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .completeness-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+    }
+
+    .completeness-pct {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    .completeness-hint {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-top: var(--space-2);
+      line-height: 1.5;
+    }
+
+    /* Sidebar nav */
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .sidebar-nav-item:hover {
+      background: var(--bg-subtle);
+      color: var(--ink);
+    }
+
+    .sidebar-nav-item.active {
+      background: var(--bg-subtle);
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .sidebar-nav-badge {
+      margin-left: auto;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      background: var(--navy);
+      border-radius: 20px;
+      padding: 1px 7px;
+    }
+
+    /* Main content */
+    .dashboard-main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-8);
+    }
+
+    /* Welcome line */
+    .welcome-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+
+    .welcome-text {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .welcome-date {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    /* Section heads */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .section-head-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .section-head-link {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+
+    .section-head-link:hover { color: var(--navy); }
+
+    /* Jobs grid — 2 columns */
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    /* New-today amber badge */
+    .new-today-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: oklch(0.45 0.14 75);
+      background: var(--amber-light);
+      border: 1px solid oklch(0.82 0.10 75);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    .new-today-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    /* Applications table */
+    .applications-table-wrap {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    /* Alerts list */
+    .alerts-list {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .alert-item:last-child { border-bottom: none; }
+    .alert-item:hover { background: var(--bg-subtle); }
+
+    .alert-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+    }
+
+    .alert-main { flex: 1; min-width: 0; }
+
+    .alert-name {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .alert-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      margin-top: 1px;
+    }
+
+    .alert-freq {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    .alert-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      font-weight: 600;
+      color: white;
+      background: var(--navy);
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .user-sidebar { position: static; }
+      .jobs-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- ── Authed header ── -->
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="home.html" class="wordmark">descinder</a>
+
+        <nav class="app-nav">
+          <a href="home.html" class="app-nav-link">Browse Jobs</a>
+          <a href="#" class="app-nav-link active">Dashboard</a>
+          <a href="#" class="app-nav-link">Saved</a>
+          <a href="#" class="app-nav-link">Applications</a>
+        </nav>
+
+        <div class="app-header-right">
+          <span class="role-badge">Job seeker</span>
+          <div class="avatar-dropdown">
+            <div class="avatar" onclick="toggleDropdown()">RH</div>
+            <div class="dropdown-menu" id="dropdown">
+              <a href="profile-editor.html" class="dropdown-item">View profile</a>
+              <a href="settings.html" class="dropdown-item">Settings</a>
+              <hr class="dropdown-sep">
+              <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Dashboard layout ── -->
+    <div class="dashboard-layout page-enter">
+
+      <!-- Left: user sidebar -->
+      <aside class="user-sidebar">
+        <div class="user-card">
+          <div class="user-card-top">
+            <div class="user-avatar-lg">RH</div>
+            <div>
+              <div class="user-name">Rachel Huang</div>
+              <div class="user-headline">Senior Product Designer · London</div>
+            </div>
+          </div>
+
+          <!-- Profile completeness -->
+          <div class="completeness-label">
+            <span class="section-label" style="margin-bottom:0">Profile</span>
+            <span class="completeness-pct">72%</span>
+          </div>
+          <div class="completeness-bar">
+            <div class="completeness-bar-fill" style="width:72%"></div>
+          </div>
+          <p class="completeness-hint">Add your work history to reach 90% and unlock more matches.</p>
+
+          <a href="profile-editor.html" class="btn btn-secondary btn-sm" style="margin-top:var(--space-4);width:100%">Edit profile</a>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#" class="sidebar-nav-item active">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+            Overview
+          </a>
+          <a href="#" class="sidebar-nav-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+            Saved jobs
+            <span class="sidebar-nav-badge">14</span>
+          </a>
+          <a href="#" class="sidebar-nav-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Applications
+            <span class="sidebar-nav-badge">3</span>
+          </a>
+          <a href="#" class="sidebar-nav-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Alerts
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <main class="dashboard-main">
+
+        <!-- Welcome -->
+        <div class="welcome-line">
+          <h1 class="welcome-text">Welcome back, Rachel.</h1>
+          <span class="welcome-date">Saturday, 10 May 2026</span>
+        </div>
+
+        <!-- ── Matched jobs ── -->
+        <section>
+          <div class="section-head">
+            <span class="section-head-title">Roles that match your profile</span>
+            <a href="home.html" class="section-head-link">Browse all →</a>
+          </div>
+          <div class="jobs-grid">
+
+            <!-- Job card 1 — featured + new today -->
+            <a href="job-detail.html" class="job-card featured">
+              <div class="job-card-top">
+                <div class="company-mono mono-mid">CL</div>
+                <div class="job-card-body">
+                  <div class="job-title">Lead Product Designer</div>
+                  <div class="job-company">Caelum · London</div>
+                </div>
+              </div>
+              <div class="job-meta">
+                <span class="badge-featured">Featured</span>
+                <span class="new-today-badge"><span class="new-today-dot"></span>New today</span>
+                <span class="tag">Full-time</span>
+                <span class="tag">Remote-friendly</span>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-salary">£80,000 – £100,000</span>
+                <span class="job-time">2h ago</span>
+              </div>
+            </a>
+
+            <!-- Job card 2 — new today -->
+            <a href="job-detail.html" class="job-card">
+              <div class="job-card-top">
+                <div class="company-mono mono-teal">PT</div>
+                <div class="job-card-body">
+                  <div class="job-title">Senior UX Designer</div>
+                  <div class="job-company">Pith · Manchester</div>
+                </div>
+              </div>
+              <div class="job-meta">
+                <span class="new-today-badge"><span class="new-today-dot"></span>New today</span>
+                <span class="tag">Full-time</span>
+                <span class="tag">Hybrid</span>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-salary">£65,000 – £82,000</span>
+                <span class="job-time">6h ago</span>
+              </div>
+            </a>
+
+            <!-- Job card 3 -->
+            <a href="job-detail.html" class="job-card">
+              <div class="job-card-top">
+                <div class="company-mono mono-green">MR</div>
+                <div class="job-card-body">
+                  <div class="job-title">Product Design Lead</div>
+                  <div class="job-company">Marrow · London</div>
+                </div>
+              </div>
+              <div class="job-meta">
+                <span class="tag">Full-time</span>
+                <span class="tag">On-site</span>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-salary">£75,000 – £92,000</span>
+                <span class="job-time">2d ago</span>
+              </div>
+            </a>
+
+            <!-- Job card 4 -->
+            <a href="job-detail.html" class="job-card">
+              <div class="job-card-top">
+                <div class="company-mono mono-plum">KN</div>
+                <div class="job-card-body">
+                  <div class="job-title">Staff Designer, Systems</div>
+                  <div class="job-company">Kinship Co. · Edinburgh</div>
+                </div>
+              </div>
+              <div class="job-meta">
+                <span class="tag">Full-time</span>
+                <span class="tag">Remote</span>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-salary">£85,000 – £110,000</span>
+                <span class="job-time">3d ago</span>
+              </div>
+            </a>
+
+          </div>
+        </section>
+
+        <!-- ── Applications ── -->
+        <section>
+          <div class="section-head">
+            <span class="section-head-title">Your applications</span>
+            <a href="#" class="section-head-link">See all 3 →</a>
+          </div>
+          <div class="applications-table-wrap">
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Company</th>
+                  <th>Applied</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--ink);font-weight:500">Principal Product Designer</td>
+                  <td>Vance Studio</td>
+                  <td style="font-family:'Geist Mono',monospace">29 Apr 2026</td>
+                  <td><span class="status-pill status-reviewing">In review</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--ink);font-weight:500">Design Director</td>
+                  <td>Arkless</td>
+                  <td style="font-family:'Geist Mono',monospace">14 Apr 2026</td>
+                  <td><span class="status-pill status-pending">Pending</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--ink);font-weight:500">Senior Product Designer</td>
+                  <td>Folio Labs</td>
+                  <td style="font-family:'Geist Mono',monospace">3 Apr 2026</td>
+                  <td><span class="status-pill status-declined">Not progressing</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── Saved searches ── -->
+        <section>
+          <div class="section-head">
+            <span class="section-head-title">Your saved searches</span>
+            <a href="#" class="section-head-link">Manage alerts →</a>
+          </div>
+          <div class="alerts-list">
+            <div class="alert-item">
+              <div class="alert-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+              </div>
+              <div class="alert-main">
+                <div class="alert-name">Senior / Lead Product Designer · London</div>
+                <div class="alert-meta">Full-time · £65k+ · Hybrid or remote</div>
+              </div>
+              <span class="alert-count">12 new</span>
+              <span class="alert-freq">Daily</span>
+            </div>
+            <div class="alert-item">
+              <div class="alert-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+              </div>
+              <div class="alert-main">
+                <div class="alert-name">Design Lead · Remote · UK</div>
+                <div class="alert-meta">Full-time · £75k+</div>
+              </div>
+              <span class="alert-count">4 new</span>
+              <span class="alert-freq">Weekly</span>
+            </div>
+            <div class="alert-item">
+              <div class="alert-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+              </div>
+              <div class="alert-main">
+                <div class="alert-name">Staff Designer, Design Systems</div>
+                <div class="alert-meta">Full-time · UK · Any location</div>
+              </div>
+              <span class="alert-freq">Weekly</span>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Minimal footer -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="home.html" class="wordmark" style="font-size:16px">descinder</a>
+        <div class="footer-links">
+          <a href="legal.html" class="footer-link">Privacy</a>
+          <a href="legal.html" class="footer-link">Terms</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      document.getElementById('dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.avatar-dropdown')) {
+        document.getElementById('dropdown').classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
