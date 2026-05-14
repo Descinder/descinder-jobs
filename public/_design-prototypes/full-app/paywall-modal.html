@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscribe to apply · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    paywall-modal.html — Standalone page showing paywall modal over job detail
+    Position four questions:
+    - Narrative role: soft paywall — inform, not coerce. User decided to apply.
+    - Viewer distance: focal point is the modal. Background is deliberately dimmed, not hidden.
+    - Visual temperature: calm but clear. The modal is bright; background is very dark.
+    - Capacity: modal carries only 3 value props + 2 CTAs + honest small print.
+
+    Deliberate motion: modal fade-in (page-enter). Single amber moment: Subscribe CTA.
+    The 120% detail: small print is genuinely honest — "External applies are always free."
+    Anti-dark-pattern: "Maybe later" is a real button, not a guilt-trip dismiss link.
+  -->
+  <style>
+    body {
+      overflow: hidden;
+      margin: 0;
+    }
+
+    /* Dimmed background showing the job detail at 50% opacity */
+    .dimmed-bg {
+      position: fixed;
+      inset: 0;
+      background: oklch(0.12 0.06 264 / 76%);
+      z-index: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-5);
+    }
+
+    /* Background job detail (visible at ~50% opacity through the overlay) */
+    .bg-job-detail {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* Simulate job detail page in background */
+    .bg-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 24px;
+    }
+
+    .bg-content {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 48px;
+    }
+
+    .bg-job-header {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .bg-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 6px;
+      letter-spacing: -0.015em;
+    }
+
+    .bg-company {
+      font-size: 16px;
+      color: var(--navy-mid);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .bg-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .bg-description {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+
+    .bg-prose-line {
+      height: 12px;
+      background: var(--border);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .bg-sidebar-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      height: 280px;
+    }
+
+    /* Paywall overlay */
+    .paywall-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0.12 0.06 264 / 76%);
+      z-index: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-5);
+    }
+
+    /* The modal itself */
+    .paywall-modal {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 64px oklch(0 0 0 / 28%);
+      max-width: 440px;
+      width: 100%;
+      padding: var(--space-7);
+      position: relative;
+      animation: modal-appear 0.22s ease both;
+    }
+
+    @keyframes modal-appear {
+      from { opacity: 0; transform: scale(0.97) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .paywall-close {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-faint);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .paywall-close:hover {
+      background: var(--bg-subtle);
+      color: var(--ink-muted);
+    }
+
+    /* Lock icon */
+    .paywall-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--navy-6);
+      border: 1px solid var(--navy-10);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-5);
+      color: var(--navy);
+    }
+
+    .paywall-headline {
+      font-size: var(--type-lg);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: var(--space-2);
+      line-height: 1.25;
+    }
+
+    .paywall-subhead {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-5);
+      line-height: 1.6;
+    }
+
+    /* Value props */
+    .paywall-props {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .paywall-prop {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .prop-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--navy);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .prop-text {
+      flex: 1;
+    }
+
+    .prop-title {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 1px;
+    }
+
+    .prop-desc {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    /* Price line */
+    .paywall-price-line {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: var(--space-5);
+    }
+
+    .paywall-price {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-lg);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .paywall-price-period {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    /* CTAs */
+    .paywall-ctas {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .btn-paywall-subscribe {
+      width: 100%;
+      height: 46px;
+      background: var(--amber);
+      color: var(--navy);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-paywall-subscribe:hover {
+      background: color-mix(in oklch, var(--amber) 88%, black);
+      transform: translateY(-1px);
+    }
+
+    .btn-paywall-later {
+      width: 100%;
+      height: 40px;
+      background: transparent;
+      color: var(--ink-muted);
+      border: 1.5px solid var(--border-mid);
+      border-radius: var(--radius-md);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+
+    .btn-paywall-later:hover {
+      background: var(--bg-subtle);
+      border-color: var(--navy);
+      color: var(--ink);
+    }
+
+    /* Honest small print */
+    .paywall-smallprint {
+      margin-top: var(--space-4);
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .paywall-smallprint a {
+      color: var(--navy);
+    }
+
+    /* The underlying job detail (behind overlay) */
+    .underlying-page {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Underlying job detail (dimmed, not interactive) -->
+  <div class="underlying-page" aria-hidden="true">
+
+    <!-- Fake header -->
+    <div class="bg-header">
+      <span class="wordmark">descinder</span>
+      <span style="font-size:13px;color:var(--ink-muted);font-weight:500">Browse Jobs</span>
+      <span style="font-size:13px;color:var(--ink-muted);font-weight:500">Dashboard</span>
+    </div>
+
+    <!-- Fake job detail content -->
+    <div class="bg-content">
+      <div>
+        <div class="bg-job-header">
+          <div class="bg-title">Senior Backend Engineer</div>
+          <div class="bg-company">Folio Labs · London, UK</div>
+          <div class="bg-meta">
+            <span class="tag">Full-time</span>
+            <span class="tag">Hybrid</span>
+            <span class="tag">Senior</span>
+            <span class="source-badge source-badge--native">Descinder</span>
+          </div>
+        </div>
+        <div class="bg-description">
+          <div class="bg-prose-line" style="width:85%"></div>
+          <div class="bg-prose-line" style="width:100%"></div>
+          <div class="bg-prose-line" style="width:78%"></div>
+          <div class="bg-prose-line" style="width:92%"></div>
+          <div class="bg-prose-line" style="width:60%"></div>
+          <div style="height:24px"></div>
+          <div class="bg-prose-line" style="width:40%;height:16px;background:var(--border-mid)"></div>
+          <div style="height:12px"></div>
+          <div class="bg-prose-line" style="width:95%"></div>
+          <div class="bg-prose-line" style="width:88%"></div>
+          <div class="bg-prose-line" style="width:72%"></div>
+        </div>
+      </div>
+      <div class="bg-sidebar-card"></div>
+    </div>
+
+  </div>
+
+  <!-- Paywall overlay + modal -->
+  <div class="paywall-overlay">
+    <div class="paywall-modal">
+
+      <button class="paywall-close" onclick="window.history.back()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Icon -->
+      <div class="paywall-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+
+      <h2 class="paywall-headline">Subscribe to apply to this role.</h2>
+      <p class="paywall-subhead">This is a native Descinder job — applications come through our platform. Subscribers get:</p>
+
+      <!-- 3 value props -->
+      <div class="paywall-props">
+        <div class="paywall-prop">
+          <div class="prop-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="M9 15l2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="prop-text">
+            <div class="prop-title">AI-tailored CV for this job</div>
+            <div class="prop-desc">Rewrite your base CV to emphasise exactly what this role is asking for. Export as PDF.</div>
+          </div>
+        </div>
+        <div class="paywall-prop">
+          <div class="prop-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3 8-8"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="prop-text">
+            <div class="prop-title">Unified application tracking</div>
+            <div class="prop-desc">See all your applications — native and external — in one dashboard. Track status manually for external applies.</div>
+          </div>
+        </div>
+        <div class="paywall-prop">
+          <div class="prop-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <div class="prop-text">
+            <div class="prop-title">Instant alerts</div>
+            <div class="prop-desc">Get notified within an hour when a matching role is posted — not the next morning's digest.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="paywall-price-line">
+        <span class="paywall-price">£14.99</span>
+        <span class="paywall-price-period">/ month · cancel any time</span>
+      </div>
+
+      <!-- CTAs -->
+      <div class="paywall-ctas">
+        <button class="btn-paywall-subscribe" onclick="window.location.href='pricing.html'">Subscribe — £14.99/mo</button>
+        <button class="btn-paywall-later" onclick="window.history.back()">Maybe later</button>
+      </div>
+
+      <!-- Honest small print -->
+      <p class="paywall-smallprint">
+        External applies (Reed, Adzuna) are always free — no subscription needed.<br>
+        This subscription covers native Descinder roles only.
+        <a href="pricing.html">See all features →</a>
+      </p>
+
+    </div>
+  </div>
+
+</body>
+</html>

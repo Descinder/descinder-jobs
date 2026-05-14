@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    pricing.html — Seeker subscription page
+    Position four questions:
+    - Narrative role: conversion page — explain value, address objections, ask for £14.99/mo
+    - Viewer distance: 60–80cm, considered reading — not a panic decision
+    - Visual temperature: confident, honest, calm — NOT a casino landing page
+    - Capacity: feature table + single pricing card + FAQ. No confetti.
+
+    Deliberate motion: page-enter fade. The amber on the Subscribe CTA is the 120% moment.
+    Rule: amber is used on the primary Subscribe CTA here + featured badge — the deliberate max.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    /* Hero */
+    .pricing-hero {
+      background: var(--navy);
+      padding: var(--space-9) 0 var(--space-8);
+      text-align: center;
+    }
+
+    .pricing-hero-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+    }
+
+    .pricing-eyebrow {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      font-weight: 500;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: var(--space-4);
+    }
+
+    .pricing-headline {
+      font-size: var(--type-2xl);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: white;
+      margin-bottom: var(--space-4);
+    }
+
+    .pricing-subhead {
+      font-size: var(--type-base);
+      color: rgba(255,255,255,0.58);
+      line-height: 1.65;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Main content */
+    .pricing-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--space-9) var(--space-6);
+      width: 100%;
+    }
+
+    /* Pricing card */
+    .pricing-card-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--space-9);
+    }
+
+    .pricing-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-7);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .pricing-card-label {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--navy-6);
+      border: 1px solid var(--navy-10);
+      border-radius: 4px;
+      padding: 3px 8px;
+      display: inline-block;
+      margin-bottom: var(--space-4);
+    }
+
+    .pricing-card-name {
+      font-size: var(--type-lg);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-2);
+    }
+
+    .pricing-card-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: var(--space-5);
+    }
+
+    .price-amount {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-2xl);
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .price-period {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin-bottom: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .pricing-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .feature-check {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: oklch(0.94 0.06 155);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    .feature-check svg { color: oklch(0.38 0.12 155); }
+
+    /* Amber subscribe CTA — the 120% moment */
+    .btn-subscribe {
+      width: 100%;
+      height: 48px;
+      background: var(--amber);
+      color: var(--navy);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-base);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-subscribe:hover {
+      background: color-mix(in oklch, var(--amber) 88%, black);
+      transform: translateY(-1px);
+    }
+
+    .pricing-card-smallprint {
+      text-align: center;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-top: var(--space-4);
+      line-height: 1.6;
+    }
+
+    /* Feature comparison table */
+    .comparison-section {
+      margin-bottom: var(--space-9);
+    }
+
+    .comparison-heading {
+      font-size: var(--type-lg);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-5);
+      letter-spacing: -0.01em;
+    }
+
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .pricing-table th {
+      text-align: left;
+      padding: var(--space-4) var(--space-5);
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .pricing-table th:not(:first-child) {
+      text-align: center;
+    }
+
+    .pricing-table td {
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      vertical-align: middle;
+    }
+
+    .pricing-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .pricing-table tr:last-child td { border-bottom: none; }
+    .pricing-table tr:hover td { background: var(--bg-subtle); }
+
+    .pricing-check {
+      color: oklch(0.40 0.12 155);
+    }
+
+    .pricing-x {
+      color: var(--border-mid);
+    }
+
+    .col-subscriber {
+      font-weight: 600;
+      color: var(--navy) !important;
+    }
+
+    /* Honest value-prop callout */
+    .honest-callout {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-6);
+      margin-bottom: var(--space-9);
+    }
+
+    .honest-callout-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-3);
+    }
+
+    .honest-callout-body {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+
+    /* FAQ */
+    .faq-section {
+      margin-bottom: var(--space-9);
+    }
+
+    .faq-heading {
+      font-size: var(--type-lg);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-5);
+      letter-spacing: -0.01em;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-4) 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-base);
+      font-weight: 600;
+      color: var(--ink);
+      text-align: left;
+      transition: color var(--transition);
+    }
+
+    .faq-question:hover { color: var(--navy); }
+
+    .faq-chevron {
+      flex-shrink: 0;
+      color: var(--ink-faint);
+      transition: transform 200ms ease;
+    }
+
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 250ms ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 400px;
+    }
+
+    .faq-answer-inner {
+      padding-bottom: var(--space-5);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.75;
+    }
+
+    /* Bottom CTA */
+    .pricing-bottom-cta {
+      text-align: center;
+      padding: var(--space-7) 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .pricing-bottom-cta h2 {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-3);
+    }
+
+    .pricing-bottom-cta p {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-5);
+    }
+
+    @media (max-width: 768px) {
+      .pricing-headline { font-size: var(--type-xl); }
+      .pricing-content { padding: var(--space-7) var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="header-nav">
+        <a href="home.html" class="nav-link">Jobs</a>
+        <a href="pricing.html" class="nav-link active">Pricing</a>
+        <a href="company-profile.html" class="nav-link">Companies</a>
+      </nav>
+      <div class="header-actions">
+        <a href="log-in.html" class="btn btn-ghost btn-md">Sign in</a>
+        <a href="sign-up.html" class="btn btn-primary btn-md">Get started free</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <div class="pricing-hero">
+    <div class="pricing-hero-inner">
+      <p class="pricing-eyebrow">Seeker subscription</p>
+      <h1 class="pricing-headline">Bring more to every application.</h1>
+      <p class="pricing-subhead">Subscribe to apply to Descinder-posted roles with an AI-tailored CV per job, unified tracking, and instant alerts. External links to Reed and Adzuna are always free.</p>
+    </div>
+  </div>
+
+  <!-- ── Pricing content ── -->
+  <div class="pricing-content page-enter">
+
+    <!-- Honest callout -->
+    <div class="honest-callout">
+      <div class="honest-callout-title">Why does applying cost anything?</div>
+      <div class="honest-callout-body">
+        Browsing jobs and clicking through to Reed or Adzuna is, and always will be, free. What you're paying for is the service wrapped around native Descinder roles: an AI that reads the actual job description and rewrites your CV to match it, a single inbox tracking every application you've made (native or external), and alerts that fire within an hour of a matching role appearing — not the next morning. If none of that sounds useful to you right now, bookmark us and come back when it does.
+      </div>
+    </div>
+
+    <!-- Pricing card -->
+    <div class="pricing-card-wrap">
+      <div class="pricing-card">
+        <span class="pricing-card-label">MVP · Single tier</span>
+        <div class="pricing-card-name">Seeker Monthly</div>
+        <div class="pricing-card-price">
+          <span class="price-amount">£14.99</span>
+          <span class="price-period">/ month · cancel any time</span>
+        </div>
+
+        <ul class="pricing-features">
+          <li class="pricing-feature">
+            <span class="feature-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+            Apply to native Descinder-posted jobs directly on-platform
+          </li>
+          <li class="pricing-feature">
+            <span class="feature-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+            AI-tailored CV per application — up to 30 per month, Groq-powered with Claude fallback
+          </li>
+          <li class="pricing-feature">
+            <span class="feature-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+            Unified application tracker — native and external applies in one view, with manual status updates
+          </li>
+          <li class="pricing-feature">
+            <span class="feature-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+            Instant alerts — roles matched to your saved searches within an hour of posting
+          </li>
+          <li class="pricing-feature">
+            <span class="feature-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+            Everything free users get: browse, save jobs, daily/weekly digests, full profile
+          </li>
+        </ul>
+
+        <button class="btn-subscribe" onclick="window.location.href='sign-up.html'">Subscribe now — £14.99/mo</button>
+
+        <p class="pricing-card-smallprint">
+          Cancel any time from Settings. Access continues until end of billing period.<br>
+          Stripe secures all payment. No trial — start subscribing straight away.
+        </p>
+      </div>
+    </div>
+
+    <!-- Feature comparison -->
+    <div class="comparison-section">
+      <h2 class="comparison-heading">Free vs subscriber, in full</h2>
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th style="color:var(--navy)">Subscriber</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Browse, search, and filter all jobs</td>
+            <td class="pricing-check">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Save jobs</td>
+            <td class="pricing-check">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Click to apply on Reed or Adzuna (external)</td>
+            <td class="pricing-check">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Daily and weekly alert digests</td>
+            <td class="pricing-check">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Full profile and base CV upload (up to 3)</td>
+            <td class="pricing-check">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Apply to native Descinder-posted jobs</td>
+            <td class="pricing-x">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>AI-tailored CV generation (30/month cap)</td>
+            <td class="pricing-x">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Instant alerts (within the hour)</td>
+            <td class="pricing-x">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td>Unified applications dashboard (native + external)</td>
+            <td style="font-size:var(--type-xs);color:var(--ink-faint)">External only</td>
+            <td class="pricing-check col-subscriber">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2 class="faq-heading">Common questions</h2>
+
+      <div class="faq-item open" id="faq1">
+        <button class="faq-question" onclick="toggleFaq('faq1')">
+          Why do I need to pay to apply — I can apply free on other job boards?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            You can. Reed and Adzuna are always free to click through to from this site — we never touch that. What's behind the subscription is the layer <em>around</em> native Descinder roles: generating a CV that's specifically rewritten for that exact job description, tracking it alongside every external application you've made elsewhere, and alerting you the moment a role matching your criteria goes live. That's the product. If you don't value that, the external apply links are genuinely free to use.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq2">
+        <button class="faq-question" onclick="toggleFaq('faq2')">
+          What is the AI-tailored CV, exactly?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            You upload up to 3 base CVs (PDF, DOCX, or text). When you want to apply to a native role, you pick one base CV and one target job — or paste the job description manually. The AI (Groq's Llama 3 model, with Claude Haiku as a fallback) reads both and returns a rewritten version that emphasises the skills and experience most relevant to that specific role. You see the output, can edit it, then export as PDF or copy to clipboard. Up to 30 generations per calendar month — enough for an active search. Your base CVs are never changed.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq3">
+        <button class="faq-question" onclick="toggleFaq('faq3')">
+          Can I cancel and does my access stop immediately?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Cancel any time from Settings → Subscription. Your access continues until the end of the current billing period — so if you cancel on the 8th of a month you paid on the 1st, you have access until the 31st. There are no partial refunds, but there's no catch either. Re-subscribing at any point restores everything immediately.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq4">
+        <button class="faq-question" onclick="toggleFaq('faq4')">
+          Are the Descinder-native jobs different from Reed or Adzuna jobs?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Yes. Native jobs are posted directly by employers on Descinder — they've created an account, written the description themselves, and chosen to receive applications through the platform. Reed and Adzuna jobs are ingested daily from those third-party feeds; they carry a source badge and click through to those sites' own apply flows. Both types appear in the same feed. Source badges on each card and job detail page make it clear which is which.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq5">
+        <button class="faq-question" onclick="toggleFaq('faq5')">
+          What data does descinder send to the AI?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Your base CV content and the target job description are sent to the AI provider (Groq or Anthropic Claude) to generate the tailored CV. We are reviewing Groq's data-processing agreement under UK GDPR; if that review is not resolved before launch, Claude becomes the sole provider. Either way, the subprocessors are listed in our Privacy Policy. We never send anything to the AI beyond what's needed for the generation.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .faq-section -->
+
+    <!-- Bottom CTA -->
+    <div class="pricing-bottom-cta">
+      <h2>Ready to apply smarter?</h2>
+      <p>Start free, subscribe when you're ready. No pressure, no dark patterns.</p>
+      <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap">
+        <a href="sign-up.html" class="btn btn-primary btn-lg">Create free account</a>
+        <button class="btn-subscribe" style="width:auto;padding:0 var(--space-6);height:44px;font-size:var(--type-sm)" onclick="window.location.href='sign-up.html'">Subscribe — £14.99/mo</button>
+      </div>
+    </div>
+
+  </div><!-- .pricing-content -->
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="wordmark" style="font-size:15px">descinder</span>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+        <a href="legal.html" class="footer-link">Cookies</a>
+        <a href="#" class="footer-link">Contact</a>
+      </div>
+      <span class="footer-copy">© 2026 Descinder Ltd.</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function toggleFaq(id) {
+    const item = document.getElementById(id);
+    item.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

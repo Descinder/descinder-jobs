@@ -249,6 +249,35 @@
       margin-bottom: var(--space-3);
     }
 
+    /* Source attribution in detail */
+    .detail-source-line {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border);
+    }
+
+    .detail-source-label {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+    }
+
+    /* Apply CTA state note */
+    .apply-cta-note {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      text-align: center;
+      margin-top: var(--space-2);
+      line-height: 1.5;
+    }
+
+    .apply-cta-note a {
+      color: var(--navy-mid);
+      text-decoration: underline;
+    }
+
     /* Similar jobs */
     .similar-section {
       max-width: 1100px;
@@ -359,7 +388,14 @@
             </div>
           </div>
         </div>
-        <div class="detail-salary">£80,000 – £110,000 per year</div>
+        <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3)">
+          <div class="detail-salary">£80,000 – £110,000 per year</div>
+          <div class="detail-source-line" style="margin-top:0;padding-top:0;border-top:none">
+            <span class="detail-source-label">Source:</span>
+            <span class="source-badge source-badge--native">Descinder</span>
+            <span class="detail-source-label">— apply directly through descinder</span>
+          </div>
+        </div>
       </div>
 
       <!-- Job description -->
@@ -443,8 +479,11 @@
             <span class="apply-stat-value mono">47 applied</span>
           </div>
         </div>
-        <a href="sign-up.html" class="btn btn-primary btn-lg" style="width:100%;margin-bottom:10px">Apply now</a>
-        <button class="btn btn-secondary btn-md" style="width:100%">
+        <!-- Native apply CTA: logged-out → sign up, free → paywall, subscriber → apply -->
+        <!-- This prototype shows the logged-out state: CTA goes to sign-up -->
+        <a href="sign-up.html" class="btn btn-primary btn-lg" style="width:100%;margin-bottom:10px">Apply on Descinder</a>
+        <p class="apply-cta-note">Sign in or <a href="sign-up.html">create a free account</a> to apply. A subscription (£14.99/mo) is required for native roles.</p>
+        <button class="btn btn-secondary btn-md" style="width:100%;margin-top:var(--space-3)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
           </svg>
@@ -494,7 +533,10 @@
         </div>
         <div class="job-card-footer">
           <span class="job-salary">£110,000 – £145,000</span>
-          <span class="job-time">3d ago</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+            <span class="job-time">3d ago</span>
+          </div>
         </div>
       </a>
 
@@ -513,7 +555,10 @@
         </div>
         <div class="job-card-footer">
           <span class="job-salary">£115,000 – £140,000</span>
-          <span class="job-time">6d ago</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+            <span class="job-time">6d ago</span>
+          </div>
         </div>
       </a>
 
@@ -531,7 +576,10 @@
         </div>
         <div class="job-card-footer">
           <span class="job-salary">£130,000 – £165,000</span>
-          <span class="job-time">5d ago</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="source-badge source-badge--native">Descinder</span>
+            <span class="job-time">5d ago</span>
+          </div>
         </div>
       </a>
 
@@ -550,7 +598,10 @@
         </div>
         <div class="job-card-footer">
           <span class="job-salary">£95,000 – £125,000</span>
-          <span class="job-time">2d ago</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="source-badge source-badge--reed">Via Reed</span>
+            <span class="job-time">2d ago</span>
+          </div>
         </div>
       </a>
 

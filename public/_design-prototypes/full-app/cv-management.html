@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My CVs · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    cv-management.html — CV list: base CVs + AI-tailored CVs
+    Position four questions:
+    - Narrative role: management/inventory screen — see, organise, act on CVs
+    - Viewer distance: 60–80cm, table-reading mode
+    - Visual temperature: calm, structured — same register as settings.html
+    - Capacity: two clearly-separated sections (Base CVs / AI-tailored CVs).
+
+    Deliberate motion: hover lift on CV rows only.
+    The 120% detail: subscriber-only badge on AI section + 3-slot pattern for base CVs.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Layout */
+    .cv-page-main {
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-8) var(--space-6);
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .page-title {
+      font-size: var(--type-xl);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    /* Section heading */
+    .cv-section {
+      margin-bottom: var(--space-8);
+    }
+
+    .cv-section-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cv-section-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .cv-section-count {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+    }
+
+    /* Base CV slots — 3-slot pattern */
+    .cv-slots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+
+    .cv-base-slot {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      position: relative;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    }
+
+    .cv-base-slot:not(.empty):hover {
+      border-color: var(--navy-mid);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .cv-base-slot.empty {
+      border-style: dashed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: var(--space-3);
+      min-height: 160px;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .cv-base-slot.empty:hover {
+      border-color: var(--navy-mid);
+      background: var(--bg-subtle);
+    }
+
+    .slot-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    .cv-slot-filename {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+      word-break: break-all;
+    }
+
+    .cv-slot-detail {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-bottom: var(--space-4);
+    }
+
+    .cv-slot-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Primary badge */
+    .primary-badge {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: oklch(0.35 0.12 155);
+      background: oklch(0.95 0.05 155);
+      border: 1px solid oklch(0.86 0.07 155);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+
+    /* AI-tailored CVs — subscriber-only section */
+    .subscriber-section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .subscriber-only-badge {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--navy-6);
+      border: 1px solid var(--navy-10);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    /* AI CVs list */
+    .ai-cv-list {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .ai-cv-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .ai-cv-row:last-child { border-bottom: none; }
+    .ai-cv-row:hover { background: var(--bg-subtle); }
+
+    .ai-cv-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+    }
+
+    .ai-cv-main { flex: 1; min-width: 0; }
+
+    .ai-cv-name {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .ai-cv-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .ai-cv-source-link {
+      color: var(--navy);
+      font-size: var(--type-xs);
+      text-decoration: none;
+    }
+
+    .ai-cv-source-link:hover { text-decoration: underline; }
+
+    .ai-cv-date {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    .ai-cv-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-subtle);
+      border-color: var(--navy-mid);
+      color: var(--ink);
+    }
+
+    .btn-icon.danger:hover {
+      background: oklch(0.97 0.02 20);
+      border-color: oklch(0.80 0.06 20);
+      color: oklch(0.48 0.14 20);
+    }
+
+    /* Generate CTA banner */
+    .generate-cta-strip {
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    .generate-cta-text {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .generate-cta-text strong { color: var(--ink); }
+
+    @media (max-width: 768px) {
+      .cv-slots-grid { grid-template-columns: 1fr; }
+      .cv-page-main { padding: var(--space-5) var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="app-nav">
+        <a href="home.html" class="app-nav-link">Browse Jobs</a>
+        <a href="dashboard-seeker.html" class="app-nav-link">Dashboard</a>
+        <a href="cv-management.html" class="app-nav-link active">My CVs</a>
+        <a href="#" class="app-nav-link">Applications</a>
+      </nav>
+      <div class="app-header-right">
+        <span class="subscription-status-badge">Subscriber</span>
+        <span class="role-badge">Job seeker</span>
+        <div class="avatar-dropdown">
+          <div class="avatar" onclick="toggleDropdown()">RH</div>
+          <div class="dropdown-menu" id="dropdown">
+            <a href="profile-editor.html" class="dropdown-item">View profile</a>
+            <a href="settings.html" class="dropdown-item">Settings</a>
+            <hr class="dropdown-sep">
+            <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="cv-page-main page-enter">
+
+    <!-- Page heading -->
+    <div class="page-heading">
+      <h1 class="page-title">My CVs</h1>
+      <a href="ai-cv-generator.html" class="btn btn-primary btn-md">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+        Generate tailored CV
+      </a>
+    </div>
+
+    <!-- ── Base CVs ── -->
+    <div class="cv-section">
+      <div class="cv-section-head">
+        <span class="cv-section-title">Base CVs</span>
+        <span class="cv-section-count">2 of 3 slots used</span>
+      </div>
+
+      <div class="cv-slots-grid">
+
+        <!-- Slot 1 — filled, primary -->
+        <div class="cv-base-slot">
+          <span class="primary-badge">Primary</span>
+          <div class="slot-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="cv-slot-filename">Rachel_Huang_CV.pdf</div>
+          <div class="cv-slot-detail">PDF · 78 KB<br>Uploaded 3 May 2026</div>
+          <div class="cv-slot-actions">
+            <button class="btn btn-secondary btn-sm">Download</button>
+            <button class="btn btn-ghost btn-sm">Replace</button>
+          </div>
+        </div>
+
+        <!-- Slot 2 — profile-built -->
+        <div class="cv-base-slot">
+          <div class="slot-icon" style="background:var(--navy-6);border-color:var(--navy-10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--navy)">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="cv-slot-filename">Profile CV (in-app)</div>
+          <div class="cv-slot-detail">Profile-built<br>Last edited 28 Apr 2026</div>
+          <div class="cv-slot-actions">
+            <button class="btn btn-secondary btn-sm">Download</button>
+            <button class="btn btn-ghost btn-sm">Edit</button>
+          </div>
+        </div>
+
+        <!-- Slot 3 — empty -->
+        <div class="cv-base-slot empty" onclick="document.getElementById('uploadInput').click()">
+          <div style="width:40px;height:40px;border-radius:var(--radius-md);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;color:var(--ink-faint)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </div>
+          <div style="font-size:var(--type-sm);color:var(--ink-muted);font-weight:600">Add a CV</div>
+          <div style="font-size:var(--type-xs);color:var(--ink-faint)">PDF, DOCX, or TXT · Max 5 MB</div>
+          <input type="file" id="uploadInput" style="display:none" accept=".pdf,.docx,.txt">
+        </div>
+
+      </div>
+
+      <!-- Upload + Build actions -->
+      <div style="display:flex;gap:var(--space-3);margin-top:var(--space-5)">
+        <button class="btn btn-secondary btn-md" onclick="document.getElementById('uploadInput').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload CV
+        </button>
+        <a href="profile-editor.html" class="btn btn-ghost btn-md">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Build from profile
+        </a>
+      </div>
+    </div>
+
+    <!-- ── AI-tailored CVs ── -->
+    <div class="cv-section">
+      <div class="subscriber-section-header">
+        <span class="cv-section-title">AI-tailored CVs</span>
+        <span class="subscriber-only-badge">Subscriber feature</span>
+        <span class="cv-section-count" style="margin-left:auto">7 generated</span>
+      </div>
+
+      <div class="ai-cv-list">
+
+        <!-- Row 1 -->
+        <div class="ai-cv-row">
+          <div class="ai-cv-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          </div>
+          <div class="ai-cv-main">
+            <div class="ai-cv-name">Rachel Huang — Senior Platform Engineer</div>
+            <div class="ai-cv-meta">
+              Tailored for <a href="job-detail.html" class="ai-cv-source-link">Folio Labs · Senior Platform Engineer</a>
+              <span style="color:var(--border-mid)">·</span>
+              <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span>
+            </div>
+          </div>
+          <div class="ai-cv-date">13 May 2026</div>
+          <div class="ai-cv-actions">
+            <button class="btn-icon" title="Download PDF">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="btn-icon danger" title="Delete">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="ai-cv-row">
+          <div class="ai-cv-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          </div>
+          <div class="ai-cv-main">
+            <div class="ai-cv-name">Rachel Huang — Staff Software Engineer</div>
+            <div class="ai-cv-meta">
+              Tailored for <a href="job-detail.html" class="ai-cv-source-link">Marrow Studios · Staff Software Engineer</a>
+              <span style="color:var(--border-mid)">·</span>
+              <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span>
+            </div>
+          </div>
+          <div class="ai-cv-date">11 May 2026</div>
+          <div class="ai-cv-actions">
+            <button class="btn-icon" title="Download PDF">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="btn-icon danger" title="Delete">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="ai-cv-row">
+          <div class="ai-cv-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          </div>
+          <div class="ai-cv-main">
+            <div class="ai-cv-name">Rachel Huang — Engineering Manager (ad-hoc JD)</div>
+            <div class="ai-cv-meta">
+              Tailored for <span style="color:var(--ink-faint);font-size:var(--type-xs)">Pasted job description</span>
+            </div>
+          </div>
+          <div class="ai-cv-date">8 May 2026</div>
+          <div class="ai-cv-actions">
+            <button class="btn-icon" title="Download PDF">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="btn-icon danger" title="Delete">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="ai-cv-row">
+          <div class="ai-cv-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          </div>
+          <div class="ai-cv-main">
+            <div class="ai-cv-name">Rachel Huang — Lead Backend Engineer</div>
+            <div class="ai-cv-meta">
+              Tailored for <a href="job-detail.html" class="ai-cv-source-link">Caelum · Lead Backend Engineer</a>
+              <span style="color:var(--border-mid)">·</span>
+              <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span>
+            </div>
+          </div>
+          <div class="ai-cv-date">5 May 2026</div>
+          <div class="ai-cv-actions">
+            <button class="btn-icon" title="Download PDF">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="btn-icon danger" title="Delete">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- .ai-cv-list -->
+
+      <!-- Note: AI-tailored CVs auto-expire after 180 days -->
+      <p style="font-size:var(--type-xs);color:var(--ink-faint);margin-top:var(--space-3);line-height:1.6">
+        AI-tailored CVs are stored for 180 days from generation, or 30 days after subscription cancellation — whichever is sooner.
+      </p>
+
+      <!-- Generate CTA -->
+      <div class="generate-cta-strip">
+        <div class="generate-cta-text">
+          <strong>12 of 30 generations</strong> used this month. Resets 1 Jun 2026.
+        </div>
+        <a href="ai-cv-generator.html" class="btn btn-primary btn-md">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          Generate tailored CV →
+        </a>
+      </div>
+
+    </div><!-- .cv-section AI -->
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="home.html" class="wordmark" style="font-size:15px">descinder</a>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('dropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.avatar-dropdown')) {
+      document.getElementById('dropdown').classList.remove('open');
+    }
+  });
+</script>
+</body>
+</html>

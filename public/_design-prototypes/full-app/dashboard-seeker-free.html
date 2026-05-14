@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    dashboard-seeker-free.html — Free-tier seeker dashboard
+    Differs from dashboard-seeker.html (subscriber) in these ways:
+    - Subscribe banner at top (subtle, not aggressive)
+    - Job cards have lock icon on Apply buttons (native jobs only)
+    - Applications section shows external-apply tracking only with manual status
+    - No "AI-tailored CVs" widget
+    - No "Instant alerts" widget
+    - Saved searches visible (free feature)
+
+    Position four questions:
+    - Narrative role: hub, but with clear awareness of what's gated
+    - Viewer distance: 60–80cm laptop, same density as subscriber dashboard
+    - Visual temperature: calm — the subscription prompt is informational, not a billboard
+    - Capacity: 4 sections. Subscribe banner. Matched jobs (locked apply). External applies. Saved searches.
+
+    Deliberate motion: job card hover. Banner in once on load.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Subscribe banner */
+    .subscribe-banner {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .subscribe-banner-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .banner-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--navy-6);
+      border: 1px solid var(--navy-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .banner-text {
+      flex: 1;
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .banner-text strong { color: var(--ink); }
+
+    /* Dashboard layout */
+    .dashboard-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-7) var(--space-6);
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    /* Left sidebar */
+    .user-sidebar {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    .user-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+
+    .user-card-top {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .user-avatar-lg {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .user-name { font-size: var(--type-md); font-weight: 700; color: var(--ink); line-height: 1.2; }
+    .user-headline { font-size: var(--type-xs); color: var(--ink-muted); margin-top: 2px; line-height: 1.4; }
+
+    .completeness-label {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);
+    }
+
+    .completeness-pct { font-family: 'Geist Mono', monospace; font-size: var(--type-xs); color: var(--ink-muted); }
+    .completeness-hint { font-size: var(--type-xs); color: var(--ink-faint); margin-top: var(--space-2); line-height: 1.5; }
+
+    /* Sidebar nav */
+    .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+
+    .sidebar-nav-item {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+      font-size: var(--type-sm); color: var(--ink-muted); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .sidebar-nav-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .sidebar-nav-item.active { background: var(--bg-subtle); color: var(--navy); font-weight: 600; }
+
+    .sidebar-nav-badge {
+      margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 10px;
+      font-weight: 600; color: white; background: var(--navy); border-radius: 20px; padding: 1px 7px;
+    }
+
+    /* Locked nav item */
+    .sidebar-nav-item.locked { opacity: 0.55; cursor: default; }
+    .lock-icon { margin-left: auto; color: var(--ink-faint); }
+
+    /* Main content */
+    .dashboard-main { display: flex; flex-direction: column; gap: var(--space-8); }
+
+    .welcome-line {
+      display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4);
+    }
+
+    .welcome-text { font-size: var(--type-xl); font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    .welcome-date { font-family: 'Geist Mono', monospace; font-size: var(--type-xs); color: var(--ink-faint); white-space: nowrap; }
+
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4);
+    }
+
+    .section-head-title { font-size: var(--type-md); font-weight: 700; color: var(--ink); }
+    .section-head-link { font-size: var(--type-sm); color: var(--ink-muted); text-decoration: none; transition: color var(--transition); }
+    .section-head-link:hover { color: var(--navy); }
+
+    /* 2-col jobs grid */
+    .jobs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+    /* New-today amber badge */
+    .new-today-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase; color: oklch(0.45 0.14 75);
+      background: var(--amber-light); border: 1px solid oklch(0.82 0.10 75); border-radius: 4px; padding: 2px 7px;
+    }
+
+    .new-today-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+
+    /* Lock apply button */
+    .apply-lock-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'Geist', sans-serif; font-size: var(--type-xs); font-weight: 600;
+      color: var(--ink-faint); background: var(--bg-subtle); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 0 var(--space-3); height: 32px;
+      cursor: default; white-space: nowrap;
+    }
+
+    /* Tooltip on hover */
+    .lock-tooltip-wrap {
+      position: relative;
+    }
+
+    .lock-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      background: var(--ink);
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .lock-tooltip-wrap:hover .lock-tooltip { display: block; }
+
+    /* External apply status buttons */
+    .status-selector {
+      display: flex;
+      gap: var(--space-1);
+    }
+
+    .status-btn {
+      font-family: 'Geist', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+      line-height: 1.6;
+    }
+
+    .status-btn.active-applied { background: oklch(0.94 0.04 264); border-color: var(--navy-mid); color: var(--navy); }
+    .status-btn.active-interviewing { background: oklch(0.94 0.06 155); border-color: oklch(0.80 0.10 155); color: oklch(0.35 0.12 155); }
+    .status-btn.active-offer { background: var(--amber-light); border-color: oklch(0.82 0.10 75); color: oklch(0.45 0.14 75); }
+    .status-btn.active-rejected { background: oklch(0.96 0.02 0); border-color: oklch(0.82 0.06 20); color: oklch(0.48 0.12 20); }
+    .status-btn:hover:not(.active-applied):not(.active-interviewing):not(.active-offer):not(.active-rejected) { background: var(--bg-subtle); }
+
+    /* External apply table */
+    .applications-table-wrap {
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+    }
+
+    /* Alerts list */
+    .alerts-list { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+
+    .alert-item {
+      display: flex; align-items: center; gap: var(--space-4);
+      padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border); transition: background var(--transition);
+    }
+
+    .alert-item:last-child { border-bottom: none; }
+    .alert-item:hover { background: var(--bg-subtle); }
+
+    .alert-icon {
+      width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-subtle);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      color: var(--ink-muted); flex-shrink: 0;
+    }
+
+    .alert-main { flex: 1; min-width: 0; }
+    .alert-name { font-size: var(--type-sm); font-weight: 600; color: var(--ink); }
+    .alert-meta { font-size: var(--type-xs); color: var(--ink-muted); margin-top: 1px; }
+    .alert-freq { font-family: 'Geist Mono', monospace; font-size: var(--type-xs); color: var(--ink-faint); white-space: nowrap; }
+    .alert-count { font-family: 'Geist Mono', monospace; font-size: var(--type-xs); font-weight: 600; color: white; background: var(--navy); border-radius: 20px; padding: 2px 9px; }
+
+    /* Instant alerts locked row */
+    .instant-locked {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-4) var(--space-5); background: var(--bg-subtle); border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .user-sidebar { position: static; }
+      .jobs-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="app-nav">
+        <a href="home.html" class="app-nav-link">Browse Jobs</a>
+        <a href="dashboard-seeker-free.html" class="app-nav-link active">Dashboard</a>
+        <a href="#" class="app-nav-link">Saved</a>
+        <a href="#" class="app-nav-link">Applications</a>
+      </nav>
+      <div class="app-header-right">
+        <span class="role-badge">Job seeker</span>
+        <div class="avatar-dropdown">
+          <div class="avatar" onclick="toggleDropdown()">JC</div>
+          <div class="dropdown-menu" id="dropdown">
+            <a href="profile-editor.html" class="dropdown-item">View profile</a>
+            <a href="settings.html" class="dropdown-item">Settings</a>
+            <hr class="dropdown-sep">
+            <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Subscribe banner ── -->
+  <div class="subscribe-banner">
+    <div class="subscribe-banner-inner">
+      <div class="banner-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <p class="banner-text"><strong>Subscribe to apply to Descinder roles and generate AI-tailored CVs.</strong> External links to Reed and Adzuna are always free.</p>
+      <a href="pricing.html" class="btn btn-primary btn-sm">See plans</a>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div class="dashboard-layout page-enter">
+
+    <!-- Left sidebar -->
+    <aside class="user-sidebar">
+      <div class="user-card">
+        <div class="user-card-top">
+          <div class="user-avatar-lg">JC</div>
+          <div>
+            <div class="user-name">James Chen</div>
+            <div class="user-headline">Software Engineer · London</div>
+          </div>
+        </div>
+
+        <div class="completeness-label">
+          <span class="section-label" style="margin-bottom:0">Profile</span>
+          <span class="completeness-pct">58%</span>
+        </div>
+        <div class="completeness-bar">
+          <div class="completeness-bar-fill" style="width:58%"></div>
+        </div>
+        <p class="completeness-hint">Add work history to reach 80% and get better matches.</p>
+        <a href="profile-editor.html" class="btn btn-secondary btn-sm" style="margin-top:var(--space-4);width:100%">Edit profile</a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-nav-item active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+          Overview
+        </a>
+        <a href="#" class="sidebar-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+          Saved jobs
+          <span class="sidebar-nav-badge">8</span>
+        </a>
+        <a href="#" class="sidebar-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          External applies
+          <span class="sidebar-nav-badge">2</span>
+        </a>
+        <a href="#" class="sidebar-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Alerts
+        </a>
+        <!-- AI CV — locked -->
+        <a href="pricing.html" class="sidebar-nav-item locked" title="Subscriber feature">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg>
+          AI-tailored CVs
+          <span class="lock-icon">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="dashboard-main">
+
+      <div class="welcome-line">
+        <h1 class="welcome-text">Welcome back, James.</h1>
+        <span class="welcome-date">Wednesday, 14 May 2026</span>
+      </div>
+
+      <!-- ── Matched jobs ── -->
+      <section>
+        <div class="section-head">
+          <span class="section-head-title">Roles that match your profile</span>
+          <a href="home.html" class="section-head-link">Browse all →</a>
+        </div>
+        <div class="jobs-grid">
+
+          <!-- Job card 1 — native, locked apply -->
+          <a href="job-detail.html" class="job-card featured">
+            <div class="job-card-top">
+              <div class="company-mono mono-slate">FL</div>
+              <div class="job-card-body">
+                <div class="job-title">Senior Platform Engineer</div>
+                <div class="job-company">Folio Labs · London</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="badge-featured">Featured</span>
+              <span class="new-today-badge"><span class="new-today-dot"></span>New today</span>
+              <span class="tag">Remote</span>
+              <span class="source-badge source-badge--native">Descinder</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£80,000 – £110,000</span>
+              <div style="display:flex;align-items:center;gap:var(--space-2)">
+                <span class="job-time">3h ago</span>
+                <div class="lock-tooltip-wrap" onclick="event.preventDefault()">
+                  <span class="apply-lock-btn">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Apply
+                  </span>
+                  <div class="lock-tooltip">Subscribe to apply on Descinder</div>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Job card 2 — external (Reed), always free -->
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="company-mono mono-teal">DS</div>
+              <div class="job-card-body">
+                <div class="job-title">Senior Software Engineer</div>
+                <div class="job-company">Deliveroo · London</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Full-time</span>
+              <span class="tag">Hybrid</span>
+              <span class="source-badge source-badge--reed">Sourced from Reed</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£75,000 – £95,000</span>
+              <div style="display:flex;align-items:center;gap:var(--space-2)">
+                <span class="job-time">1d ago</span>
+                <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()" title="Opens on Reed">Apply on Reed ↗</button>
+              </div>
+            </div>
+          </a>
+
+          <!-- Job card 3 — native, locked -->
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="company-mono mono-mid">MR</div>
+              <div class="job-card-body">
+                <div class="job-title">Staff Software Engineer</div>
+                <div class="job-company">Marrow Studios · Manchester</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Hybrid</span>
+              <span class="tag">Full-time</span>
+              <span class="source-badge source-badge--native">Descinder</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£110,000 – £145,000</span>
+              <div style="display:flex;align-items:center;gap:var(--space-2)">
+                <span class="job-time">2d ago</span>
+                <div class="lock-tooltip-wrap" onclick="event.preventDefault()">
+                  <span class="apply-lock-btn">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Apply
+                  </span>
+                  <div class="lock-tooltip">Subscribe to apply on Descinder</div>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Job card 4 — external (Adzuna) -->
+          <a href="job-detail.html" class="job-card">
+            <div class="job-card-top">
+              <div class="company-mono mono-green">GG</div>
+              <div class="job-card-body">
+                <div class="job-title">Backend Engineer (Go)</div>
+                <div class="job-company">GoCardless · London</div>
+              </div>
+            </div>
+            <div class="job-meta">
+              <span class="tag">Full-time</span>
+              <span class="tag">Remote</span>
+              <span class="source-badge source-badge--adzuna">Sourced from Adzuna</span>
+            </div>
+            <div class="job-card-footer">
+              <span class="job-salary">£85,000 – £115,000</span>
+              <div style="display:flex;align-items:center;gap:var(--space-2)">
+                <span class="job-time">2d ago</span>
+                <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Adzuna ↗</button>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+      <!-- ── External applies (manual tracking) ── -->
+      <section>
+        <div class="section-head">
+          <span class="section-head-title">Your external applications</span>
+          <a href="pricing.html" class="section-head-link" style="font-size:var(--type-xs);color:var(--navy)">Subscribe for unified tracking →</a>
+        </div>
+        <div class="applications-table-wrap">
+          <table class="status-table">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Company</th>
+                <th>Source</th>
+                <th>Clicked</th>
+                <th>Your status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--ink);font-weight:500">Senior Backend Engineer</td>
+                <td>Monzo</td>
+                <td><span class="source-badge source-badge--reed">Reed</span></td>
+                <td style="font-family:'Geist Mono',monospace">12 May 2026</td>
+                <td>
+                  <div class="status-selector">
+                    <button class="status-btn active-applied" onclick="setStatus(this,'active-applied')">Applied</button>
+                    <button class="status-btn" onclick="setStatus(this,'active-interviewing')">Interview</button>
+                    <button class="status-btn" onclick="setStatus(this,'active-rejected')">Rejected</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="color:var(--ink);font-weight:500">Platform Engineer (Go)</td>
+                <td>Checkout.com</td>
+                <td><span class="source-badge source-badge--adzuna">Adzuna</span></td>
+                <td style="font-family:'Geist Mono',monospace">9 May 2026</td>
+                <td>
+                  <div class="status-selector">
+                    <button class="status-btn active-applied" onclick="setStatus(this,'active-applied')">Applied</button>
+                    <button class="status-btn" onclick="setStatus(this,'active-interviewing')">Interview</button>
+                    <button class="status-btn" onclick="setStatus(this,'active-offer')">Offer</button>
+                    <button class="status-btn" onclick="setStatus(this,'active-rejected')">Rejected</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:var(--type-xs);color:var(--ink-faint);margin-top:var(--space-3)">
+          Manual status tracking only. <a href="pricing.html" style="color:var(--navy)">Subscribe</a> for a unified view of native + external applications.
+        </p>
+      </section>
+
+      <!-- ── Saved searches (free feature) ── -->
+      <section>
+        <div class="section-head">
+          <span class="section-head-title">Saved searches</span>
+          <a href="#" class="section-head-link">Manage alerts →</a>
+        </div>
+        <div class="alerts-list">
+          <div class="alert-item">
+            <div class="alert-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+            </div>
+            <div class="alert-main">
+              <div class="alert-name">Senior / Lead Backend Engineer · London</div>
+              <div class="alert-meta">Full-time · £70k+ · Remote or Hybrid</div>
+            </div>
+            <span class="alert-count">9 new</span>
+            <span class="alert-freq">Daily</span>
+          </div>
+          <div class="alert-item">
+            <div class="alert-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+            </div>
+            <div class="alert-main">
+              <div class="alert-name">Platform Engineer · Remote · UK</div>
+              <div class="alert-meta">Full-time · £80k+</div>
+            </div>
+            <span class="alert-count">3 new</span>
+            <span class="alert-freq">Weekly</span>
+          </div>
+
+          <!-- Instant alerts — subscribe to unlock -->
+          <div class="instant-locked">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-faint);flex-shrink:0">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span style="flex:1;font-size:var(--type-xs);color:var(--ink-muted)">Instant alerts (within the hour) — subscriber feature</span>
+            <a href="pricing.html" class="btn btn-secondary btn-sm">Unlock</a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="home.html" class="wordmark" style="font-size:15px">descinder</a>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('dropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.avatar-dropdown')) {
+      document.getElementById('dropdown').classList.remove('open');
+    }
+  });
+
+  function setStatus(btn, activeClass) {
+    const row = btn.closest('.status-selector');
+    row.querySelectorAll('.status-btn').forEach(b => {
+      b.className = 'status-btn';
+    });
+    btn.classList.add(activeClass);
+  }
+</script>
+</body>
+</html>

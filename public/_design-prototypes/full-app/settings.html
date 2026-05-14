@@ -322,6 +322,7 @@
       <nav class="settings-nav">
         <span class="settings-nav-group-title">Account</span>
         <a href="#account" class="settings-nav-item active">Account</a>
+        <a href="#subscription" class="settings-nav-item">Subscription</a>
         <a href="#notifications" class="settings-nav-item">Notifications</a>
         <span class="settings-nav-group-title">Data</span>
         <a href="#privacy" class="settings-nav-item">Privacy &amp; data</a>
@@ -357,6 +358,42 @@
             </div>
             <span class="form-hint">Last changed 3 months ago.</span>
           </div>
+        </section>
+
+        <!-- ── Subscription ── -->
+        <section class="settings-section" id="subscription">
+          <div class="section-head">
+            <div class="section-title">Subscription</div>
+            <div class="section-sub">Manage your plan, billing, and invoices.</div>
+          </div>
+
+          <!-- Subscriber state (shown for subscriber Rachel Huang) -->
+          <div style="background:var(--bg-subtle);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-5)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+              <div>
+                <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+                  <span style="font-size:var(--type-sm);font-weight:700;color:var(--ink)">Seeker Monthly</span>
+                  <span class="subscription-status-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                    Active
+                  </span>
+                </div>
+                <div style="font-size:var(--type-sm);color:var(--ink-muted)">£14.99 / month · Renews 14 Jun 2026</div>
+              </div>
+              <a href="subscription-billing.html" class="btn btn-secondary btn-sm">Manage billing</a>
+            </div>
+          </div>
+
+          <p style="font-size:var(--type-xs);color:var(--ink-faint);line-height:1.6">Your subscription gives you native apply, AI-tailored CVs, and instant alerts. External roles (Reed, Adzuna) are always free to apply to regardless of plan. <a href="subscription-billing.html" style="color:var(--navy-mid)">View invoices and cancel →</a></p>
+
+          <!-- Free-user state annotation (commented out — swap in for free-user variant) -->
+          <!--
+          <div style="background:var(--bg-subtle);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5)">
+            <div style="font-size:var(--type-sm);font-weight:600;color:var(--ink);margin-bottom:var(--space-2)">Free plan</div>
+            <div style="font-size:var(--type-sm);color:var(--ink-muted);margin-bottom:var(--space-4)">Subscribe for native applies, AI-tailored CVs, and instant alerts.</div>
+            <a href="pricing.html" class="btn btn-secondary btn-sm">See plans →</a>
+          </div>
+          -->
         </section>
 
         <!-- ── Notifications ── -->
@@ -406,6 +443,20 @@
             </div>
             <label class="toggle-switch">
               <input type="checkbox" onchange="toggleKnob(this)">
+              <div class="toggle-track"><div class="toggle-knob"></div></div>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:2px">
+                <div class="toggle-title">Instant alerts</div>
+                <span class="subscription-status-badge" style="font-size:10px;padding:1px 7px">Subscriber</span>
+              </div>
+              <div class="toggle-desc">Real-time browser and push notifications the moment a matching role is posted. Available on the Seeker Monthly plan.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked onchange="toggleKnob(this)">
               <div class="toggle-track"><div class="toggle-knob"></div></div>
             </label>
           </div>

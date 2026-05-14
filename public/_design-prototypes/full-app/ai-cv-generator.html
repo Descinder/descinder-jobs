@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-tailored CV · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    ai-cv-generator.html — Subscriber-only AI CV generation screen
+    Position four questions:
+    - Narrative role: tool screen — input → generate → review → export
+    - Viewer distance: 60–80cm laptop, task-focused, three panes
+    - Visual temperature: calm, focused, with one deliberate amber "Generate" CTA moment
+    - Capacity: 3-pane layout. Left = base CV picker. Center = target job. Right = output.
+
+    Deliberate motion: the generating pulse on the right pane is the perpetual exception for this screen.
+    The 120% detail: usage cap bar + "Generating... using Groq" status text.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Usage cap strip */
+    .usage-strip {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-3) 0;
+    }
+
+    .usage-strip-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+    }
+
+    .usage-label {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .usage-detail {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    .usage-bar-wrap {
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .usage-cap-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .usage-cap-fill {
+      height: 100%;
+      background: var(--navy);
+      border-radius: 4px;
+      transition: width 400ms ease;
+    }
+
+    /* Three-pane layout */
+    .generator-layout {
+      flex: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-5) var(--space-6);
+      display: grid;
+      grid-template-columns: 260px 1fr 380px;
+      gap: var(--space-4);
+      align-items: start;
+    }
+
+    /* Shared pane styles */
+    .gen-pane {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .pane-header {
+      padding: var(--space-4) var(--space-4) var(--space-3);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-sidebar);
+    }
+
+    .pane-title {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .pane-body {
+      padding: var(--space-4);
+    }
+
+    /* Left pane: base CV selector */
+    .cv-slot-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      margin-bottom: var(--space-2);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .cv-slot-item:hover {
+      border-color: var(--navy-mid);
+    }
+
+    .cv-slot-item.selected {
+      border-color: var(--navy);
+      background: var(--navy-6);
+    }
+
+    .cv-slot-item.empty {
+      border-style: dashed;
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .cv-slot-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+    }
+
+    .cv-slot-item.selected .cv-slot-icon {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: white;
+    }
+
+    .cv-slot-info { flex: 1; min-width: 0; }
+
+    .cv-slot-name {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cv-slot-meta {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+    }
+
+    .cv-slot-primary {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: oklch(0.38 0.12 155);
+      background: oklch(0.95 0.05 155);
+      border: 1px solid oklch(0.86 0.07 155);
+      border-radius: 3px;
+      padding: 1px 5px;
+      display: inline-block;
+      margin-top: 3px;
+    }
+
+    .pane-divider {
+      height: 1px;
+      background: var(--border);
+      margin: var(--space-3) 0;
+    }
+
+    .pane-action-link {
+      font-size: var(--type-xs);
+      color: var(--navy);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color var(--transition);
+    }
+
+    .pane-action-link:hover { color: var(--navy-mid); }
+
+    /* Center pane: target job picker */
+    .job-mode-tabs {
+      display: flex;
+      gap: var(--space-1);
+      margin-bottom: var(--space-4);
+    }
+
+    .job-mode-tab {
+      flex: 1;
+      height: 32px;
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-xs);
+      font-weight: 600;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+
+    .job-mode-tab.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: white;
+    }
+
+    .job-mode-tab:hover:not(.active) {
+      border-color: var(--navy-mid);
+      color: var(--ink);
+    }
+
+    /* Saved job picker */
+    .saved-job-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      margin-bottom: var(--space-2);
+    }
+
+    .saved-job-item:hover {
+      border-color: var(--navy-mid);
+    }
+
+    .saved-job-item.selected {
+      border-color: var(--navy);
+      background: var(--navy-6);
+    }
+
+    .saved-job-title {
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .saved-job-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+    }
+
+    /* JD paste area */
+    .jd-paste-area {
+      width: 100%;
+      min-height: 200px;
+      padding: var(--space-4);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      color: var(--ink);
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      resize: vertical;
+      line-height: 1.65;
+      transition: border-color var(--transition);
+    }
+
+    .jd-paste-area:focus {
+      border-color: var(--navy);
+      background: var(--bg);
+    }
+
+    .jd-paste-area::placeholder { color: var(--ink-faint); }
+
+    /* Generate button — amber is the deliberate moment */
+    .btn-generate {
+      width: 100%;
+      height: 46px;
+      background: var(--amber);
+      color: var(--navy);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+      margin-top: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-generate:hover {
+      background: color-mix(in oklch, var(--amber) 88%, black);
+      transform: translateY(-1px);
+    }
+
+    .btn-generate:disabled {
+      background: var(--border-mid);
+      color: var(--ink-faint);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Right pane: CV preview + generating state */
+    .cv-preview-area {
+      min-height: 480px;
+      position: relative;
+    }
+
+    /* Generating pulse animation — the perpetual exception for this screen */
+    @keyframes generating-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .cv-preview-area.generating {
+      animation: generating-pulse 1.8s ease-in-out infinite;
+    }
+
+    .generating-status {
+      display: none;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .generating-status.visible { display: flex; }
+
+    .generating-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: generating-pulse 1.2s ease-in-out infinite;
+    }
+
+    /* Rendered CV markdown output */
+    .cv-output {
+      padding: var(--space-5);
+      font-size: var(--type-sm);
+      line-height: 1.75;
+      color: var(--ink);
+    }
+
+    .cv-output h1 {
+      font-size: var(--type-md);
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+      letter-spacing: -0.01em;
+    }
+
+    .cv-output h2 {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--navy);
+      margin-top: var(--space-5);
+      margin-bottom: var(--space-2);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: var(--type-xs);
+    }
+
+    .cv-output p {
+      color: var(--ink-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    .cv-output ul {
+      list-style: disc;
+      padding-left: var(--space-5);
+      margin-bottom: var(--space-3);
+      color: var(--ink-muted);
+    }
+
+    .cv-output li { margin-bottom: 3px; }
+
+    .cv-output .cv-meta {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+    }
+
+    /* Output action bar */
+    .output-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border);
+      background: var(--bg-sidebar);
+    }
+
+    .output-actions-right {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    /* Empty state */
+    .cv-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-9) var(--space-5);
+      text-align: center;
+      color: var(--ink-faint);
+      min-height: 380px;
+    }
+
+    .cv-empty-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+      color: var(--ink-faint);
+    }
+
+    .cv-empty-text {
+      font-size: var(--type-sm);
+      color: var(--ink-faint);
+      line-height: 1.6;
+      max-width: 200px;
+    }
+
+    @media (max-width: 1024px) {
+      .generator-layout {
+        grid-template-columns: 240px 1fr 320px;
+        gap: var(--space-3);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .generator-layout { grid-template-columns: 1fr; }
+      .usage-strip-inner { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="app-nav">
+        <a href="home.html" class="app-nav-link">Browse Jobs</a>
+        <a href="dashboard-seeker.html" class="app-nav-link">Dashboard</a>
+        <a href="cv-management.html" class="app-nav-link active">My CVs</a>
+        <a href="#" class="app-nav-link">Applications</a>
+      </nav>
+      <div class="app-header-right">
+        <span class="subscription-status-badge">Subscriber</span>
+        <span class="role-badge">Job seeker</span>
+        <div class="avatar-dropdown">
+          <div class="avatar" onclick="toggleDropdown()">RH</div>
+          <div class="dropdown-menu" id="dropdown">
+            <a href="profile-editor.html" class="dropdown-item">View profile</a>
+            <a href="settings.html" class="dropdown-item">Settings</a>
+            <hr class="dropdown-sep">
+            <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Usage cap strip ── -->
+  <div class="usage-strip">
+    <div class="usage-strip-inner">
+      <span class="usage-label">AI CV Generator</span>
+      <span class="usage-detail">12 of 30 generations used this month</span>
+      <div class="usage-bar-wrap">
+        <div class="usage-cap-bar">
+          <div class="usage-cap-fill" style="width: 40%"></div>
+        </div>
+      </div>
+      <span class="usage-detail">Resets 1 Jun 2026</span>
+    </div>
+  </div>
+
+  <!-- ── Three-pane generator ── -->
+  <div class="generator-layout page-enter">
+
+    <!-- ── Left pane: Base CV selector ── -->
+    <div class="gen-pane">
+      <div class="pane-header">
+        <div class="pane-title">Base CV</div>
+      </div>
+      <div class="pane-body">
+        <p style="font-size:var(--type-xs);color:var(--ink-muted);margin-bottom:var(--space-3);line-height:1.5">Select the CV to start from. The AI tailors it for the target job.</p>
+
+        <!-- CV slot 1 — selected -->
+        <div class="cv-slot-item selected" onclick="selectCV(this)">
+          <div class="cv-slot-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="cv-slot-info">
+            <div class="cv-slot-name">Rachel_Huang_CV.pdf</div>
+            <div class="cv-slot-meta">PDF · 78 KB · Uploaded 3 May</div>
+            <span class="cv-slot-primary">Primary</span>
+          </div>
+        </div>
+
+        <!-- CV slot 2 -->
+        <div class="cv-slot-item" onclick="selectCV(this)">
+          <div class="cv-slot-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="cv-slot-info">
+            <div class="cv-slot-name">Profile CV (built in-app)</div>
+            <div class="cv-slot-meta">Profile-built · Last edited 28 Apr</div>
+          </div>
+        </div>
+
+        <!-- CV slot 3 — empty -->
+        <div class="cv-slot-item empty">
+          <div class="cv-slot-icon" style="border-style:dashed">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <div class="cv-slot-info">
+            <div class="cv-slot-name" style="color:var(--ink-faint)">Slot 3 — empty</div>
+            <div class="cv-slot-meta">Max 3 base CVs</div>
+          </div>
+        </div>
+
+        <div class="pane-divider"></div>
+        <a href="cv-management.html" class="pane-action-link">Manage base CVs →</a>
+      </div>
+    </div>
+
+    <!-- ── Center pane: Target job ── -->
+    <div class="gen-pane">
+      <div class="pane-header" style="display:flex;align-items:center;justify-content:space-between">
+        <div class="pane-title">Target job</div>
+        <span style="font-family:'Geist Mono',monospace;font-size:9px;color:var(--ink-faint)">STEP 2 OF 2</span>
+      </div>
+      <div class="pane-body">
+
+        <!-- Mode tabs -->
+        <div class="job-mode-tabs">
+          <button class="job-mode-tab active" id="tab-saved" onclick="switchMode('saved')">From saved jobs</button>
+          <button class="job-mode-tab" id="tab-paste" onclick="switchMode('paste')">Paste description</button>
+        </div>
+
+        <!-- Saved jobs mode -->
+        <div id="mode-saved">
+          <div class="input" style="margin-bottom:var(--space-3);display:flex;align-items:center;gap:var(--space-2);height:36px;cursor:text">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-faint);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" placeholder="Search saved jobs..." style="border:none;outline:none;font-family:'Geist',sans-serif;font-size:var(--type-sm);color:var(--ink);background:transparent;width:100%" id="jobSearch">
+          </div>
+
+          <div id="saved-jobs-list">
+            <!-- Job 1 — selected -->
+            <div class="saved-job-item selected" onclick="selectJob(this)">
+              <div class="saved-job-title">Senior Platform Engineer</div>
+              <div class="saved-job-meta">Folio Labs · London, UK · <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span></div>
+            </div>
+            <div class="saved-job-item" onclick="selectJob(this)">
+              <div class="saved-job-title">Staff Software Engineer — Infrastructure</div>
+              <div class="saved-job-meta">Marrow Studios · Manchester · <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span></div>
+            </div>
+            <div class="saved-job-item" onclick="selectJob(this)">
+              <div class="saved-job-title">Lead Backend Engineer</div>
+              <div class="saved-job-meta">Caelum · Remote · <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span></div>
+            </div>
+            <div class="saved-job-item" onclick="selectJob(this)">
+              <div class="saved-job-title">Engineering Manager — Platform</div>
+              <div class="saved-job-meta">Orrery · Edinburgh, UK · <span class="source-badge source-badge--native" style="font-size:9px">Descinder</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paste mode — hidden by default -->
+        <div id="mode-paste" style="display:none">
+          <p style="font-size:var(--type-xs);color:var(--ink-muted);margin-bottom:var(--space-3);line-height:1.5">Paste the full job description. Works for any role — not just jobs saved on Descinder.</p>
+          <textarea class="jd-paste-area" placeholder="Paste the full job description here...
+
+Role: Senior Backend Engineer
+Company: [Company name]
+..."></textarea>
+        </div>
+
+        <!-- Generate CTA -->
+        <button class="btn-generate" id="generateBtn" onclick="startGenerating()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/>
+          </svg>
+          Generate tailored CV
+        </button>
+
+        <p style="font-size:var(--type-xs);color:var(--ink-faint);margin-top:var(--space-3);text-align:center;line-height:1.5">
+          Uses 1 of your 30 monthly generations.<br>Your base CV is not modified.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Right pane: CV output / preview ── -->
+    <div class="gen-pane" id="outputPane">
+
+      <div class="generating-status" id="generatingStatus">
+        <span class="generating-dot"></span>
+        <span id="generatingText">Generating... using Groq</span>
+      </div>
+
+      <div class="cv-preview-area" id="cvPreview">
+        <!-- State A: empty — select both inputs first -->
+        <div class="cv-empty-state" id="emptyState">
+          <div class="cv-empty-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="m12 12 3 3m0 0 3-3m-3 3V9"/>
+            </svg>
+          </div>
+          <p class="cv-empty-text">Pick a base CV and target job, then hit Generate.</p>
+        </div>
+
+        <!-- State B: generated CV (shown after generation) -->
+        <div id="generatedOutput" style="display:none">
+          <div class="cv-output">
+            <h1>Rachel Huang</h1>
+            <p class="cv-meta">r.huang@example.com · London, UK · linkedin.com/in/rachelhuang</p>
+
+            <h2>Professional Summary</h2>
+            <p>Senior software engineer with 7 years designing and operating distributed systems at scale. At Folio Labs-calibre environments, I've led platform migrations to Kubernetes, reduced p99 latency by 34ms across three microservices, and co-authored the internal incident-response runbook adopted across 4 engineering teams. Strong TypeScript and Go foundations; comfortable owning full lifecycle from architecture review to on-call rotation.</p>
+
+            <h2>Core Skills</h2>
+            <p>TypeScript · Node.js · Go · Kubernetes · Terraform · AWS (ECS, RDS, CloudFront) · PostgreSQL · Redis · Datadog · GitHub Actions</p>
+
+            <h2>Experience</h2>
+            <p><strong>Platform Engineer II</strong> — Vance Studio, London · Jan 2023 – Present</p>
+            <ul>
+              <li>Migrated 11 microservices from EC2 to Kubernetes; reduced mean deploy time from 18 min to 4 min</li>
+              <li>Designed and shipped internal secrets-management layer replacing Vault with a lightweight proxy; zero-downtime rollout</li>
+              <li>Led on-call rotation for platform SLAs; authored incident playbooks covering 83% of recurring failure modes</li>
+            </ul>
+            <p><strong>Software Engineer</strong> — Marrow Studios, Manchester · Aug 2020 – Dec 2022</p>
+            <ul>
+              <li>Built data-pipeline orchestration service in Go handling 140k events/day; P95 under 40ms</li>
+              <li>Implemented CI/CD with GitHub Actions + Terraform; cut release cycle from weekly to daily</li>
+            </ul>
+
+            <h2>Education</h2>
+            <p>BSc Computer Science, University of Edinburgh · 2020 · First-class honours</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output actions (visible after generation) -->
+      <div class="output-actions" id="outputActions" style="display:none">
+        <span style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint)">Tailored for: Senior Platform Engineer</span>
+        <div class="output-actions-right">
+          <button class="btn btn-secondary btn-sm" onclick="copyToClipboard()">Copy</button>
+          <button class="btn btn-primary btn-sm">Export PDF</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- .generator-layout -->
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="home.html" class="wordmark" style="font-size:15px">descinder</a>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('dropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.avatar-dropdown')) {
+      document.getElementById('dropdown').classList.remove('open');
+    }
+  });
+
+  function selectCV(el) {
+    document.querySelectorAll('.cv-slot-item:not(.empty)').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function selectJob(el) {
+    document.querySelectorAll('.saved-job-item').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function switchMode(mode) {
+    document.getElementById('mode-saved').style.display = mode === 'saved' ? 'block' : 'none';
+    document.getElementById('mode-paste').style.display = mode === 'paste' ? 'block' : 'none';
+    document.getElementById('tab-saved').classList.toggle('active', mode === 'saved');
+    document.getElementById('tab-paste').classList.toggle('active', mode === 'paste');
+  }
+
+  function startGenerating() {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+
+    const status = document.getElementById('generatingStatus');
+    const preview = document.getElementById('cvPreview');
+    const emptyState = document.getElementById('emptyState');
+    const generatedOutput = document.getElementById('generatedOutput');
+    const outputActions = document.getElementById('outputActions');
+    const generatingText = document.getElementById('generatingText');
+
+    // Show generating state
+    status.classList.add('visible');
+    preview.classList.add('generating');
+    emptyState.style.display = 'none';
+
+    // Simulate Groq then fallback
+    let t = 0;
+    const steps = [
+      { t: 800, text: 'Generating... using Groq' },
+      { t: 2200, text: 'Groq rate-limited, falling back to Claude…' },
+      { t: 3600, text: 'Generating... using Claude Haiku' },
+    ];
+
+    steps.forEach(s => {
+      setTimeout(() => { generatingText.textContent = s.text; }, s.t);
+    });
+
+    // Done after 4.5s
+    setTimeout(() => {
+      preview.classList.remove('generating');
+      status.classList.remove('visible');
+      generatedOutput.style.display = 'block';
+      outputActions.style.display = 'flex';
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2-2 7H3l6 4.5-2.3 7L12 17l5.3 3.5L15 13.5 21 9h-7z"/></svg> Regenerate';
+      // Update usage counter
+      document.querySelector('.usage-detail').textContent = '13 of 30 generations used this month';
+      document.querySelector('.usage-cap-fill').style.width = '43%';
+    }, 4500);
+  }
+
+  function copyToClipboard() {
+    const text = document.querySelector('.cv-output').innerText;
+    navigator.clipboard.writeText(text).catch(() => {});
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  }
+</script>
+</body>
+</html>

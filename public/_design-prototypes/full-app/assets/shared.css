@@ -1420,3 +1420,312 @@ textarea.input {
   font-weight: 400;
   color: var(--ink-muted);
 }
+
+/* ── v3 additions: paywall, subscription, source attribution, AI CV ── */
+
+/* Source attribution badge — appears on job cards and detail pages */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.source-badge--reed {
+  color: oklch(0.38 0.10 20);
+  background: oklch(0.98 0.01 20);
+  border-color: oklch(0.90 0.03 20);
+}
+
+.source-badge--adzuna {
+  color: oklch(0.35 0.08 210);
+  background: oklch(0.97 0.01 210);
+  border-color: oklch(0.90 0.03 210);
+}
+
+.source-badge--native {
+  color: var(--navy);
+  background: var(--navy-6);
+  border-color: var(--navy-10);
+}
+
+/* Subscription status badge */
+.subscription-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: oklch(0.35 0.12 155);
+  background: oklch(0.95 0.05 155);
+  border: 1px solid oklch(0.85 0.08 155);
+  border-radius: 4px;
+  padding: 3px 9px;
+}
+
+.subscription-status-badge--inactive {
+  color: var(--ink-faint);
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+
+/* Paywall overlay (for paywall-modal.html) */
+.paywall-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0.12 0.06 264 / 72%);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+}
+
+.paywall-modal {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 440px;
+  width: 100%;
+  padding: var(--space-7);
+  position: relative;
+}
+
+.paywall-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  transition: background var(--transition), color var(--transition);
+}
+
+.paywall-close:hover {
+  background: var(--bg-subtle);
+  color: var(--ink-muted);
+}
+
+/* AI CV pane layout classes */
+.ai-cv-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  gap: var(--space-5);
+  min-height: calc(100dvh - 56px - 120px);
+  align-items: start;
+}
+
+.ai-cv-pane {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.ai-cv-pane-header {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+
+.ai-cv-pane-title {
+  font-size: var(--type-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.ai-cv-pane-body {
+  padding: var(--space-4);
+}
+
+/* Usage cap bar */
+.usage-cap-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.usage-cap-fill {
+  height: 100%;
+  background: var(--navy);
+  border-radius: 3px;
+  transition: width 400ms ease;
+}
+
+.usage-cap-fill.warning {
+  background: var(--amber);
+}
+
+/* CV slot cards */
+.cv-slot {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  margin-bottom: var(--space-2);
+}
+
+.cv-slot:hover {
+  border-color: var(--navy-mid);
+  background: var(--bg-subtle);
+}
+
+.cv-slot.selected {
+  border-color: var(--navy);
+  background: var(--navy-6);
+}
+
+.cv-slot-name {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.cv-slot-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+}
+
+/* Free-tier subscribe banner */
+.subscribe-banner {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.subscribe-banner-text {
+  flex: 1;
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.subscribe-banner-text strong {
+  color: var(--ink);
+}
+
+/* Apply-lock overlay on job cards (free seeker) */
+.apply-lock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Geist', sans-serif;
+  font-size: var(--type-xs);
+  font-weight: 600;
+  color: var(--ink-faint);
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 var(--space-3);
+  height: 32px;
+  cursor: not-allowed;
+  white-space: nowrap;
+}
+
+/* Pricing page specific */
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.pricing-table th {
+  text-align: left;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--type-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pricing-table td {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  vertical-align: middle;
+}
+
+.pricing-table tr:last-child td { border-bottom: none; }
+
+.pricing-check {
+  color: oklch(0.40 0.12 155);
+}
+
+.pricing-x {
+  color: var(--border-mid);
+}
+
+/* Subscription billing page */
+.billing-section {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.billing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.billing-row:last-child { border-bottom: none; }
+
+.billing-label {
+  font-size: var(--type-sm);
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.billing-value {
+  font-family: 'Geist Mono', monospace;
+  font-size: var(--type-sm);
+  color: var(--ink);
+}
+
+@media (max-width: 768px) {
+  .ai-cv-layout {
+    grid-template-columns: 1fr;
+  }
+}
+

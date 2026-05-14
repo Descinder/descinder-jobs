@@ -503,22 +503,22 @@
   <div class="gallery-header">
     <div class="gallery-header-inner">
       <span class="gallery-wordmark">descinder</span>
-      <h1 class="gallery-title">Design Prototypes<br><em>Full App — Complete (Dispatch 1 + 2)</em></h1>
+      <h1 class="gallery-title">Design Prototypes<br><em>Full App — v3 (Dispatch 1 + 2 + 3)</em></h1>
       <div class="gallery-meta">
-        <span class="dispatch-badge">Complete · 16 screens</span>
+        <span class="dispatch-badge">Complete · 22 screens</span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect width="18" height="18" x="3" y="4" rx="2"/>
             <path d="M16 2v4M8 2v4M3 10h18"/>
           </svg>
-          Updated 2026-05-10
+          Updated 2026-05-14
         </span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
-          16 screens · 17 files
+          22 screens · 23 files
         </span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -550,6 +550,19 @@
       </div>
     </div>
 
+    <!-- ── What's new in v3 ── -->
+    <div style="background:oklch(0.97 0.02 264);border:1.5px solid oklch(0.90 0.04 264);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-8)">
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)">
+        <span style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--navy);background:white;border:1px solid oklch(0.88 0.04 264);border-radius:4px;padding:2px 8px">What's new · v3</span>
+        <span style="font-size:var(--type-xs);color:var(--ink-faint)">2026-05-14</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">6 net-new screens:</strong> Pricing page, Paywall modal, AI CV generator, CV management, Subscription &amp; billing, Free seeker dashboard</div>
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">6 revised screens:</strong> Home (source badges + country filter), Job detail (source attribution + correct apply CTAs), Seeker dashboard (subscriber variant: Source column, AI CVs widget, instant alerts), Settings (new Subscription section), Sign-up (transparency note), Index (this page)</div>
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">Key product decisions reflected:</strong> External applies (Reed/Adzuna) always free · Native apply requires subscription · AI CV cap 30/month (Groq + Claude Haiku fallback) · Honest paywall copy throughout</div>
+      </div>
+    </div>
+
     <!-- ── Public screens ── -->
     <div class="screen-section">
       <div class="section-header">
@@ -577,8 +590,8 @@
             <div class="preview-label">Home</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Jobs List — Homepage</div>
-            <div class="screen-desc">The homepage IS the job board. Search band, collapsible sidebar filters (salary with explicit apply), job feed with Featured badges, pagination.</div>
+            <div class="screen-name">Jobs List — Homepage <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3</span></div>
+            <div class="screen-desc">Search band with tech-category tagline + country filter (UK/US/AU/CA). Source badges on every card (Descinder / Via Reed / Via Adzuna). Collapsible sidebar filters, salary with explicit apply. Featured badges.</div>
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               home.html
@@ -609,8 +622,8 @@
             <div class="preview-label">Detail</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Job Detail</div>
-            <div class="screen-desc">Full job description, sticky apply sidebar with salary and stats, skills tags, about-the-company card, similar roles at the bottom.</div>
+            <div class="screen-name">Job Detail <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3</span></div>
+            <div class="screen-desc">Source attribution badge on job header. Native CTA = "Apply on Descinder" (logged-out shows sign-up redirect, subscriber-only note). External roles always free. Source badges on similar jobs.</div>
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               job-detail.html
@@ -671,8 +684,8 @@
             <div class="preview-label">Sign up</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Create account</div>
-            <div class="screen-desc">Role selector cards (Job seeker / Employer), full registration form, terms acceptance, optional marketing opt-in. Navy brand panel.</div>
+            <div class="screen-name">Create account <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3</span></div>
+            <div class="screen-desc">Role selector cards (Job seeker / Employer), registration form, terms acceptance. Transparency note below CTA: external applies always free, subscription only for native roles + AI CVs.</div>
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               sign-up.html
@@ -874,8 +887,8 @@
     <!-- ── Authed app (Seeker) ── -->
     <div class="screen-section">
       <div class="section-header">
-        <span class="section-name">Authenticated app — Job seeker</span>
-        <span class="section-count">3 screens</span>
+        <span class="section-name">Authenticated app — Job seeker (free vs subscriber)</span>
+        <span class="section-count">4 screens</span>
       </div>
       <div class="screens-grid">
 
@@ -893,14 +906,40 @@
                 </div>
               </div>
             </div>
-            <div class="preview-label">Dashboard</div>
+            <div class="preview-label">Subscriber</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Seeker dashboard</div>
-            <div class="screen-desc">Calm personalised home. Profile completeness sidebar, matched job cards (with amber "New today" badge), applications status table, saved searches list.</div>
+            <div class="screen-name">Seeker dashboard (subscriber) <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3</span></div>
+            <div class="screen-desc">Active subscription badge, matched jobs with source badges, unified applications table with Source column, AI-tailored CVs widget (recent generations), instant alerts widget (subscriber-only).</div>
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               dashboard-seeker.html
+            </div>
+          </div>
+        </a>
+
+        <a href="dashboard-seeker-free.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.26 0.07 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div style="height:5px;background:oklch(0.82 0.10 75 / 30%);border-radius:1px;margin-bottom:3px;border:0.5px solid oklch(0.82 0.10 75)"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Free</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Seeker dashboard (free) <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Subscribe banner, locked native apply buttons with tooltip, external apply CTAs (always free), manual status tracking table, instant alerts locked strip at bottom of saved searches.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              dashboard-seeker-free.html
             </div>
           </div>
         </a>
@@ -956,8 +995,8 @@
             <div class="preview-label" style="color:var(--ink-faint)">Settings</div>
           </div>
           <div class="screen-info">
-            <div class="screen-name">Account settings</div>
-            <div class="screen-desc">Sticky left nav. Account (email/password), Notifications (custom animated toggle switches), Privacy (visibility + data export), Danger zone (destructive-tinted, restrained).</div>
+            <div class="screen-name">Account settings <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3</span></div>
+            <div class="screen-desc">Sticky left nav. Account, Subscription (active plan card + billing link + free-user fallback comment), Notifications (with Instant alerts subscriber badge), Privacy, Danger zone.</div>
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               settings.html
@@ -1073,6 +1112,166 @@
       </div>
     </div>
 
+    <!-- ── Dispatch 3 divider ── -->
+    <div style="display:flex;align-items:center;gap:var(--space-4);margin:var(--space-8) 0 var(--space-6)">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap">Dispatch 3 · Subscription, paywall, AI-CV</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- ── Subscription & Paywall ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">Subscription &amp; Paywall</span>
+        <span class="section-count">3 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <a href="pricing.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.22 0.08 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-feed">
+                  <div style="height:14px;background:oklch(0.97 0.01 264);border:0.5px solid oklch(0.88 0.04 264);border-radius:2px;margin-bottom:3px"></div>
+                  <div style="height:6px;background:oklch(0.72 0.18 75 / 80%);border-radius:1px;width:80%;margin:0 auto"></div>
+                  <div class="mini-card" style="margin-top:3px"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label">Pricing</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Pricing page <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Seeker subscription page. Navy hero, honest why-it-costs-anything callout, single £14.99/mo card, feature comparison table (free vs subscriber), 5-item FAQ accordion. Amber Subscribe CTA.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              pricing.html
+            </div>
+          </div>
+        </a>
+
+        <a href="paywall-modal.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.12 0.06 264)">
+            <div class="mini-screen" style="transform:scale(0.85)">
+              <div class="mini-header"></div>
+              <div class="mini-body" style="opacity:0.3">
+                <div class="mini-prose">
+                  <div class="mini-line wide"></div>
+                  <div class="mini-line mid"></div>
+                </div>
+              </div>
+            </div>
+            <div style="position:absolute;width:60px;height:44px;background:white;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,0.4);top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+              <div style="width:8px;height:8px;background:var(--navy);border-radius:50%"></div>
+              <div style="width:40px;height:4px;background:oklch(0.90 0.02 264);border-radius:1px"></div>
+              <div style="width:36px;height:6px;background:oklch(0.72 0.18 75);border-radius:1px"></div>
+            </div>
+            <div class="preview-label">Paywall</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Paywall modal <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Paywall overlay on dimmed job detail. Lock icon, 3 value props (AI CV / unified tracking / instant alerts), £14.99/mo price, amber Subscribe CTA, ghost "Maybe later". Honest small print about external applies.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              paywall-modal.html
+            </div>
+          </div>
+        </a>
+
+        <a href="subscription-billing.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-sidebar"></div>
+                <div class="mini-feed">
+                  <div style="height:10px;border:0.5px solid oklch(0.88 0.04 155);border-radius:2px;background:oklch(0.97 0.02 155);margin-bottom:3px"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">Billing</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Subscription &amp; billing <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Settings-register layout. Active plan card, billing details row, invoice history (4 rows + PDF download), cancel zone with confirmation step. Honest annotation about access until period end.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              subscription-billing.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ── AI-tailored CV ── -->
+    <div class="screen-section">
+      <div class="section-header">
+        <span class="section-name">AI-tailored CV</span>
+        <span class="section-count">2 screens</span>
+      </div>
+      <div class="screens-grid">
+
+        <a href="ai-cv-generator.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.24 0.07 264)">
+            <div class="mini-screen" style="width:130px">
+              <div class="mini-header"></div>
+              <div class="mini-body" style="gap:2px">
+                <div class="mini-sidebar" style="width:18px"></div>
+                <div class="mini-feed" style="flex:1">
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+                <div class="mini-sidebar" style="width:22px;background:oklch(0.22 0.08 264 / 10%)"></div>
+              </div>
+            </div>
+            <div class="preview-label">AI CV</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">AI CV generator <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Three-pane layout: base CV selector (left), target job picker / JD paste (centre), output preview (right). Usage cap bar, amber Generate CTA, pulse animation during generation, Groq→Claude Haiku fallback status.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              ai-cv-generator.html
+            </div>
+          </div>
+        </a>
+
+        <a href="cv-management.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.97 0.01 264)">
+            <div class="mini-screen">
+              <div class="mini-header"></div>
+              <div class="mini-body">
+                <div class="mini-feed">
+                  <div style="display:flex;gap:2px;margin-bottom:3px">
+                    <div style="flex:1;height:14px;background:oklch(0.22 0.08 264 / 8%);border:0.5px solid oklch(0.88 0.04 264);border-radius:2px"></div>
+                    <div style="flex:1;height:14px;background:oklch(0.97 0.01 264);border:1px dashed oklch(0.88 0.04 264);border-radius:2px"></div>
+                    <div style="flex:1;height:14px;background:oklch(0.97 0.01 264);border:1px dashed oklch(0.88 0.04 264);border-radius:2px"></div>
+                  </div>
+                  <div class="mini-card"></div>
+                  <div class="mini-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-faint)">CVs</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">CV management <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.45 0.12 155);background:oklch(0.95 0.04 155);border-radius:3px;padding:1px 5px;margin-left:4px">v3 new</span></div>
+            <div class="screen-desc">Two sections: Base CVs (3-slot grid, primary badge, upload/build actions) + AI-tailored CVs (subscriber badge, 4 rows, download + delete). Auto-expiry note. Generate CTA strip with usage cap.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              cv-management.html
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
     <!-- ── Brand tokens callout ── -->
     <div class="tokens-callout">
       <div class="tokens-title">
@@ -1126,7 +1325,7 @@
   <footer class="site-footer" style="margin-top:var(--space-8)">
     <div class="footer-inner">
       <span class="wordmark" style="font-size:15px">descinder</span>
-      <span class="footer-copy" style="font-family:'Geist Mono',monospace;font-size:10px">Design prototypes · Dispatch 1 of 2 · 2026-05-10</span>
+      <span class="footer-copy" style="font-family:'Geist Mono',monospace;font-size:10px">Design prototypes · Dispatch 3 (v3) · 2026-05-14 · 22 screens</span>
       <a href="home.html" class="btn btn-secondary btn-sm">Open home.html</a>
     </div>
   </footer>

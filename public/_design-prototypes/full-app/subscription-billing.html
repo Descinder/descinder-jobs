@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription · Settings · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    subscription-billing.html — Subscriber billing management screen
+    Position four questions:
+    - Narrative role: account management — see plan, manage payment, view invoices
+    - Viewer distance: 60–80cm, calm settings register
+    - Visual temperature: same as settings.html — calm, structured, no high-pressure
+    - Capacity: current plan widget + billing row + invoice list + cancel
+
+    Deliberate motion: toggle confirm flow on Cancel button.
+    The 120% detail: honest cancellation annotation explaining what "cancel" means.
+  -->
+  <style>
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .avatar-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: var(--space-2); min-width: 180px; z-index: 200; display: none;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm); color: var(--ink-muted);
+      border-radius: var(--radius-sm); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dropdown-item:hover { background: var(--bg-subtle); color: var(--ink); }
+    .dropdown-item.danger { color: oklch(0.45 0.14 20); }
+    .dropdown-item.danger:hover { background: oklch(0.97 0.02 20); }
+    .dropdown-sep { border: none; border-top: 1px solid var(--border); margin: var(--space-2) 0; }
+
+    /* Layout — same as settings.html */
+    .settings-layout {
+      max-width: 840px;
+      margin: 0 auto;
+      width: 100%;
+      padding: var(--space-8) var(--space-6);
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+
+    .settings-nav {
+      position: sticky;
+      top: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .settings-nav-item {
+      display: block;
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+    }
+
+    .settings-nav-item:hover { background: var(--bg-subtle); color: var(--ink); }
+
+    .settings-nav-item.active {
+      color: var(--navy);
+      font-weight: 600;
+      background: var(--bg-subtle);
+      border-left-color: var(--navy);
+    }
+
+    .settings-nav-group-title {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      padding: var(--space-2) var(--space-3);
+      margin-top: var(--space-3);
+    }
+
+    .settings-nav-group-title:first-child { margin-top: 0; }
+
+    /* Content */
+    .settings-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .settings-section {
+      padding: var(--space-7) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-section:last-child { border-bottom: none; }
+    .settings-section:first-child { padding-top: 0; }
+
+    .section-head { margin-bottom: var(--space-5); }
+
+    .section-title {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+    }
+
+    .section-sub {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+    }
+
+    /* Plan card */
+    .plan-card {
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-5);
+      margin-bottom: var(--space-5);
+    }
+
+    .plan-info { flex: 1; }
+
+    .plan-name {
+      font-size: var(--type-md);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-1);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .plan-price {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xl);
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-1);
+    }
+
+    .plan-price span {
+      font-size: var(--type-xs);
+      font-weight: 400;
+      color: var(--ink-muted);
+    }
+
+    .plan-status-line {
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    /* Billing details */
+    .billing-block {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .billing-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .billing-row:last-child { border-bottom: none; }
+
+    .billing-label {
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: var(--ink-muted);
+    }
+
+    .billing-value {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-sm);
+      color: var(--ink);
+      text-align: right;
+    }
+
+    /* Invoice table */
+    .invoice-list {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .invoice-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .invoice-row:last-child { border-bottom: none; }
+    .invoice-row:hover { background: var(--bg-subtle); }
+
+    .invoice-date {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .invoice-desc {
+      flex: 1;
+      font-size: var(--type-sm);
+      color: var(--ink);
+    }
+
+    .invoice-amount {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-sm);
+      font-weight: 600;
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .invoice-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: oklch(0.38 0.12 155);
+      background: oklch(0.95 0.05 155);
+      border: 1px solid oklch(0.86 0.07 155);
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    /* Cancel zone */
+    .cancel-zone {
+      border: 1.5px solid oklch(0.88 0.04 20);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      background: oklch(0.997 0.003 20);
+    }
+
+    .cancel-zone-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(0.52 0.14 20);
+      margin-bottom: var(--space-3);
+    }
+
+    .cancel-info-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-5);
+    }
+
+    .cancel-info-text {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      line-height: 1.65;
+      flex: 1;
+    }
+
+    .btn-cancel-sub {
+      background: transparent;
+      color: oklch(0.45 0.14 20);
+      border: 1.5px solid oklch(0.82 0.08 20);
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      font-weight: 600;
+      padding: 0 var(--space-4);
+      height: 36px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .btn-cancel-sub:hover {
+      background: oklch(0.97 0.02 20);
+      border-color: oklch(0.70 0.10 20);
+    }
+
+    /* Cancel confirmation (shown on click) */
+    .cancel-confirm {
+      display: none;
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid oklch(0.90 0.03 20);
+    }
+
+    .cancel-confirm.visible { display: block; }
+
+    .cancel-confirm-text {
+      font-size: var(--type-sm);
+      color: var(--ink-muted);
+      margin-bottom: var(--space-4);
+      line-height: 1.6;
+    }
+
+    /* Cancellation annotation note */
+    .cancel-note {
+      background: oklch(0.97 0.01 264);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--type-xs);
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-top: var(--space-4);
+    }
+
+    .cancel-note strong { color: var(--ink); }
+
+    @media (max-width: 768px) {
+      .settings-layout { grid-template-columns: 1fr; padding: var(--space-5) var(--space-4); }
+      .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+      .settings-nav-group-title { display: none; }
+      .plan-card { flex-direction: column; }
+      .cancel-info-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a href="home.html" class="wordmark">descinder</a>
+      <nav class="app-nav">
+        <a href="home.html" class="app-nav-link">Browse Jobs</a>
+        <a href="dashboard-seeker.html" class="app-nav-link">Dashboard</a>
+        <a href="profile-editor.html" class="app-nav-link">Profile</a>
+        <a href="settings.html" class="app-nav-link active">Settings</a>
+      </nav>
+      <div class="app-header-right">
+        <span class="subscription-status-badge">Subscriber</span>
+        <span class="role-badge">Job seeker</span>
+        <div class="avatar-dropdown">
+          <div class="avatar" onclick="toggleDropdown()">RH</div>
+          <div class="dropdown-menu" id="dropdown">
+            <a href="profile-editor.html" class="dropdown-item">View profile</a>
+            <a href="settings.html" class="dropdown-item">Settings</a>
+            <hr class="dropdown-sep">
+            <a href="log-in.html" class="dropdown-item danger">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Settings layout ── -->
+  <div class="settings-layout page-enter">
+
+    <!-- Left nav -->
+    <nav class="settings-nav">
+      <span class="settings-nav-group-title">Account</span>
+      <a href="settings.html" class="settings-nav-item">Account</a>
+      <a href="#" class="settings-nav-item active">Subscription</a>
+      <a href="settings.html#notifications" class="settings-nav-item">Notifications</a>
+      <span class="settings-nav-group-title">Data</span>
+      <a href="settings.html#privacy" class="settings-nav-item">Privacy &amp; data</a>
+      <a href="settings.html#danger" class="settings-nav-item" style="color:oklch(0.52 0.14 20)">Danger zone</a>
+    </nav>
+
+    <!-- Right: content -->
+    <div class="settings-sections">
+
+      <!-- ── Current plan ── -->
+      <section class="settings-section" id="plan">
+        <div class="section-head">
+          <div class="section-title">Subscription</div>
+          <div class="section-sub">Your current plan, billing details, and invoice history.</div>
+        </div>
+
+        <!-- Plan card -->
+        <div class="plan-card">
+          <div class="plan-info">
+            <div class="plan-name">
+              Seeker Monthly
+              <span class="subscription-status-badge">Active</span>
+            </div>
+            <div class="plan-price">£14.99 <span>/ month</span></div>
+            <div class="plan-status-line">Next renewal: <strong style="color:var(--ink);font-family:'Geist Mono',monospace;font-size:var(--type-xs)">14 Jun 2026</strong></div>
+          </div>
+          <a href="#billing" class="btn btn-secondary btn-md" onclick="event.preventDefault();window.open('#','_blank')">
+            Manage in billing portal
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+        <!-- Billing details -->
+        <div class="billing-block" style="margin-bottom:var(--space-5)">
+          <div class="billing-row">
+            <span class="billing-label">Plan</span>
+            <span class="billing-value">Seeker Monthly</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-label">Billing cycle</span>
+            <span class="billing-value">Monthly</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-label">Next billing date</span>
+            <span class="billing-value">14 Jun 2026</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-label">Payment method</span>
+            <span class="billing-value" style="display:flex;align-items:center;gap:var(--space-2)">
+              <svg width="24" height="16" viewBox="0 0 38 24" fill="none" style="flex-shrink:0">
+                <rect width="38" height="24" rx="4" fill="oklch(0.95 0.01 264)"/>
+                <circle cx="15" cy="12" r="5" fill="oklch(0.55 0.15 25)" opacity="0.85"/>
+                <circle cx="23" cy="12" r="5" fill="oklch(0.72 0.18 75)" opacity="0.75"/>
+              </svg>
+              Visa ending 7341
+            </span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── Invoice history ── -->
+      <section class="settings-section" id="invoices">
+        <div class="section-head">
+          <div class="section-title">Invoice history</div>
+          <div class="section-sub">Download PDF invoices for any billing period.</div>
+        </div>
+
+        <div class="invoice-list">
+          <div class="invoice-row">
+            <span class="invoice-date">14 May 2026</span>
+            <span class="invoice-desc">Seeker Monthly — May 2026</span>
+            <span class="invoice-amount">£14.99</span>
+            <span class="invoice-status">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Paid
+            </span>
+            <button class="btn btn-ghost btn-sm">PDF</button>
+          </div>
+          <div class="invoice-row">
+            <span class="invoice-date">14 Apr 2026</span>
+            <span class="invoice-desc">Seeker Monthly — April 2026</span>
+            <span class="invoice-amount">£14.99</span>
+            <span class="invoice-status">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Paid
+            </span>
+            <button class="btn btn-ghost btn-sm">PDF</button>
+          </div>
+          <div class="invoice-row">
+            <span class="invoice-date">14 Mar 2026</span>
+            <span class="invoice-desc">Seeker Monthly — March 2026</span>
+            <span class="invoice-amount">£14.99</span>
+            <span class="invoice-status">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Paid
+            </span>
+            <button class="btn btn-ghost btn-sm">PDF</button>
+          </div>
+          <div class="invoice-row">
+            <span class="invoice-date">14 Feb 2026</span>
+            <span class="invoice-desc">Seeker Monthly — February 2026</span>
+            <span class="invoice-amount">£14.99</span>
+            <span class="invoice-status">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Paid
+            </span>
+            <button class="btn btn-ghost btn-sm">PDF</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── Cancel subscription ── -->
+      <section class="settings-section" id="cancel">
+        <div class="section-head">
+          <div class="section-title">Cancel subscription</div>
+          <div class="section-sub">You can re-subscribe at any time with no penalty.</div>
+        </div>
+
+        <div class="cancel-zone">
+          <div class="cancel-zone-label">Cancel</div>
+          <div class="cancel-info-row">
+            <div class="cancel-info-text">
+              Cancelling stops the next monthly charge. Your access to native applies, AI-tailored CVs, and instant alerts continues until the end of the current billing period (<strong style="color:var(--ink)">14 Jun 2026</strong>). After that date, native apply and AI-CV features gate again.
+            </div>
+            <button class="btn-cancel-sub" onclick="showCancelConfirm()">Cancel subscription</button>
+          </div>
+
+          <!-- Confirmation step (hidden by default) -->
+          <div class="cancel-confirm" id="cancelConfirm">
+            <p class="cancel-confirm-text">
+              Are you sure? You'll lose access to native applies and AI-CV generation after <strong>14 Jun 2026</strong>. Your application history and saved jobs are kept.
+            </p>
+            <div style="display:flex;gap:var(--space-3)">
+              <button class="btn btn-primary btn-md" onclick="hideCancelConfirm()">Keep my subscription</button>
+              <button class="btn-cancel-sub" onclick="confirmCancel()">Yes, cancel on 14 Jun</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annotation note — the honest 120% detail -->
+        <div class="cancel-note">
+          <strong>If you cancel:</strong> access continues until end of period (14 Jun 2026). Re-subscribing at any point after that reactivates everything immediately — no waiting period, no penalty, same price. AI-tailored CVs generated before cancellation remain accessible for 30 days post-cancellation, then are permanently deleted.
+        </div>
+
+      </section>
+
+    </div><!-- .settings-sections -->
+  </div><!-- .settings-layout -->
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="home.html" class="wordmark" style="font-size:15px">descinder</a>
+      <div class="footer-links">
+        <a href="legal.html" class="footer-link">Privacy</a>
+        <a href="legal.html" class="footer-link">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('dropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.avatar-dropdown')) {
+      document.getElementById('dropdown').classList.remove('open');
+    }
+  });
+
+  function showCancelConfirm() {
+    document.getElementById('cancelConfirm').classList.add('visible');
+  }
+
+  function hideCancelConfirm() {
+    document.getElementById('cancelConfirm').classList.remove('visible');
+  }
+
+  function confirmCancel() {
+    // In production this would call Stripe
+    alert('Subscription cancellation confirmed. Access continues until 14 Jun 2026. (Simulated — no actual cancellation.)');
+    hideCancelConfirm();
+  }
+</script>
+</body>
+</html>

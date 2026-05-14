@@ -3,26 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard · descinder</title>
+  <title>Dashboard (Subscriber) · descinder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/shared.css">
   <!--
-    dashboard-seeker.html
+    dashboard-seeker.html — SUBSCRIBER variant
     Position four questions:
-    - Narrative role: logged-in home — personalised hub, not a landing page
+    - Narrative role: logged-in subscriber hub — active subscription, full feature access
     - Viewer distance: 60–80cm laptop, scanning mode
     - Visual temperature: calm, focused — no celebration, no confetti
-    - Capacity: 3 focused sections max. No 5-card Bento.
+    - Capacity: 4 focused sections.
 
     Deliberate motion: job card hover translateY(-1px) only. Nothing loops.
     The 120% detail: "New today" amber dot badge on jobs posted in last 24h.
 
+    v3 additions:
+    - "Active subscription" badge in header right
+    - AI-tailored CVs widget (recent generations + "Generate new" CTA)
+    - Instant alerts widget (subscriber-only real-time alerts)
+    - Applications table with Source column (Position / Company / Source / Applied / Status)
     Layout: narrow sidebar (user summary) + wide main content
-    Sections:
-      1. Matched jobs (4 job cards — reuses .job-card)
-      2. Applications status table
-      3. Saved searches / alerts
   -->
   <style>
     .page-wrapper {
@@ -359,6 +360,141 @@
       padding: 2px 9px;
     }
 
+    /* AI CV widget */
+    .ai-cv-widget {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .ai-cv-widget-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-cv-widget-title {
+      font-size: var(--type-sm);
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .ai-cv-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .ai-cv-row:last-of-type { border-bottom: none; }
+    .ai-cv-row:hover { background: var(--bg-subtle); }
+
+    .ai-cv-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--navy-6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .ai-cv-info { flex: 1; min-width: 0; }
+
+    .ai-cv-name {
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ai-cv-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-top: 1px;
+    }
+
+    .ai-cv-widget-footer {
+      padding: var(--space-3) var(--space-5);
+      border-top: 1px solid var(--border);
+      background: var(--bg-subtle);
+    }
+
+    /* Instant alerts widget */
+    .instant-alerts-widget {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .instant-alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .instant-alert-item:last-child { border-bottom: none; }
+    .instant-alert-item:hover { background: var(--bg-subtle); }
+
+    .instant-alert-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: oklch(0.55 0.16 155);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .instant-alert-dot.seen {
+      background: var(--border);
+    }
+
+    .instant-alert-body { flex: 1; }
+
+    .instant-alert-title {
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    .instant-alert-meta {
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      margin-top: 2px;
+    }
+
+    .instant-alert-time {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    /* Subscriber welcome badge area */
+    .welcome-sub-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 900px) {
       .dashboard-layout { grid-template-columns: 1fr; }
       .user-sidebar { position: static; }
@@ -383,6 +519,10 @@
         </nav>
 
         <div class="app-header-right">
+          <span class="subscription-status-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Active subscription
+          </span>
           <span class="role-badge">Job seeker</span>
           <div class="avatar-dropdown">
             <div class="avatar" onclick="toggleDropdown()">RH</div>
@@ -441,7 +581,16 @@
           </a>
           <a href="#" class="sidebar-nav-item">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            Alerts
+            Instant alerts
+          </a>
+          <a href="cv-management.html" class="sidebar-nav-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>
+            AI-tailored CVs
+            <span class="sidebar-nav-badge">4</span>
+          </a>
+          <a href="subscription-billing.html" class="sidebar-nav-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+            Subscription
           </a>
         </nav>
       </aside>
@@ -451,8 +600,13 @@
 
         <!-- Welcome -->
         <div class="welcome-line">
-          <h1 class="welcome-text">Welcome back, Rachel.</h1>
-          <span class="welcome-date">Saturday, 10 May 2026</span>
+          <div>
+            <div class="welcome-sub-row">
+              <h1 class="welcome-text">Welcome back, Rachel.</h1>
+            </div>
+            <p style="font-size:var(--type-sm);color:var(--ink-faint);margin-top:4px">Subscriber since 14 Feb 2026 · renews 14 Jun 2026</p>
+          </div>
+          <span class="welcome-date">Wednesday, 14 May 2026</span>
         </div>
 
         <!-- ── Matched jobs ── -->
@@ -463,7 +617,7 @@
           </div>
           <div class="jobs-grid">
 
-            <!-- Job card 1 — featured + new today -->
+            <!-- Job card 1 — featured + new today, native -->
             <a href="job-detail.html" class="job-card featured">
               <div class="job-card-top">
                 <div class="company-mono mono-mid">CL</div>
@@ -480,11 +634,14 @@
               </div>
               <div class="job-card-footer">
                 <span class="job-salary">£80,000 – £100,000</span>
-                <span class="job-time">2h ago</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="source-badge source-badge--native">Descinder</span>
+                  <span class="job-time">2h ago</span>
+                </div>
               </div>
             </a>
 
-            <!-- Job card 2 — new today -->
+            <!-- Job card 2 — new today, Reed -->
             <a href="job-detail.html" class="job-card">
               <div class="job-card-top">
                 <div class="company-mono mono-teal">PT</div>
@@ -500,11 +657,14 @@
               </div>
               <div class="job-card-footer">
                 <span class="job-salary">£65,000 – £82,000</span>
-                <span class="job-time">6h ago</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="source-badge source-badge--reed">Via Reed</span>
+                  <span class="job-time">6h ago</span>
+                </div>
               </div>
             </a>
 
-            <!-- Job card 3 -->
+            <!-- Job card 3 — native -->
             <a href="job-detail.html" class="job-card">
               <div class="job-card-top">
                 <div class="company-mono mono-green">MR</div>
@@ -519,11 +679,14 @@
               </div>
               <div class="job-card-footer">
                 <span class="job-salary">£75,000 – £92,000</span>
-                <span class="job-time">2d ago</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="source-badge source-badge--native">Descinder</span>
+                  <span class="job-time">2d ago</span>
+                </div>
               </div>
             </a>
 
-            <!-- Job card 4 -->
+            <!-- Job card 4 — Adzuna -->
             <a href="job-detail.html" class="job-card">
               <div class="job-card-top">
                 <div class="company-mono mono-plum">KN</div>
@@ -538,7 +701,10 @@
               </div>
               <div class="job-card-footer">
                 <span class="job-salary">£85,000 – £110,000</span>
-                <span class="job-time">3d ago</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+                  <span class="job-time">3d ago</span>
+                </div>
               </div>
             </a>
 
@@ -549,14 +715,15 @@
         <section>
           <div class="section-head">
             <span class="section-head-title">Your applications</span>
-            <a href="#" class="section-head-link">See all 3 →</a>
+            <a href="#" class="section-head-link">See all 5 →</a>
           </div>
           <div class="applications-table-wrap">
             <table class="status-table">
               <thead>
                 <tr>
-                  <th>Role</th>
+                  <th>Position</th>
                   <th>Company</th>
+                  <th>Source</th>
                   <th>Applied</th>
                   <th>Status</th>
                 </tr>
@@ -565,19 +732,36 @@
                 <tr>
                   <td style="color:var(--ink);font-weight:500">Principal Product Designer</td>
                   <td>Vance Studio</td>
-                  <td style="font-family:'Geist Mono',monospace">29 Apr 2026</td>
+                  <td><span class="source-badge source-badge--native">Descinder</span></td>
+                  <td style="font-family:'Geist Mono',monospace;font-size:var(--type-xs)">12 May 2026</td>
+                  <td><span class="status-pill status-reviewing">In review</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--ink);font-weight:500">Lead Product Designer</td>
+                  <td>Caelum</td>
+                  <td><span class="source-badge source-badge--native">Descinder</span></td>
+                  <td style="font-family:'Geist Mono',monospace;font-size:var(--type-xs)">2 May 2026</td>
+                  <td><span class="status-pill status-pending">Pending</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--ink);font-weight:500">Senior UX Designer</td>
+                  <td>Pith</td>
+                  <td><span class="source-badge source-badge--reed">Via Reed</span></td>
+                  <td style="font-family:'Geist Mono',monospace;font-size:var(--type-xs)">29 Apr 2026</td>
                   <td><span class="status-pill status-reviewing">In review</span></td>
                 </tr>
                 <tr>
                   <td style="color:var(--ink);font-weight:500">Design Director</td>
                   <td>Arkless</td>
-                  <td style="font-family:'Geist Mono',monospace">14 Apr 2026</td>
+                  <td><span class="source-badge source-badge--adzuna">Via Adzuna</span></td>
+                  <td style="font-family:'Geist Mono',monospace;font-size:var(--type-xs)">14 Apr 2026</td>
                   <td><span class="status-pill status-pending">Pending</span></td>
                 </tr>
                 <tr>
                   <td style="color:var(--ink);font-weight:500">Senior Product Designer</td>
                   <td>Folio Labs</td>
-                  <td style="font-family:'Geist Mono',monospace">3 Apr 2026</td>
+                  <td><span class="source-badge source-badge--native">Descinder</span></td>
+                  <td style="font-family:'Geist Mono',monospace;font-size:var(--type-xs)">3 Apr 2026</td>
                   <td><span class="status-pill status-declined">Not progressing</span></td>
                 </tr>
               </tbody>
@@ -585,44 +769,97 @@
           </div>
         </section>
 
-        <!-- ── Saved searches ── -->
+        <!-- ── AI-tailored CVs widget ── -->
         <section>
           <div class="section-head">
-            <span class="section-head-title">Your saved searches</span>
+            <span class="section-head-title">AI-tailored CVs</span>
+            <a href="cv-management.html" class="section-head-link">Manage CVs →</a>
+          </div>
+          <div class="ai-cv-widget">
+            <div class="ai-cv-widget-head">
+              <div class="ai-cv-widget-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+                Recent generations
+              </div>
+              <span style="font-family:'Geist Mono',monospace;font-size:var(--type-xs);color:var(--ink-faint)">18 / 30 used this month</span>
+            </div>
+            <div class="ai-cv-row">
+              <div class="ai-cv-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              </div>
+              <div class="ai-cv-info">
+                <div class="ai-cv-name">Rachel_Huang — Principal Product Designer (Vance Studio)</div>
+                <div class="ai-cv-meta">Generated 12 May 2026 · Groq/Llama 3.3-70b</div>
+              </div>
+              <button class="btn btn-ghost btn-sm">Download</button>
+            </div>
+            <div class="ai-cv-row">
+              <div class="ai-cv-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              </div>
+              <div class="ai-cv-info">
+                <div class="ai-cv-name">Rachel_Huang — Lead Product Designer (Caelum)</div>
+                <div class="ai-cv-meta">Generated 2 May 2026 · Claude Haiku fallback</div>
+              </div>
+              <button class="btn btn-ghost btn-sm">Download</button>
+            </div>
+            <div class="ai-cv-row">
+              <div class="ai-cv-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              </div>
+              <div class="ai-cv-info">
+                <div class="ai-cv-name">Rachel_Huang — Senior UX Designer (Pith)</div>
+                <div class="ai-cv-meta">Generated 29 Apr 2026 · Groq/Llama 3.3-70b</div>
+              </div>
+              <button class="btn btn-ghost btn-sm">Download</button>
+            </div>
+            <div class="ai-cv-widget-footer">
+              <a href="ai-cv-generator.html" class="btn btn-secondary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                Generate new tailored CV
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Instant alerts (subscriber-only) ── -->
+        <section>
+          <div class="section-head">
+            <span class="section-head-title">Instant alerts</span>
             <a href="#" class="section-head-link">Manage alerts →</a>
           </div>
-          <div class="alerts-list">
-            <div class="alert-item">
-              <div class="alert-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+          <div class="instant-alerts-widget">
+            <div class="instant-alert-item">
+              <div class="instant-alert-dot"></div>
+              <div class="instant-alert-body">
+                <div class="instant-alert-title">New role: Design Director at Orrery (Edinburgh · Hybrid · £115k–£145k)</div>
+                <div class="instant-alert-meta">Matches: Design Lead · Remote · UK · £75k+</div>
               </div>
-              <div class="alert-main">
-                <div class="alert-name">Senior / Lead Product Designer · London</div>
-                <div class="alert-meta">Full-time · £65k+ · Hybrid or remote</div>
-              </div>
-              <span class="alert-count">12 new</span>
-              <span class="alert-freq">Daily</span>
+              <span class="instant-alert-time">just now</span>
             </div>
-            <div class="alert-item">
-              <div class="alert-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+            <div class="instant-alert-item">
+              <div class="instant-alert-dot"></div>
+              <div class="instant-alert-body">
+                <div class="instant-alert-title">New role: Lead Product Designer at Veldt (Remote · £90k–£115k)</div>
+                <div class="instant-alert-meta">Matches: Senior / Lead Product Designer · London</div>
               </div>
-              <div class="alert-main">
-                <div class="alert-name">Design Lead · Remote · UK</div>
-                <div class="alert-meta">Full-time · £75k+</div>
-              </div>
-              <span class="alert-count">4 new</span>
-              <span class="alert-freq">Weekly</span>
+              <span class="instant-alert-time">11 min ago</span>
             </div>
-            <div class="alert-item">
-              <div class="alert-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
+            <div class="instant-alert-item">
+              <div class="instant-alert-dot seen"></div>
+              <div class="instant-alert-body">
+                <div class="instant-alert-title">New role: Staff Product Designer at Lumen Works (Remote · £82k–£105k)</div>
+                <div class="instant-alert-meta">Matches: Staff Designer, Design Systems</div>
               </div>
-              <div class="alert-main">
-                <div class="alert-name">Staff Designer, Design Systems</div>
-                <div class="alert-meta">Full-time · UK · Any location</div>
+              <span class="instant-alert-time">43 min ago</span>
+            </div>
+            <div class="instant-alert-item">
+              <div class="instant-alert-dot seen"></div>
+              <div class="instant-alert-body">
+                <div class="instant-alert-title">New role: Head of Product Design at Kindred Works (London · On-site · £120k+)</div>
+                <div class="instant-alert-meta">Matches: Senior / Lead Product Designer · London</div>
               </div>
-              <span class="alert-freq">Weekly</span>
+              <span class="instant-alert-time">2h ago</span>
             </div>
           </div>
         </section>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>descinder — Find your next role</title>
+  <title>descinder — Tech jobs in the UK, US, AU &amp; CA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/shared.css">
@@ -255,6 +255,63 @@
 
     .filter-chip:hover .filter-chip-remove { opacity: 1; }
 
+    /* Country filter dropdown */
+    .country-filter-wrap {
+      width: 160px;
+      position: relative;
+    }
+
+    .country-select {
+      font-family: 'Geist', sans-serif;
+      font-size: var(--type-sm);
+      font-weight: 500;
+      color: white;
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-md);
+      padding: 0 36px 0 36px;
+      height: 48px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .country-select option {
+      background: var(--navy);
+      color: white;
+    }
+
+    .country-select:focus {
+      background-color: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.45);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .country-field-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.5);
+      pointer-events: none;
+    }
+
+    .search-tagline {
+      font-size: var(--type-xs);
+      font-family: 'Geist Mono', monospace;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: var(--space-3);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
     /* Save btn */
     .save-btn {
       background: none;
@@ -349,6 +406,7 @@
   <!-- ── Search band ── -->
   <div class="search-band">
     <div class="search-band-inner">
+      <p class="search-tagline">Tech jobs · UK · US · AU · CA</p>
       <p class="search-headline">Find roles at companies that are hiring now.</p>
       <div class="search-row">
         <div class="search-field-wrap" style="flex:1.6">
@@ -367,9 +425,24 @@
           </span>
           <input class="search-input location-input" type="text" placeholder="City or Remote" value="London">
         </div>
+        <!-- Country filter -->
+        <div class="country-filter-wrap">
+          <span class="country-field-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </span>
+          <select class="country-select" aria-label="Filter by country">
+            <option value="all">All countries</option>
+            <option value="uk" selected>🇬🇧 United Kingdom</option>
+            <option value="us">🇺🇸 United States</option>
+            <option value="au">🇦🇺 Australia</option>
+            <option value="ca">🇨🇦 Canada</option>
+          </select>
+        </div>
         <button class="search-btn">Search</button>
       </div>
-      <p class="search-meta">1,247 open roles · updated 3h ago</p>
+      <p class="search-meta">1,247 open roles · UK · US · AU · CA · updated 3h ago</p>
     </div>
   </div>
 
@@ -518,7 +591,7 @@
 
       <div class="job-feed">
 
-        <!-- Card 1 — Featured -->
+        <!-- Card 1 — Featured, native -->
         <a href="job-detail.html" class="job-card featured">
           <div class="job-card-top">
             <div class="company-mono mono-slate">FL</div>
@@ -546,12 +619,13 @@
             <span class="job-salary">£80,000 – £110,000</span>
             <div class="job-card-actions">
               <span class="job-time">1d ago</span>
+              <span class="source-badge source-badge--native">Descinder</span>
               <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 2 -->
+        <!-- Card 2 — Reed -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-teal">CA</div>
@@ -576,12 +650,13 @@
             <span class="job-salary">£95,000 – £125,000</span>
             <div class="job-card-actions">
               <span class="job-time">2d ago</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <span class="source-badge source-badge--reed">Via Reed</span>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 3 — Featured -->
+        <!-- Card 3 — Featured, native -->
         <a href="job-detail.html" class="job-card featured">
           <div class="job-card-top">
             <div class="company-mono mono-plum">PT</div>
@@ -609,12 +684,13 @@
             <span class="job-salary">£70,000 – £90,000 + equity</span>
             <div class="job-card-actions">
               <span class="job-time">3d ago</span>
+              <span class="source-badge source-badge--native">Descinder</span>
               <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 4 -->
+        <!-- Card 4 — Adzuna -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-green">MR</div>
@@ -640,12 +716,13 @@
             <span class="job-salary">£110,000 – £145,000</span>
             <div class="job-card-actions">
               <span class="job-time">3d ago</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Adzuna ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 5 -->
+        <!-- Card 5 — Reed -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-deep">VL</div>
@@ -668,12 +745,13 @@
             <span class="job-salary">£100,000 – £130,000</span>
             <div class="job-card-actions">
               <span class="job-time">4d ago</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <span class="source-badge source-badge--reed">Via Reed</span>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 6 -->
+        <!-- Card 6 — native -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-navy">KN</div>
@@ -698,12 +776,13 @@
             <span class="job-salary">£130,000 – £165,000</span>
             <div class="job-card-actions">
               <span class="job-time">5d ago</span>
+              <span class="source-badge source-badge--native">Descinder</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 7 -->
+        <!-- Card 7 — Adzuna -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-mid">OR</div>
@@ -728,12 +807,13 @@
             <span class="job-salary">£115,000 – £140,000</span>
             <div class="job-card-actions">
               <span class="job-time">6d ago</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Adzuna ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 8 -->
+        <!-- Card 8 — Reed -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
             <div class="company-mono mono-slate">LU</div>
@@ -758,7 +838,8 @@
             <span class="job-salary">£65,000 – £85,000</span>
             <div class="job-card-actions">
               <span class="job-time">7d ago</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <span class="source-badge source-badge--reed">Via Reed</span>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
         </a>
