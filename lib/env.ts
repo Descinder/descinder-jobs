@@ -8,6 +8,12 @@ const serverEnvSchema = z.object({
   SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   SESSION_COOKIE_SECRET: z.string().min(32),
+  STORAGE_ENDPOINT: z.string().url(),
+  STORAGE_REGION: z.string().min(1),
+  STORAGE_ACCESS_KEY_ID: z.string().min(1),
+  STORAGE_SECRET_ACCESS_KEY: z.string().min(1),
+  STORAGE_BUCKET: z.string().min(1),
+  STORAGE_FORCE_PATH_STYLE: z.string().transform((v) => v === "true"),
 });
 
 const clientEnvSchema = z.object({
