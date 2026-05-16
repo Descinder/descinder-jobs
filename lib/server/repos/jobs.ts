@@ -10,7 +10,12 @@ const JOB_SELECT = `
   company:companies ( id, name, slug, logo_url, location, size )
 `;
 
-export type JobRepoRow = Record<string, unknown>;
+export type JobRepoRow = {
+  id: string;
+  title: string;
+  company?: { id: string; name: string; slug: string; logo_url: string | null; location: string | null; size: string | null } | null;
+  [key: string]: unknown;
+};
 
 export async function listJobs(f: JobFilters): Promise<{ rows: JobRepoRow[]; total: number }> {
   let q = db().from("jobs").select(JOB_SELECT, { count: "exact" }).eq("status", "published");
@@ -44,7 +49,7 @@ export async function getSimilarJobs(id: string, limit = 4): Promise<JobRepoRow[
   const skills = (base.skills_required as string[]) ?? [];
   let q = db().from("jobs").select(JOB_SELECT).eq("status", "published").neq("id", id).limit(limit);
   if (skills.length) q = q.overlaps("skills_required", skills);
-  else q = q.eq("employment_type", base.employment_type as string);
+  else q = q.eq("employment_type", base.employment_type as "full_time" | "part_time" | "contract" | "internship");
   const { data, error } = await q;
   if (error) throw new Error(`getSimilarJobs failed: ${error.message}`);
   return (data ?? []) as JobRepoRow[];
@@ -58,7 +63,7 @@ export async function getCompanyJobs(companyId: string, includeNonPublished = fa
   return (data ?? []) as JobRepoRow[];
 }
 
-export async function createJob(input: CreateJobInput & { company_id: string }): Promise<string> {
+export async function createJob(input: Omit<CreateJobInput, "external_apply_url"> & { company_id: string; external_apply_url?: string | null }): Promise<string> {
   const now = new Date().toISOString();
   const publish = input.status === "published";
   const { data, error } = await db().from("jobs").insert({
@@ -81,11 +86,12 @@ export async function updateJob(id: string, patch: UpdateJobInput): Promise<void
 }
 
 export async function setJobStatus(id: string, status: "draft" | "published" | "closed" | "expired"): Promise<void> {
-  const patch: Record<string, unknown> = { status };
-  if (status === "published") {
-    patch.posted_at = new Date().toISOString();
-    patch.expires_at = new Date(Date.now() + 60 * 864e5).toISOString();
-  }
+  const now = new Date().toISOString();
+  const expires = new Date(Date.now() + 60 * 864e5).toISOString();
+  const patch =
+    status === "published"
+      ? { status, posted_at: now, expires_at: expires }
+      : { status };
   const { error } = await db().from("jobs").update(patch).eq("id", id);
   if (error) throw new Error(`setJobStatus failed: ${error.message}`);
 }
