@@ -15,6 +15,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./tests/setup.ts"],
     env: localEnv,
+    // vitest owns unit tests only. Playwright owns tests/e2e/*.spec.ts —
+    // excluded here so `npm test` never tries to run Playwright specs.
+    include: ["tests/unit/**/*.test.ts"],
+    exclude: ["tests/e2e/**", "node_modules/**", ".next/**"],
   },
   resolve: {
     alias: {
