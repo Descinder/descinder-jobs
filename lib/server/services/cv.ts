@@ -42,6 +42,12 @@ export async function createUploadUrl(
   const u = requireUser(user);
   const key = `cvs/${u.id}/${randomUUID()}.${ext(req.filename)}`;
   let cvId: string;
+  // Intentional tradeoff: the row is inserted BEFORE the client uploads so the
+  // ≤3-base cap is claimed atomically (the kind-aware trigger gates here, not
+  // after an out-of-band upload). If the client never PUTs, the row is a
+  // RECOVERABLE orphan — DELETE /api/me/cvs/:id works even for never-uploaded
+  // objects because S3/R2 DeleteObject is idempotent. Do NOT add a second
+  // write to "confirm" the upload: it would race the presigned PUT.
   try {
     cvId = await insertCvFile(u.id, {
       r2_object_key: key,

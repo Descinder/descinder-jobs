@@ -65,4 +65,6 @@ test("CV ops are owner-scoped: another user cannot access someone else's CV", as
   expect(dl.status()).toBe(404);
   const del = await attacker.delete(`/api/me/cvs/${cvId}`, { headers: { "x-csrf-token": ac } });
   expect(del.status()).toBe(404);
+  const pr = await attacker.patch(`/api/me/cvs/${cvId}/primary`, { headers: { "x-csrf-token": ac } });
+  expect(pr.status()).toBe(404); // set-primary is owner-scoped too
 });
