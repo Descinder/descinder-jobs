@@ -25,8 +25,17 @@ export async function listJobs(f: JobFilters): Promise<{ rows: JobRepoRow[]; tot
   if (f.employment_type) q = q.eq("employment_type", f.employment_type);
   if (f.experience_level) q = q.eq("experience_level", f.experience_level);
   if (f.source) q = q.eq("source", f.source);
-  if (typeof f.salary_min === "number") q = q.gte("salary_max", f.salary_min);
-  if (typeof f.salary_max === "number") q = q.lte("salary_min", f.salary_max);
+  // Salary filters keep jobs whose range overlaps the requested range, AND jobs
+  // with no disclosed salary (NULL) — most ingested Adzuna/Reed listings have no
+  // salary, and hiding them on any salary filter would silently drop a large
+  // chunk of inventory. f.salary_* are zod-validated non-negative ints (safe to
+  // interpolate into the PostgREST or() filter string — not user strings).
+  if (typeof f.salary_min === "number") {
+    q = q.or(`salary_max.gte.${f.salary_min},salary_max.is.null`);
+  }
+  if (typeof f.salary_max === "number") {
+    q = q.or(`salary_min.lte.${f.salary_max},salary_min.is.null`);
+  }
   if (f.sort === "newest") q = q.order("posted_at", { ascending: false, nullsFirst: false });
   else if (f.sort === "salary") q = q.order("salary_max", { ascending: false, nullsFirst: false });
   else q = q.order("featured", { ascending: false }).order("posted_at", { ascending: false, nullsFirst: false });
