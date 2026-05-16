@@ -78,6 +78,7 @@ export type Database = {
         Row: {
           cover_letter: string | null
           cv_file_id: string | null
+          external_status: string | null
           id: string
           job_id: string
           status: Database["public"]["Enums"]["application_status"]
@@ -90,6 +91,7 @@ export type Database = {
         Insert: {
           cover_letter?: string | null
           cv_file_id?: string | null
+          external_status?: string | null
           id?: string
           job_id: string
           status?: Database["public"]["Enums"]["application_status"]
@@ -102,6 +104,7 @@ export type Database = {
         Update: {
           cover_letter?: string | null
           cv_file_id?: string | null
+          external_status?: string | null
           id?: string
           job_id?: string
           status?: Database["public"]["Enums"]["application_status"]
@@ -700,7 +703,9 @@ export type Database = {
           created_at: string
           description: string
           employment_type: Database["public"]["Enums"]["job_employment_type"]
-          experience_level: Database["public"]["Enums"]["job_experience_level"]
+          experience_level:
+            | Database["public"]["Enums"]["job_experience_level"]
+            | null
           expires_at: string | null
           external_apply_url: string | null
           external_id: string | null
@@ -722,7 +727,7 @@ export type Database = {
           status: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at: string
-          work_mode: Database["public"]["Enums"]["job_work_mode"]
+          work_mode: Database["public"]["Enums"]["job_work_mode"] | null
         }
         Insert: {
           apply_method?: Database["public"]["Enums"]["job_apply_method"]
@@ -731,7 +736,9 @@ export type Database = {
           created_at?: string
           description: string
           employment_type: Database["public"]["Enums"]["job_employment_type"]
-          experience_level: Database["public"]["Enums"]["job_experience_level"]
+          experience_level?:
+            | Database["public"]["Enums"]["job_experience_level"]
+            | null
           expires_at?: string | null
           external_apply_url?: string | null
           external_id?: string | null
@@ -753,7 +760,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at?: string
-          work_mode: Database["public"]["Enums"]["job_work_mode"]
+          work_mode?: Database["public"]["Enums"]["job_work_mode"] | null
         }
         Update: {
           apply_method?: Database["public"]["Enums"]["job_apply_method"]
@@ -762,7 +769,9 @@ export type Database = {
           created_at?: string
           description?: string
           employment_type?: Database["public"]["Enums"]["job_employment_type"]
-          experience_level?: Database["public"]["Enums"]["job_experience_level"]
+          experience_level?:
+            | Database["public"]["Enums"]["job_experience_level"]
+            | null
           expires_at?: string | null
           external_apply_url?: string | null
           external_id?: string | null
@@ -784,7 +793,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
           updated_at?: string
-          work_mode?: Database["public"]["Enums"]["job_work_mode"]
+          work_mode?: Database["public"]["Enums"]["job_work_mode"] | null
         }
         Relationships: [
           {
