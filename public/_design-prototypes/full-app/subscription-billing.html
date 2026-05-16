@@ -415,10 +415,13 @@
             <div class="plan-price">£14.99 <span>/ month</span></div>
             <div class="plan-status-line">Next renewal: <strong style="color:var(--ink);font-family:'Geist Mono',monospace;font-size:var(--type-xs)">14 Jun 2026</strong></div>
           </div>
-          <a href="#billing" class="btn btn-secondary btn-md" onclick="event.preventDefault();window.open('#','_blank')">
-            Manage in billing portal
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-1)">
+            <a href="billing-portal.html" class="btn btn-secondary btn-md">
+              Manage in billing portal
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <span style="font-size:10px;color:var(--ink-faint);font-family:'Geist Mono',monospace">↗ opens Stripe in production</span>
+          </div>
         </div>
 
         <!-- Billing details -->

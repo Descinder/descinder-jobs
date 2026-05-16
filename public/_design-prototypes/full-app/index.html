@@ -503,22 +503,22 @@
   <div class="gallery-header">
     <div class="gallery-header-inner">
       <span class="gallery-wordmark">descinder</span>
-      <h1 class="gallery-title">Design Prototypes<br><em>Full App — v3 (Dispatch 1 + 2 + 3)</em></h1>
+      <h1 class="gallery-title">Design Prototypes<br><em>Full App — v4 (Dispatch 1 + 2 + 3 + 4)</em></h1>
       <div class="gallery-meta">
-        <span class="dispatch-badge">Complete · 22 screens</span>
+        <span class="dispatch-badge">Complete · 23 screens</span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect width="18" height="18" x="3" y="4" rx="2"/>
             <path d="M16 2v4M8 2v4M3 10h18"/>
           </svg>
-          Updated 2026-05-14
+          Updated 2026-05-16
         </span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
-          22 screens · 23 files
+          23 screens · 24 files
         </span>
         <span class="gallery-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -547,6 +547,19 @@
           All screens are self-contained HTML files — <strong>double-click any card to open it in your browser</strong>. No server or build step required. Navigation links between screens are wired. Best viewed at 1440px width in Chrome or Safari.
           Design tokens and base styles live in <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px">assets/shared.css</code>.
         </div>
+      </div>
+    </div>
+
+    <!-- ── What's new in v4 ── -->
+    <div style="background:oklch(0.97 0.02 264);border:1.5px solid oklch(0.90 0.04 264);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4)">
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)">
+        <span style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--navy);background:white;border:1px solid oklch(0.88 0.04 264);border-radius:4px;padding:2px 8px">What's new · v4</span>
+        <span style="font-size:var(--type-xs);color:var(--ink-faint)">2026-05-16</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">1 net-new screen:</strong> Billing portal (Stripe Customer Portal mock — current plan, payment method, invoice history, cancel flow)</div>
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">4 revised screens:</strong> Auth shell (sign-up, log-in, forgot-password, reset-password) — real photo backdrop with navy duotone overlay + Ken Burns drift, replacing flat navy panel</div>
+        <div style="font-size:var(--type-sm);color:var(--ink-muted);line-height:1.6"><strong style="color:var(--ink)">3 revised screens:</strong> Home (native vs ingested job cards: monogram tiles, Est. salary pill, sourced-from badges, absent skill chips, filter scope hints), Job detail (native vs ingested tab toggle: company profile / snippet+readmore / omitted sections / external apply for ingested), Subscription &amp; billing (billing portal link wired)</div>
       </div>
     </div>
 
@@ -1123,7 +1136,7 @@
     <div class="screen-section">
       <div class="section-header">
         <span class="section-name">Subscription &amp; Paywall</span>
-        <span class="section-count">3 screens</span>
+        <span class="section-count">4 screens</span>
       </div>
       <div class="screens-grid">
 
@@ -1201,6 +1214,31 @@
             <div class="screen-filename">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               subscription-billing.html
+            </div>
+          </div>
+        </a>
+
+        <a href="billing-portal.html" class="screen-card">
+          <div class="screen-preview" style="background:oklch(0.94 0.005 264)">
+            <div class="mini-screen">
+              <div class="mini-header" style="background:white;border-bottom:0.5px solid oklch(0.88 0.04 264)"></div>
+              <div class="mini-body" style="background:oklch(0.94 0.005 264);padding:3px">
+                <div class="mini-feed">
+                  <div style="height:8px;background:white;border:0.5px solid oklch(0.88 0.04 264);border-radius:2px;margin-bottom:2px"></div>
+                  <div style="height:6px;background:white;border:0.5px solid oklch(0.88 0.04 264);border-radius:2px;margin-bottom:2px"></div>
+                  <div style="height:5px;background:oklch(0.72 0.18 75 / 60%);border-radius:1px;width:50%;margin-bottom:2px"></div>
+                  <div style="height:5px;background:oklch(0.55 0.07 20 / 40%);border-radius:1px;width:40%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-label" style="color:var(--ink-muted)">Stripe Portal</div>
+          </div>
+          <div class="screen-info">
+            <div class="screen-name">Billing portal (Stripe) <span style="font-size:10px;font-family:'Geist Mono',monospace;color:oklch(0.38 0.10 264);background:oklch(0.93 0.03 264);border-radius:3px;padding:1px 5px;margin-left:4px">v4 new</span></div>
+            <div class="screen-desc">Stripe Customer Portal mock. Current plan + active badge, Visa card on file, 4-row invoice history with PDF buttons, update-payment-method, cancel-subscription (confirm dialog). "Return to Descinder" footer link. Neutral palette to signal third-party handoff.</div>
+            <div class="screen-filename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              billing-portal.html
             </div>
           </div>
         </a>

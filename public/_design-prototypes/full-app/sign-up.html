@@ -41,14 +41,6 @@
       overflow: hidden;
     }
 
-    .auth-panel::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 30% 20%, oklch(0.32 0.09 264 / 60%) 0%, transparent 65%);
-      pointer-events: none;
-    }
-
     .panel-wordmark {
       font-family: 'Geist', sans-serif;
       font-weight: 700;
@@ -58,7 +50,7 @@
       text-decoration: none;
       line-height: 1;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .panel-body {
@@ -67,7 +59,7 @@
       flex-direction: column;
       justify-content: flex-end;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .panel-tagline {
@@ -280,6 +272,15 @@
 
   <!-- ── Brand panel ── -->
   <div class="auth-panel">
+    <!-- Photo backdrop: open-plan workspace, evokes collaborative tech culture -->
+    <div class="auth-panel-photo" style="background-image: url('https://picsum.photos/seed/workspace-tech/880/1200')"></div>
+    <!-- Navy duotone overlay — navy dominates, photo is atmosphere -->
+    <div class="auth-panel-overlay"></div>
+    <!-- Subtle grid texture over photo -->
+    <div class="auth-panel-grid"></div>
+    <!-- Amber accent line at base -->
+    <div class="auth-panel-accent-line"></div>
+
     <a href="home.html" class="panel-wordmark">descinder</a>
     <div class="panel-body">
       <h2 class="panel-tagline">Hire smarter.<br><em>Find better.</em></h2>

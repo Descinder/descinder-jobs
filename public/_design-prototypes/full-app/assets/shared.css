@@ -1729,3 +1729,400 @@ textarea.input {
   }
 }
 
+/* ── v4 additions: auth panel imagery, billing portal, ingestion degradation ── */
+
+/* ── Auth panel photo backdrop ──────────────────────────────
+   The left brand panel uses a real photograph via picsum with a
+   navy duotone overlay so it stays on-brand. These classes are
+   shared across sign-up, log-in, forgot-password, reset-password.
+   Navy dominates; the image is atmosphere, not a billboard.
+*/
+.auth-panel-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Slow Ken Burns drift — one deliberate moment, 30s loop */
+  animation: panel-ken-burns 30s ease-in-out infinite alternate;
+}
+
+@keyframes panel-ken-burns {
+  from { transform: scale(1) translate(0, 0); }
+  to   { transform: scale(1.06) translate(-1%, -1%); }
+}
+
+.auth-panel-overlay {
+  /* Navy duotone: navy (dark) on top, slightly transparent to let photo through */
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    oklch(0.18 0.09 264 / 88%) 0%,
+    oklch(0.22 0.08 264 / 82%) 40%,
+    oklch(0.28 0.07 264 / 75%) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Geometric accent grid (fallback/complement for photo panels) */
+.auth-panel-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(oklch(1 0 0 / 100%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 100%) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Amber accent line — one deliberate use of amber in auth panel */
+.auth-panel-accent-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Estimated salary pill ──────────────────────────────────
+   Shown on Adzuna jobs when salary_is_predicted = true.
+   Sits inline next to the salary figure.
+*/
+.est-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.42 0.08 75);
+  background: oklch(0.97 0.04 75);
+  border: 1px solid oklch(0.88 0.08 75);
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  white-space: nowrap;
+  margin-left: 4px;
+}
+
+/* ── Filter scope hint ──────────────────────────────────────
+   Quiet inline note below filters that only apply to native roles
+   (work-mode, experience level, skills — not available for ingested).
+*/
+.filter-scope-hint {
+  font-size: var(--type-xs);
+  color: var(--ink-faint);
+  line-height: 1.55;
+  padding: var(--space-2) 0 var(--space-1);
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.filter-scope-hint::before {
+  content: '·';
+  flex-shrink: 0;
+  color: var(--ink-faint);
+  margin-top: -1px;
+}
+
+/* ── Monogram tile (ingested jobs, no logo available) ───────
+   These extend .company-mono. The shared.css already has
+   .company-mono; these variants add the "ingested" visual
+   treatment: slightly desaturated, muted fill to signal
+   "we don't have a real logo here" without looking broken.
+*/
+.mono-ingested {
+  background: oklch(0.38 0.04 264);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* ── Ingested card modifier ─────────────────────────────────
+   Job cards for ingested (Adzuna/Reed) sources get a subtle
+   right-border treatment to distinguish from native.
+   Intentional, not a quality downgrade — just accurate.
+*/
+.job-card--ingested {
+  border-color: var(--border);
+}
+
+.job-card--ingested:hover {
+  border-color: var(--border-mid);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Job detail: native vs ingested toggle tabs ─────────── */
+.detail-state-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: var(--space-6);
+  width: fit-content;
+}
+
+.detail-state-tab {
+  font-family: 'Geist', sans-serif;
+  font-size: var(--type-xs);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+
+.detail-state-tab:hover {
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.detail-state-tab.active {
+  background: var(--navy);
+  color: white;
+}
+
+.detail-state-panel { display: none; }
+.detail-state-panel.active { display: block; }
+
+/* ── Snippet + readmore link (ingested job detail) ─────────
+   Short description snippet with "Read full description on {source} ↗"
+   link below. Distinct from the full prose of a native job.
+*/
+.ingested-snippet {
+  font-size: var(--type-base);
+  color: var(--ink-muted);
+  line-height: 1.75;
+  margin-bottom: var(--space-3);
+}
+
+.ingested-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--type-sm);
+  font-weight: 500;
+  color: var(--navy-mid);
+  text-decoration: none;
+  border-bottom: 1px solid oklch(0.32 0.07 264 / 30%);
+  padding-bottom: 1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.ingested-readmore:hover {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+/* ── Billing portal classes ─────────────────────────────────
+   Stripe-handoff surface: clean, neutral, trustworthy.
+   Uses a subdued neutral palette (not navy) to signal "third party".
+*/
+.billing-portal-wrap {
+  min-height: 100dvh;
+  background: oklch(0.97 0.005 264);
+  display: flex;
+  flex-direction: column;
+}
+
+.billing-portal-header {
+  background: white;
+  border-bottom: 1px solid oklch(0.90 0.01 264);
+  padding: 0 var(--space-6);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.billing-portal-stripe-mark {
+  font-family: 'Geist', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: oklch(0.28 0.10 264);
+  letter-spacing: -0.04em;
+}
+
+.billing-portal-header-sep {
+  width: 1px;
+  height: 20px;
+  background: oklch(0.88 0.01 264);
+}
+
+.billing-portal-for {
+  font-size: var(--type-xs);
+  color: oklch(0.55 0.03 264);
+  font-weight: 500;
+}
+
+.billing-portal-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  width: 100%;
+  flex: 1;
+}
+
+.billing-portal-section {
+  background: white;
+  border: 1px solid oklch(0.90 0.01 264);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 4%);
+}
+
+.billing-portal-section-title {
+  font-size: var(--type-sm);
+  font-weight: 700;
+  color: oklch(0.22 0.06 264);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.01em;
+}
+
+.billing-portal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid oklch(0.94 0.01 264);
+}
+
+.billing-portal-row:last-child { border-bottom: none; }
+
+.billing-portal-label {
+  font-size: var(--type-sm);
+  color: oklch(0.50 0.03 264);
+}
+
+.billing-portal-value {
+  font-family: 'Geist Mono', monospace;
+  font-size: var(--type-sm);
+  color: oklch(0.22 0.06 264);
+  font-weight: 500;
+}
+
+.billing-portal-invoice-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid oklch(0.94 0.01 264);
+  font-size: var(--type-sm);
+}
+
+.billing-portal-invoice-row:last-child { border-bottom: none; }
+
+.billing-portal-invoice-date {
+  font-family: 'Geist Mono', monospace;
+  font-size: var(--type-xs);
+  color: oklch(0.55 0.03 264);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.billing-portal-invoice-desc {
+  flex: 1;
+  color: oklch(0.30 0.04 264);
+}
+
+.billing-portal-invoice-amount {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+  color: oklch(0.22 0.06 264);
+}
+
+.billing-portal-invoice-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: oklch(0.35 0.12 155);
+  background: oklch(0.95 0.04 155);
+  border: 1px solid oklch(0.86 0.07 155);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+.billing-portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: 'Geist', sans-serif;
+  font-size: var(--type-sm);
+  font-weight: 600;
+  color: oklch(0.28 0.10 264);
+  background: white;
+  border: 1.5px solid oklch(0.88 0.02 264);
+  border-radius: var(--radius);
+  padding: 0 var(--space-4);
+  height: 36px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.billing-portal-btn:hover {
+  background: oklch(0.96 0.01 264);
+  border-color: oklch(0.75 0.04 264);
+  color: oklch(0.22 0.08 264);
+}
+
+.billing-portal-btn--danger {
+  color: oklch(0.45 0.14 20);
+  border-color: oklch(0.88 0.04 20);
+}
+
+.billing-portal-btn--danger:hover {
+  background: oklch(0.97 0.02 20);
+  border-color: oklch(0.75 0.08 20);
+}
+
+.billing-portal-footer {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.billing-portal-return {
+  font-size: var(--type-sm);
+  color: oklch(0.45 0.07 264);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color var(--transition);
+}
+
+.billing-portal-return:hover { color: oklch(0.28 0.10 264); }
+
+.billing-portal-powered {
+  font-size: var(--type-xs);
+  color: oklch(0.60 0.02 264);
+  font-family: 'Geist Mono', monospace;
+}
+
+@media (max-width: 768px) {
+  .billing-portal-main { padding: var(--space-5) var(--space-4); }
+  .billing-portal-footer { flex-direction: column; align-items: flex-start; }
+}
+

@@ -338,7 +338,7 @@
       <span class="breadcrumb-sep">›</span>
       <a href="home.html">Platform Engineering</a>
       <span class="breadcrumb-sep">›</span>
-      <span>Senior Platform Engineer</span>
+      <span id="bc-title">Senior Platform Engineer</span>
     </nav>
   </div>
 
@@ -347,167 +347,367 @@
 
     <!-- Left: job content -->
     <div>
-      <!-- Job header card -->
-      <div class="job-header-card">
-        <div class="job-header-top">
-          <div class="company-mono company-mono-xl mono-slate">FL</div>
-          <div class="job-header-body">
-            <h1 class="detail-title">Senior Platform Engineer</h1>
-            <a href="company-profile.html" class="detail-company">Folio Labs</a>
-            <div class="detail-meta-row">
-              <span class="detail-meta-item">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-                London, UK
-              </span>
-              <span class="detail-meta-item">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect width="20" height="14" x="2" y="7" rx="2"/>
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-                Full-time
-              </span>
-              <span class="detail-meta-item">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect width="18" height="18" x="3" y="4" rx="2"/>
-                  <path d="M16 2v4M8 2v4M3 10h18"/>
-                </svg>
-                Posted 1 day ago
-              </span>
-              <span class="detail-meta-item">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                47 applied
-              </span>
-              <span class="badge-featured">Featured</span>
+
+      <!--
+        ╔══════════════════════════════════════════════════════════════════════╗
+        ║  NATIVE vs INGESTED STATE TOGGLE                                    ║
+        ║  Toggle between Native (full data) and Ingested (Reed) states.      ║
+        ║  In production this would be a single state — prototype shows both. ║
+        ╚══════════════════════════════════════════════════════════════════════╝
+      -->
+      <div class="detail-state-tabs" role="tablist" aria-label="Job detail example states">
+        <button class="detail-state-tab active" role="tab" aria-selected="true" onclick="switchState('native')">
+          Native example
+        </button>
+        <button class="detail-state-tab" role="tab" aria-selected="false" onclick="switchState('ingested')">
+          Ingested example (Reed)
+        </button>
+      </div>
+
+      <!-- ─── NATIVE STATE ─── -->
+      <div class="detail-state-panel active" id="panel-native">
+
+        <!-- Job header card: native has company logo + linked company name -->
+        <div class="job-header-card">
+          <div class="job-header-top">
+            <!-- Native: real company logo (picsum placeholder) -->
+            <img
+              src="https://picsum.photos/seed/folio-labs-logo/72/72"
+              alt="Folio Labs"
+              width="72" height="72"
+              style="border-radius:var(--radius-lg);flex-shrink:0;object-fit:cover;border:1.5px solid var(--border)"
+            >
+            <div class="job-header-body">
+              <h1 class="detail-title">Senior Platform Engineer</h1>
+              <!-- Native: company name is a link to company profile -->
+              <a href="company-profile.html" class="detail-company">Folio Labs</a>
+              <div class="detail-meta-row">
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  London, UK
+                </span>
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="20" height="14" x="2" y="7" rx="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                  Full-time
+                </span>
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="4" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                  Posted 1 day ago
+                </span>
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  47 applied
+                </span>
+                <span class="badge-featured">Featured</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3)">
+            <!-- Native: exact salary (not estimated) -->
+            <div class="detail-salary">£80,000 – £110,000 per year</div>
+            <div class="detail-source-line" style="margin-top:0;padding-top:0;border-top:none">
+              <span class="detail-source-label">Source:</span>
+              <span class="source-badge source-badge--native">Descinder</span>
+              <span class="detail-source-label">— apply directly through descinder</span>
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3)">
-          <div class="detail-salary">£80,000 – £110,000 per year</div>
-          <div class="detail-source-line" style="margin-top:0;padding-top:0;border-top:none">
-            <span class="detail-source-label">Source:</span>
-            <span class="source-badge source-badge--native">Descinder</span>
-            <span class="detail-source-label">— apply directly through descinder</span>
+
+        <!-- Native: full markdown description -->
+        <div class="job-description">
+          <h2>About the role</h2>
+          <p>Folio Labs is building the infrastructure layer for the next generation of creative collaboration tools. As a Senior Platform Engineer you will own the design, reliability, and evolution of our core compute and data platform — the infrastructure that thousands of teams depend on every day.</p>
+          <p>This is an individual contributor role with significant influence. You will work closely with the engineering leadership team and embed with product squads to design systems that scale predictably. We are a company that ships fast, but we do not compromise on engineering quality: our on-call burden is low, our postmortems are blameless, and we invest heavily in platform observability.</p>
+
+          <h2>What you will do</h2>
+          <ul>
+            <li>Design and build the distributed infrastructure that underpins Folio's multi-tenant compute layer, handling over 400,000 requests per minute at peak</li>
+            <li>Own incident response and drive the reliability programme — SLO design, alerting strategy, chaos engineering</li>
+            <li>Partner with product engineering squads to review system designs and provide architectural guidance</li>
+            <li>Build internal developer tooling that reduces friction — local dev environments, CI pipelines, deployment abstractions</li>
+            <li>Contribute meaningfully to the platform roadmap; your technical judgement shapes what we build next</li>
+          </ul>
+
+          <h2>What we are looking for</h2>
+          <ul>
+            <li>5+ years working on production distributed systems or platform infrastructure, ideally at scale</li>
+            <li>Deep familiarity with Kubernetes — you understand the scheduler, the networking model, and you have debugged node pressure issues in production</li>
+            <li>Strong TypeScript or Go; experience with Rust is a genuine bonus, not a must-have</li>
+            <li>Comfort operating in AWS: you know when to use managed services and when to roll your own</li>
+            <li>A bias for instrumentation — you believe that if something is not measured, it does not exist</li>
+            <li>Clear written communication; asynchronous by default</li>
+          </ul>
+
+          <h2>What we offer</h2>
+          <ul>
+            <li>£80,000 – £110,000 depending on experience</li>
+            <li>0.1 – 0.3% EMI options on a standard 4-year vest, 1-year cliff</li>
+            <li>Remote-first with optional London office access; travel budget for quarterly team offsites</li>
+            <li>£2,000 annual learning budget — conferences, books, courses</li>
+            <li>25 days holiday + bank holidays + your birthday off</li>
+            <li>Private medical (Vitality) + dental</li>
+          </ul>
+        </div>
+
+        <!-- Native: skills section present (populated from form) -->
+        <div class="skills-section">
+          <p class="skills-title">Skills &amp; tools</p>
+          <div class="skills-tags">
+            <span class="tag-navy tag">TypeScript</span>
+            <span class="tag-navy tag">Kubernetes</span>
+            <span class="tag-navy tag">AWS</span>
+            <span class="tag-navy tag">Terraform</span>
+            <span class="tag-navy tag">Go</span>
+            <span class="tag-navy tag">Prometheus</span>
+            <span class="tag-navy tag">Grafana</span>
+            <span class="tag-navy tag">PostgreSQL</span>
+            <span class="tag">Rust (bonus)</span>
+            <span class="tag">Platform engineering</span>
+            <span class="tag">SRE</span>
           </div>
         </div>
-      </div>
 
-      <!-- Job description -->
-      <div class="job-description">
-        <h2>About the role</h2>
-        <p>Folio Labs is building the infrastructure layer for the next generation of creative collaboration tools. As a Senior Platform Engineer you will own the design, reliability, and evolution of our core compute and data platform — the infrastructure that thousands of teams depend on every day.</p>
-        <p>This is an individual contributor role with significant influence. You will work closely with the engineering leadership team and embed with product squads to design systems that scale predictably. We are a company that ships fast, but we do not compromise on engineering quality: our on-call burden is low, our postmortems are blameless, and we invest heavily in platform observability.</p>
+      </div><!-- #panel-native -->
 
-        <h2>What you will do</h2>
-        <ul>
-          <li>Design and build the distributed infrastructure that underpins Folio's multi-tenant compute layer, handling over 400,000 requests per minute at peak</li>
-          <li>Own incident response and drive the reliability programme — SLO design, alerting strategy, chaos engineering</li>
-          <li>Partner with product engineering squads to review system designs and provide architectural guidance</li>
-          <li>Build internal developer tooling that reduces friction — local dev environments, CI pipelines, deployment abstractions</li>
-          <li>Contribute meaningfully to the platform roadmap; your technical judgement shapes what we build next</li>
-        </ul>
+      <!-- ─── INGESTED STATE (Reed) ─── -->
+      <div class="detail-state-panel" id="panel-ingested">
 
-        <h2>What we are looking for</h2>
-        <ul>
-          <li>5+ years working on production distributed systems or platform infrastructure, ideally at scale</li>
-          <li>Deep familiarity with Kubernetes — you understand the scheduler, the networking model, and you have debugged node pressure issues in production</li>
-          <li>Strong TypeScript or Go; experience with Rust is a genuine bonus, not a must-have</li>
-          <li>Comfort operating in AWS: you know when to use managed services and when to roll your own</li>
-          <li>A bias for instrumentation — you believe that if something is not measured, it does not exist</li>
-          <li>Clear written communication; asynchronous by default</li>
-        </ul>
-
-        <h2>What we offer</h2>
-        <ul>
-          <li>£80,000 – £110,000 depending on experience</li>
-          <li>0.1 – 0.3% EMI options on a standard 4-year vest, 1-year cliff</li>
-          <li>Remote-first with optional London office access; travel budget for quarterly team offsites</li>
-          <li>£2,000 annual learning budget — conferences, books, courses</li>
-          <li>25 days holiday + bank holidays + your birthday off</li>
-          <li>Private medical (Vitality) + dental</li>
-        </ul>
-      </div>
-
-      <!-- Skills -->
-      <div class="skills-section">
-        <p class="skills-title">Skills &amp; tools</p>
-        <div class="skills-tags">
-          <span class="tag-navy tag">TypeScript</span>
-          <span class="tag-navy tag">Kubernetes</span>
-          <span class="tag-navy tag">AWS</span>
-          <span class="tag-navy tag">Terraform</span>
-          <span class="tag-navy tag">Go</span>
-          <span class="tag-navy tag">Prometheus</span>
-          <span class="tag-navy tag">Grafana</span>
-          <span class="tag-navy tag">PostgreSQL</span>
-          <span class="tag">Rust (bonus)</span>
-          <span class="tag">Platform engineering</span>
-          <span class="tag">SRE</span>
+        <!-- Job header card: ingested has NO company logo, NO company profile link -->
+        <div class="job-header-card">
+          <div class="job-header-top">
+            <!-- Ingested: monogram tile — Reed provides no logo -->
+            <div class="company-mono company-mono-xl mono-ingested">C</div>
+            <div class="job-header-body">
+              <h1 class="detail-title">Lead Data Scientist</h1>
+              <!--
+                Ingested: company name is PLAIN TEXT — no link to company profile.
+                Ingested companies have no company_id, so no profile route exists.
+              -->
+              <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-1)">
+                <span class="detail-company" style="cursor:default;color:var(--ink-muted)">Caelum</span>
+                <span class="source-badge source-badge--reed">Sourced from Reed</span>
+              </div>
+              <div class="detail-meta-row">
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  Remote, UK
+                </span>
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="20" height="14" x="2" y="7" rx="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                  Full-time
+                </span>
+                <span class="detail-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="4" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                  Posted 2 days ago
+                </span>
+                <!--
+                  No applicant count — Reed doesn't provide this.
+                  No experience level — unavailable from ingested sources.
+                -->
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3)">
+            <!-- Reed salary is stated — no Est. pill for this example -->
+            <div class="detail-salary">£95,000 – £125,000 per year</div>
+          </div>
         </div>
-      </div>
+
+        <!--
+          Ingested: description is a SNIPPET only (per ToS — store snippet, link out).
+          Not a full markdown document.
+          skills / work-mode / experience sections are OMITTED ENTIRELY — not shown empty.
+        -->
+        <div class="job-description">
+          <p class="ingested-snippet">
+            Caelum is looking for a Lead Data Scientist to join our growing analytics function. You will define data strategy, build and mentor a team of data scientists, and deliver models that directly influence product decisions. The role requires deep technical expertise in machine learning and strong cross-functional communication skills. This is a remote position open to candidates based in the UK.
+          </p>
+          <!-- "Read full description" link — always external, never paywalled -->
+          <a href="#" class="ingested-readmore" onclick="event.preventDefault();alert('Opens Reed job page in production (external URL)')">
+            Read full description on Reed
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </a>
+        </div>
+
+        <!--
+          Ingested: Skills section OMITTED (not shown empty).
+          Work-mode section OMITTED (not available from Reed for this job).
+          Experience level section OMITTED (unavailable from ingested sources).
+          These sections are intentionally absent — not placeholders, not empty states.
+        -->
+
+      </div><!-- #panel-ingested -->
 
     </div>
 
     <!-- Right: sticky apply sidebar -->
     <aside class="apply-sidebar">
 
-      <!-- Apply card -->
-      <div class="apply-card">
-        <div class="apply-salary-large">£80,000 – £110,000</div>
-        <div class="apply-salary-note">per year · Full-time · Remote</div>
-        <div class="apply-stats">
-          <div class="apply-stat">
-            <span class="apply-stat-label">Location</span>
-            <span class="apply-stat-value">London, UK</span>
-          </div>
-          <div class="apply-stat">
-            <span class="apply-stat-label">Work mode</span>
-            <span class="apply-stat-value">Remote-first</span>
-          </div>
-          <div class="apply-stat">
-            <span class="apply-stat-label">Posted</span>
-            <span class="apply-stat-value mono">1d ago</span>
-          </div>
-          <div class="apply-stat">
-            <span class="apply-stat-label">Applicants</span>
-            <span class="apply-stat-value mono">47 applied</span>
-          </div>
-        </div>
-        <!-- Native apply CTA: logged-out → sign up, free → paywall, subscriber → apply -->
-        <!-- This prototype shows the logged-out state: CTA goes to sign-up -->
-        <a href="sign-up.html" class="btn btn-primary btn-lg" style="width:100%;margin-bottom:10px">Apply on Descinder</a>
-        <p class="apply-cta-note">Sign in or <a href="sign-up.html">create a free account</a> to apply. A subscription (£14.99/mo) is required for native roles.</p>
-        <button class="btn btn-secondary btn-md" style="width:100%;margin-top:var(--space-3)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
-          </svg>
-          Save role
-        </button>
-      </div>
+      <!-- ── NATIVE SIDEBAR (shown when native tab is active) ── -->
+      <div id="sidebar-native">
 
-      <!-- Company mini card -->
-      <div class="company-mini-card">
-        <div class="company-mini-header">
-          <div class="company-mono mono-slate">FL</div>
-          <div>
-            <div class="company-mini-name">Folio Labs</div>
-            <div style="font-size:var(--type-xs);color:var(--ink-faint)">11–50 people · London, UK</div>
+        <!-- Apply card: native — paywall-aware -->
+        <div class="apply-card">
+          <div class="apply-salary-large">£80,000 – £110,000</div>
+          <div class="apply-salary-note">per year · Full-time · Remote</div>
+          <div class="apply-stats">
+            <div class="apply-stat">
+              <span class="apply-stat-label">Location</span>
+              <span class="apply-stat-value">London, UK</span>
+            </div>
+            <div class="apply-stat">
+              <span class="apply-stat-label">Work mode</span>
+              <span class="apply-stat-value">Remote-first</span>
+            </div>
+            <div class="apply-stat">
+              <span class="apply-stat-label">Experience</span>
+              <span class="apply-stat-value">Senior</span>
+            </div>
+            <div class="apply-stat">
+              <span class="apply-stat-label">Posted</span>
+              <span class="apply-stat-value mono">1d ago</span>
+            </div>
+            <div class="apply-stat">
+              <span class="apply-stat-label">Applicants</span>
+              <span class="apply-stat-value mono">47 applied</span>
+            </div>
           </div>
+          <!--
+            Native apply CTA: paywall-aware.
+            Logged-out → sign up redirect.
+            Free user → paywall modal.
+            Subscriber → direct apply.
+            Prototype shows logged-out state.
+          -->
+          <a href="sign-up.html" class="btn btn-primary btn-lg" style="width:100%;margin-bottom:10px">Apply on Descinder</a>
+          <p class="apply-cta-note">Sign in or <a href="sign-up.html">create a free account</a> to apply. A subscription (£14.99/mo) is required for native roles.</p>
+          <button class="btn btn-secondary btn-md" style="width:100%;margin-top:var(--space-3)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+            </svg>
+            Save role
+          </button>
         </div>
-        <p class="company-mini-desc">Infrastructure and tooling for creative collaboration at scale. Remote-first engineering culture.</p>
-        <a href="company-profile.html" class="btn btn-ghost btn-sm" style="width:100%;justify-content:flex-start;padding-left:0">
-          View company
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-        </a>
-      </div>
+
+        <!-- Company mini card: native has logo + "About" text + "View company" link -->
+        <div class="company-mini-card">
+          <div class="company-mini-header">
+            <img
+              src="https://picsum.photos/seed/folio-labs-logo/40/40"
+              alt="Folio Labs"
+              width="40" height="40"
+              style="border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--border);flex-shrink:0"
+            >
+            <div>
+              <div class="company-mini-name">Folio Labs</div>
+              <div style="font-size:var(--type-xs);color:var(--ink-faint)">11–50 people · London, UK</div>
+            </div>
+          </div>
+          <p class="company-mini-desc">Infrastructure and tooling for creative collaboration at scale. Remote-first engineering culture.</p>
+          <a href="company-profile.html" class="btn btn-ghost btn-sm" style="width:100%;justify-content:flex-start;padding-left:0">
+            View company profile
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </a>
+        </div>
+
+      </div><!-- #sidebar-native -->
+
+      <!-- ── INGESTED SIDEBAR (shown when ingested tab is active) ── -->
+      <div id="sidebar-ingested" style="display:none">
+
+        <!-- Apply card: ingested — always free, always external, NEVER paywalled -->
+        <div class="apply-card">
+          <!-- Reed salary is stated -->
+          <div class="apply-salary-large">£95,000 – £125,000</div>
+          <div class="apply-salary-note">per year · Full-time</div>
+          <div class="apply-stats">
+            <div class="apply-stat">
+              <span class="apply-stat-label">Location</span>
+              <span class="apply-stat-value">Remote, UK</span>
+            </div>
+            <div class="apply-stat">
+              <span class="apply-stat-label">Posted</span>
+              <span class="apply-stat-value mono">2d ago</span>
+            </div>
+            <!--
+              Work mode: NOT shown here (couldn't infer for this example).
+              Experience level: OMITTED — unavailable from Reed.
+              Applicant count: OMITTED — unavailable from Reed.
+            -->
+          </div>
+
+          <!-- Source badge above CTA -->
+          <div style="margin-bottom:var(--space-3)">
+            <span class="source-badge source-badge--reed" style="font-size:11px">Sourced from Reed</span>
+          </div>
+
+          <!--
+            Ingested apply CTA: ALWAYS external, ALWAYS free.
+            No paywall. No subscription required.
+            Opens external URL in new tab.
+          -->
+          <a href="#" class="btn btn-secondary btn-lg" style="width:100%;margin-bottom:10px" onclick="event.preventDefault();alert('Opens Reed job application page (external). Always free — no subscription required. (Prototype)')">
+            Apply on Reed ↗
+          </a>
+          <p class="apply-cta-note" style="text-align:center">
+            External application — no Descinder account required.
+            <br>Always free to apply.
+          </p>
+          <button class="btn btn-secondary btn-md" style="width:100%;margin-top:var(--space-3)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+            </svg>
+            Save role
+          </button>
+        </div>
+
+        <!--
+          Ingested: NO company mini card / no company profile card.
+          Ingested jobs have no company_id — the company profile route
+          does not exist for them. Plain note instead.
+        -->
+        <div class="company-mini-card">
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+            <span style="font-size:var(--type-sm);font-weight:700;color:var(--ink)">Caelum</span>
+            <span class="source-badge source-badge--reed">Reed</span>
+          </div>
+          <p style="font-size:var(--type-xs);color:var(--ink-faint);line-height:1.6;margin-bottom:var(--space-3)">
+            Company profile not available for externally-sourced roles. For details about this employer, visit their page on Reed.
+          </p>
+          <a href="#" class="btn btn-ghost btn-sm" style="width:100%;justify-content:flex-start;padding-left:0" onclick="event.preventDefault()">
+            View on Reed ↗
+          </a>
+        </div>
+
+      </div><!-- #sidebar-ingested -->
 
     </aside>
 
@@ -622,5 +822,33 @@
     </div>
   </footer>
 
+<script>
+  function switchState(state) {
+    const isNative = state === 'native';
+
+    // Update tab buttons
+    document.querySelectorAll('.detail-state-tab').forEach(btn => {
+      const active = btn.getAttribute('onclick').includes(state);
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active);
+    });
+
+    // Toggle main content panels
+    document.getElementById('panel-native').classList.toggle('active', isNative);
+    document.getElementById('panel-ingested').classList.toggle('active', !isNative);
+
+    // Toggle sidebars
+    document.getElementById('sidebar-native').style.display = isNative ? '' : 'none';
+    document.getElementById('sidebar-ingested').style.display = isNative ? 'none' : '';
+
+    // Update breadcrumb title
+    const bcTitle = document.getElementById('bc-title');
+    if (bcTitle) {
+      bcTitle.textContent = isNative
+        ? 'Senior Platform Engineer'
+        : 'Customer Success Manager';
+    }
+  }
+</script>
 </body>
 </html>

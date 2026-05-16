@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing portal · descinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/shared.css">
+  <!--
+    billing-portal.html — Stripe Customer Portal prototype
+    Position four questions:
+    - Narrative role: trust surface / handoff — "we are passing you to Stripe now"
+    - Viewer distance: 60–80cm, focused task (update card / view invoice)
+    - Visual temperature: calm, neutral, trustworthy — NOT navy branded, signals third-party
+    - Capacity: single-column centred, Stripe-register aesthetic
+
+    Deliberate motion: single page-enter fade-in only.
+    The 120% detail: honest "Billing managed by Stripe" header + clear prototype annotation.
+    This is explicitly a mock of what Stripe's Customer Portal would show.
+  -->
+  <style>
+    body { background: oklch(0.97 0.005 264); }
+
+    /* Prototype annotation banner — makes clear this is a placeholder */
+    .proto-banner {
+      background: oklch(0.96 0.04 75);
+      border-bottom: 1px solid oklch(0.88 0.08 75);
+      padding: var(--space-2) var(--space-6);
+      text-align: center;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      color: oklch(0.40 0.10 75);
+      letter-spacing: 0.02em;
+    }
+
+    /* Stripe-style plan badge */
+    .stripe-plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: var(--type-xs);
+      font-weight: 600;
+      color: oklch(0.30 0.08 264);
+      background: oklch(0.94 0.03 264);
+      border: 1px solid oklch(0.85 0.04 264);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    /* Payment method visual */
+    .pm-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .pm-card-icon {
+      width: 38px;
+      height: 24px;
+      background: oklch(0.94 0.01 264);
+      border: 1px solid oklch(0.88 0.02 264);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .pm-card-text {
+      font-size: var(--type-sm);
+      color: oklch(0.30 0.04 264);
+    }
+
+    .pm-card-text strong {
+      font-weight: 600;
+    }
+
+    .pm-card-exp {
+      font-family: 'Geist Mono', monospace;
+      font-size: var(--type-xs);
+      color: oklch(0.58 0.02 264);
+      margin-top: 1px;
+    }
+
+    /* Section divider label */
+    .portal-section-label {
+      font-size: var(--type-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(0.55 0.03 264);
+      margin-bottom: var(--space-4);
+    }
+
+    /* Cancel danger zone */
+    .portal-cancel-zone {
+      border: 1px solid oklch(0.88 0.04 20);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      background: oklch(0.997 0.003 20);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-5);
+    }
+
+    .portal-cancel-text {
+      font-size: var(--type-sm);
+      color: oklch(0.45 0.04 264);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    /* Stripe-logo-style horizontal rule */
+    .portal-rule {
+      border: none;
+      border-top: 1px solid oklch(0.90 0.01 264);
+      margin: var(--space-4) 0;
+    }
+
+    @media (max-width: 768px) {
+      .portal-cancel-zone { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Prototype annotation -->
+  <div class="proto-banner">
+    Prototype · This simulates the Stripe Customer Portal. In production, users are redirected to Stripe's hosted portal at <span style="letter-spacing:0">billing.stripe.com</span>
+  </div>
+
+  <div class="billing-portal-wrap page-enter">
+
+    <!-- ── Portal header ── -->
+    <header class="billing-portal-header">
+      <!-- Stripe wordmark-style (neutral, not navy branded) -->
+      <span class="billing-portal-stripe-mark">Stripe</span>
+      <div class="billing-portal-header-sep"></div>
+      <span class="billing-portal-for">Billing managed by Stripe on behalf of <strong style="color:oklch(0.22 0.06 264)">Descinder Ltd</strong></span>
+    </header>
+
+    <!-- ── Main content ── -->
+    <main class="billing-portal-main">
+
+      <!-- Page heading -->
+      <div style="margin-bottom:var(--space-6)">
+        <h1 style="font-size:var(--type-xl);font-weight:700;color:oklch(0.18 0.08 264);letter-spacing:-0.02em;margin-bottom:var(--space-2)">
+          Your billing
+        </h1>
+        <p style="font-size:var(--type-sm);color:oklch(0.50 0.03 264)">
+          Manage your subscription, payment method, and download invoices.
+        </p>
+      </div>
+
+      <!-- ── Current plan ── -->
+      <div class="billing-portal-section">
+        <div class="portal-section-label">Current plan</div>
+
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-4)">
+          <div>
+            <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+              <span style="font-size:var(--type-md);font-weight:700;color:oklch(0.18 0.08 264)">Seeker Monthly</span>
+              <span class="stripe-plan-badge">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="oklch(0.40 0.12 155)"><circle cx="12" cy="12" r="10"/></svg>
+                Active
+              </span>
+            </div>
+            <div style="font-family:'Geist Mono',monospace;font-size:var(--type-lg);font-weight:700;color:oklch(0.18 0.08 264);letter-spacing:-0.02em;margin-bottom:var(--space-1)">
+              £14.99<span style="font-size:var(--type-xs);font-weight:400;color:oklch(0.55 0.03 264)">&nbsp;/ month</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-rule"></div>
+
+        <div class="billing-portal-row">
+          <span class="billing-portal-label">Next billing date</span>
+          <span class="billing-portal-value">14 Jun 2026</span>
+        </div>
+        <div class="billing-portal-row">
+          <span class="billing-portal-label">Billing cycle</span>
+          <span class="billing-portal-value">Monthly</span>
+        </div>
+        <div class="billing-portal-row">
+          <span class="billing-portal-label">Subscribed since</span>
+          <span class="billing-portal-value">14 Feb 2026</span>
+        </div>
+
+        <div class="portal-rule"></div>
+        <!-- No upgrade option in MVP — single tier -->
+        <p style="font-size:var(--type-xs);color:oklch(0.60 0.02 264);line-height:1.5">
+          Descinder offers a single seeker plan. To cancel, use the "Cancel subscription" section below.
+        </p>
+      </div>
+
+      <!-- ── Payment method ── -->
+      <div class="billing-portal-section">
+        <div class="portal-section-label">Payment method on file</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+          <div class="pm-card">
+            <!-- Simplified card illustration (two overlapping circles — mastercard-style) -->
+            <div class="pm-card-icon">
+              <svg width="28" height="18" viewBox="0 0 38 24" fill="none">
+                <rect width="38" height="24" rx="4" fill="oklch(0.94 0.01 264)"/>
+                <circle cx="15" cy="12" r="5" fill="oklch(0.55 0.15 25)" opacity="0.80"/>
+                <circle cx="23" cy="12" r="5" fill="oklch(0.70 0.18 75)" opacity="0.70"/>
+              </svg>
+            </div>
+            <div>
+              <div class="pm-card-text"><strong>Visa</strong> ending in 7341</div>
+              <div class="pm-card-exp">Expires 09 / 2028</div>
+            </div>
+          </div>
+          <button class="billing-portal-btn" onclick="alert('In production: Stripe Customer Portal update-payment flow. (Prototype — not functional.)')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="20" height="14" x="2" y="5" rx="2"/>
+              <path d="M2 10h20"/>
+            </svg>
+            Update payment method
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Invoice history ── -->
+      <div class="billing-portal-section">
+        <div class="portal-section-label">Invoice history</div>
+
+        <div class="billing-portal-invoice-row">
+          <span class="billing-portal-invoice-date">14 May 2026</span>
+          <span class="billing-portal-invoice-desc">Seeker Monthly — May 2026</span>
+          <span class="billing-portal-invoice-amount">£14.99</span>
+          <span class="billing-portal-invoice-status">
+            <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Paid
+          </span>
+          <button class="billing-portal-btn" style="height:28px;font-size:11px;padding:0 10px" onclick="alert('PDF download (prototype — not functional)')">PDF</button>
+        </div>
+
+        <div class="billing-portal-invoice-row">
+          <span class="billing-portal-invoice-date">14 Apr 2026</span>
+          <span class="billing-portal-invoice-desc">Seeker Monthly — April 2026</span>
+          <span class="billing-portal-invoice-amount">£14.99</span>
+          <span class="billing-portal-invoice-status">
+            <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Paid
+          </span>
+          <button class="billing-portal-btn" style="height:28px;font-size:11px;padding:0 10px" onclick="alert('PDF download (prototype — not functional)')">PDF</button>
+        </div>
+
+        <div class="billing-portal-invoice-row">
+          <span class="billing-portal-invoice-date">14 Mar 2026</span>
+          <span class="billing-portal-invoice-desc">Seeker Monthly — March 2026</span>
+          <span class="billing-portal-invoice-amount">£14.99</span>
+          <span class="billing-portal-invoice-status">
+            <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Paid
+          </span>
+          <button class="billing-portal-btn" style="height:28px;font-size:11px;padding:0 10px" onclick="alert('PDF download (prototype — not functional)')">PDF</button>
+        </div>
+
+        <div class="billing-portal-invoice-row">
+          <span class="billing-portal-invoice-date">14 Feb 2026</span>
+          <span class="billing-portal-invoice-desc">Seeker Monthly — February 2026</span>
+          <span class="billing-portal-invoice-amount">£14.99</span>
+          <span class="billing-portal-invoice-status">
+            <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Paid
+          </span>
+          <button class="billing-portal-btn" style="height:28px;font-size:11px;padding:0 10px" onclick="alert('PDF download (prototype — not functional)')">PDF</button>
+        </div>
+      </div>
+
+      <!-- ── Cancel subscription ── -->
+      <div class="billing-portal-section">
+        <div class="portal-section-label" style="color:oklch(0.52 0.14 20)">Cancel subscription</div>
+
+        <div class="portal-cancel-zone">
+          <div class="portal-cancel-text">
+            Cancelling stops your next monthly charge. Access to native applies, AI-tailored CVs, and instant alerts continues until <strong style="color:oklch(0.30 0.06 264)">14 Jun 2026</strong>. Your saved jobs and application history are kept permanently.
+          </div>
+          <button class="billing-portal-btn billing-portal-btn--danger" onclick="confirmPortalCancel()">
+            Cancel subscription
+          </button>
+        </div>
+
+        <p style="font-size:var(--type-xs);color:oklch(0.60 0.02 264);margin-top:var(--space-3);line-height:1.55">
+          You can re-subscribe at any time after cancellation — no waiting period, same price.
+        </p>
+      </div>
+
+    </main>
+
+    <!-- ── Footer ── -->
+    <footer class="billing-portal-footer">
+      <a href="subscription-billing.html" class="billing-portal-return">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Return to Descinder
+      </a>
+      <span class="billing-portal-powered">Powered by Stripe · Prototype only — no real Stripe session</span>
+    </footer>
+
+  </div><!-- .billing-portal-wrap -->
+
+<script>
+  function confirmPortalCancel() {
+    const ok = confirm(
+      'Cancel your Seeker Monthly subscription?\n\n' +
+      'Access continues until 14 Jun 2026. No charges after that.\n\n' +
+      '(Prototype — this does not cancel a real subscription.)'
+    );
+    if (ok) {
+      alert('Cancellation recorded. Access continues until 14 Jun 2026.\n\n(Prototype confirmation only.)');
+    }
+  }
+</script>
+</body>
+</html>

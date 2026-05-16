@@ -468,6 +468,8 @@
           <label class="filter-option"><input type="checkbox" checked> Remote</label>
           <label class="filter-option"><input type="checkbox"> Hybrid</label>
           <label class="filter-option"><input type="checkbox"> On-site</label>
+          <!-- Filter scope hint: work-mode filter is best-effort for ingested -->
+          <div class="filter-scope-hint">Best-effort for Adzuna &amp; Reed roles</div>
         </div>
       </div>
 
@@ -501,6 +503,8 @@
           <label class="filter-option"><input type="checkbox"> Lead / Principal</label>
           <label class="filter-option"><input type="checkbox"> Head of / Director</label>
           <label class="filter-option"><input type="checkbox"> VP / C-level</label>
+          <!-- Filter scope hint: experience level not available from ingested sources -->
+          <div class="filter-scope-hint">Applies to Descinder-posted roles only</div>
         </div>
       </div>
 
@@ -544,6 +548,8 @@
           <label class="filter-option"><input type="checkbox"> Kubernetes</label>
           <label class="filter-option"><input type="checkbox"> AWS</label>
           <label class="filter-option"><input type="checkbox"> dbt</label>
+          <!-- Filter scope hint: skills not available from ingested sources -->
+          <div class="filter-scope-hint">Some filters apply to Descinder-posted roles only</div>
         </div>
       </div>
 
@@ -591,10 +597,25 @@
 
       <div class="job-feed">
 
-        <!-- Card 1 — Featured, native -->
+        <!--
+          ╔════════════════════════════════════════════════════════════════╗
+          ║  NATIVE CARDS: company logo + full data + skill chips         ║
+          ║  INGESTED CARDS: monogram tile + source badge + NO skills     ║
+          ║                  Adzuna → Est. pill when salary_is_predicted   ║
+          ║                  work-mode badge only when non-null            ║
+          ╚════════════════════════════════════════════════════════════════╝
+        -->
+
+        <!-- Card 1 — NATIVE (Folio Labs) Featured: logo via picsum, full data -->
         <a href="job-detail.html" class="job-card featured">
           <div class="job-card-top">
-            <div class="company-mono mono-slate">FL</div>
+            <!-- Native: real company logo (picsum placeholder for prototype) -->
+            <img
+              src="https://picsum.photos/seed/folio-labs-logo/40/40"
+              alt="Folio Labs"
+              width="40" height="40"
+              style="border-radius:var(--radius-sm);flex-shrink:0;object-fit:cover;border:1px solid var(--border)"
+            >
             <div class="job-card-body">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                 <h2 class="job-title">Senior Platform Engineer</h2>
@@ -608,30 +629,34 @@
               </svg>
             </button>
           </div>
+          <!-- Native: full skill chips + work-mode + experience badges -->
           <div class="job-meta">
             <span class="tag">Remote</span>
             <span class="tag">Full-time</span>
             <span class="tag">Senior</span>
             <span class="tag-navy tag">TypeScript</span>
             <span class="tag-navy tag">Kubernetes</span>
+            <span class="tag-navy tag">AWS</span>
           </div>
           <div class="job-card-footer">
             <span class="job-salary">£80,000 – £110,000</span>
             <div class="job-card-actions">
               <span class="job-time">1d ago</span>
               <span class="source-badge source-badge--native">Descinder</span>
-              <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply on Descinder</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 2 — Reed -->
-        <a href="job-detail.html" class="job-card">
+        <!-- Card 2 — INGESTED (Reed): monogram tile, no skills, no work-mode (not inferred) -->
+        <a href="job-detail.html" class="job-card job-card--ingested">
           <div class="job-card-top">
-            <div class="company-mono mono-teal">CA</div>
+            <!-- Ingested: monogram tile — Reed doesn't provide logo -->
+            <div class="company-mono mono-ingested">C</div>
             <div class="job-card-body">
               <h2 class="job-title">Lead Data Scientist</h2>
-              <div class="job-company">Caelum · Remote</div>
+              <!-- Plain text — no link to company profile (ingested has no company_id) -->
+              <div class="job-company">Caelum · Remote, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -639,33 +664,38 @@
               </svg>
             </button>
           </div>
+          <!-- Ingested (Reed): NO skill chips. Work-mode shown because "Remote" was inferred from description. -->
           <div class="job-meta">
             <span class="tag">Remote</span>
             <span class="tag">Full-time</span>
-            <span class="tag">Lead</span>
-            <span class="tag-navy tag">Python</span>
-            <span class="tag-navy tag">dbt</span>
+            <!-- Note: no skill chips — Reed provides no skills list -->
           </div>
           <div class="job-card-footer">
+            <!-- Reed salary is always stated — no Est. pill -->
             <span class="job-salary">£95,000 – £125,000</span>
             <div class="job-card-actions">
               <span class="job-time">2d ago</span>
-              <span class="source-badge source-badge--reed">Via Reed</span>
+              <span class="source-badge source-badge--reed">Sourced from Reed</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 3 — Featured, native -->
+        <!-- Card 3 — NATIVE (Pith) Featured: logo, full data -->
         <a href="job-detail.html" class="job-card featured">
           <div class="job-card-top">
-            <div class="company-mono mono-plum">PT</div>
+            <img
+              src="https://picsum.photos/seed/pith-studio-logo/40/40"
+              alt="Pith"
+              width="40" height="40"
+              style="border-radius:var(--radius-sm);flex-shrink:0;object-fit:cover;border:1px solid var(--border)"
+            >
             <div class="job-card-body">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                 <h2 class="job-title">Founding Designer</h2>
                 <span class="badge-featured">Featured</span>
               </div>
-              <div class="job-company">Pith · London, UK (Hybrid)</div>
+              <div class="job-company">Pith · London, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -673,30 +703,34 @@
               </svg>
             </button>
           </div>
+          <!-- Native: full skill chips -->
           <div class="job-meta">
             <span class="tag">Hybrid</span>
             <span class="tag">Full-time</span>
             <span class="tag">Senior</span>
             <span class="tag-navy tag">Figma</span>
             <span class="tag-navy tag">Design systems</span>
+            <span class="tag-navy tag">Prototyping</span>
           </div>
           <div class="job-card-footer">
             <span class="job-salary">£70,000 – £90,000 + equity</span>
             <div class="job-card-actions">
               <span class="job-time">3d ago</span>
               <span class="source-badge source-badge--native">Descinder</span>
-              <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <button class="btn btn-primary btn-sm" onclick="event.preventDefault()">Apply on Descinder</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 4 — Adzuna -->
-        <a href="job-detail.html" class="job-card">
+        <!-- Card 4 — INGESTED (Adzuna): monogram, Est. pill (salary_is_predicted), work-mode inferred "Hybrid" -->
+        <a href="job-detail.html" class="job-card job-card--ingested">
           <div class="job-card-top">
-            <div class="company-mono mono-green">MR</div>
+            <!-- Ingested: monogram tile — Adzuna doesn't provide logo -->
+            <div class="company-mono mono-ingested">M</div>
             <div class="job-card-body">
               <h2 class="job-title">Staff Software Engineer — Infrastructure</h2>
-              <div class="job-company">Marrow Studios · Manchester, UK (Hybrid)</div>
+              <!-- Plain text — no company profile link -->
+              <div class="job-company">Marrow Studios · Manchester, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -704,31 +738,30 @@
               </svg>
             </button>
           </div>
+          <!-- Ingested (Adzuna): NO skill chips. Work-mode "Hybrid" inferred from description. -->
           <div class="job-meta">
             <span class="tag">Hybrid</span>
             <span class="tag">Full-time</span>
-            <span class="tag">Staff</span>
-            <span class="tag-navy tag">Go</span>
-            <span class="tag-navy tag">Terraform</span>
-            <span class="tag-navy tag">AWS</span>
+            <!-- Note: no skill chips — Adzuna provides no skills list -->
           </div>
           <div class="job-card-footer">
-            <span class="job-salary">£110,000 – £145,000</span>
+            <!-- Adzuna: salary_is_predicted = true → Est. pill mandatory -->
+            <span class="job-salary">£110,000 – £145,000<span class="est-pill">Est.</span></span>
             <div class="job-card-actions">
               <span class="job-time">3d ago</span>
-              <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+              <span class="source-badge source-badge--adzuna">Sourced from Adzuna</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Adzuna ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 5 — Reed -->
-        <a href="job-detail.html" class="job-card">
+        <!-- Card 5 — INGESTED (Reed): monogram, no work-mode (not inferred from description) -->
+        <a href="job-detail.html" class="job-card job-card--ingested">
           <div class="job-card-top">
-            <div class="company-mono mono-deep">VL</div>
+            <div class="company-mono mono-ingested">V</div>
             <div class="job-card-body">
               <h2 class="job-title">Head of Product — Growth</h2>
-              <div class="job-company">Veldt · Remote (UK-based)</div>
+              <div class="job-company">Veldt · London, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -736,25 +769,31 @@
               </svg>
             </button>
           </div>
+          <!-- Ingested (Reed): NO skill chips. NO work-mode (couldn't infer from snippet). -->
           <div class="job-meta">
-            <span class="tag">Remote</span>
             <span class="tag">Full-time</span>
-            <span class="tag">Head of</span>
+            <!-- Note: no work-mode tag — not inferrable from Reed snippet for this job -->
+            <!-- Note: no skill chips -->
           </div>
           <div class="job-card-footer">
             <span class="job-salary">£100,000 – £130,000</span>
             <div class="job-card-actions">
               <span class="job-time">4d ago</span>
-              <span class="source-badge source-badge--reed">Via Reed</span>
+              <span class="source-badge source-badge--reed">Sourced from Reed</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 6 — native -->
+        <!-- Card 6 — NATIVE (Kindred Works): logo, full data -->
         <a href="job-detail.html" class="job-card">
           <div class="job-card-top">
-            <div class="company-mono mono-navy">KN</div>
+            <img
+              src="https://picsum.photos/seed/kindred-works-logo/40/40"
+              alt="Kindred Works"
+              width="40" height="40"
+              style="border-radius:var(--radius-sm);flex-shrink:0;object-fit:cover;border:1px solid var(--border)"
+            >
             <div class="job-card-body">
               <h2 class="job-title">Principal ML Engineer</h2>
               <div class="job-company">Kindred Works · London, UK</div>
@@ -765,30 +804,32 @@
               </svg>
             </button>
           </div>
+          <!-- Native: full skill chips -->
           <div class="job-meta">
             <span class="tag">On-site</span>
             <span class="tag">Full-time</span>
             <span class="tag">Principal</span>
             <span class="tag-navy tag">Python</span>
             <span class="tag-navy tag">PyTorch</span>
+            <span class="tag-navy tag">MLOps</span>
           </div>
           <div class="job-card-footer">
             <span class="job-salary">£130,000 – £165,000</span>
             <div class="job-card-actions">
               <span class="job-time">5d ago</span>
               <span class="source-badge source-badge--native">Descinder</span>
-              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply</button>
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Descinder</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 7 — Adzuna -->
-        <a href="job-detail.html" class="job-card">
+        <!-- Card 7 — INGESTED (Adzuna): monogram, Est. pill, work-mode inferred "Hybrid" -->
+        <a href="job-detail.html" class="job-card job-card--ingested">
           <div class="job-card-top">
-            <div class="company-mono mono-mid">OR</div>
+            <div class="company-mono mono-ingested">O</div>
             <div class="job-card-body">
               <h2 class="job-title">Engineering Manager — Backend Platform</h2>
-              <div class="job-company">Orrery · Edinburgh, UK (Hybrid)</div>
+              <div class="job-company">Orrery · Edinburgh, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -796,30 +837,29 @@
               </svg>
             </button>
           </div>
+          <!-- Ingested (Adzuna): NO skills. Hybrid inferred. -->
           <div class="job-meta">
             <span class="tag">Hybrid</span>
             <span class="tag">Full-time</span>
-            <span class="tag">Manager</span>
-            <span class="tag-navy tag">Rust</span>
-            <span class="tag-navy tag">AWS</span>
           </div>
           <div class="job-card-footer">
-            <span class="job-salary">£115,000 – £140,000</span>
+            <!-- Adzuna: salary_is_predicted = true → Est. pill -->
+            <span class="job-salary">£115,000 – £140,000<span class="est-pill">Est.</span></span>
             <div class="job-card-actions">
               <span class="job-time">6d ago</span>
-              <span class="source-badge source-badge--adzuna">Via Adzuna</span>
+              <span class="source-badge source-badge--adzuna">Sourced from Adzuna</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Adzuna ↗</button>
             </div>
           </div>
         </a>
 
-        <!-- Card 8 — Reed -->
-        <a href="job-detail.html" class="job-card">
+        <!-- Card 8 — INGESTED (Reed): monogram, work-mode inferred "Remote" -->
+        <a href="job-detail.html" class="job-card job-card--ingested">
           <div class="job-card-top">
-            <div class="company-mono mono-slate">LU</div>
+            <div class="company-mono mono-ingested">L</div>
             <div class="job-card-body">
               <h2 class="job-title">Senior Product Designer</h2>
-              <div class="job-company">Lumen Works · Remote</div>
+              <div class="job-company">Lumen Works · Remote, UK</div>
             </div>
             <button class="save-btn" aria-label="Save job" onclick="event.preventDefault();this.classList.toggle('saved')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -827,18 +867,16 @@
               </svg>
             </button>
           </div>
+          <!-- Ingested (Reed): NO skills. Remote inferred. -->
           <div class="job-meta">
             <span class="tag">Remote</span>
             <span class="tag">Full-time</span>
-            <span class="tag">Senior</span>
-            <span class="tag-navy tag">Figma</span>
-            <span class="tag-navy tag">Prototyping</span>
           </div>
           <div class="job-card-footer">
             <span class="job-salary">£65,000 – £85,000</span>
             <div class="job-card-actions">
               <span class="job-time">7d ago</span>
-              <span class="source-badge source-badge--reed">Via Reed</span>
+              <span class="source-badge source-badge--reed">Sourced from Reed</span>
               <button class="btn btn-secondary btn-sm" onclick="event.preventDefault()">Apply on Reed ↗</button>
             </div>
           </div>
