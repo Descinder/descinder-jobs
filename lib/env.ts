@@ -14,6 +14,9 @@ const serverEnvSchema = z.object({
   STORAGE_SECRET_ACCESS_KEY: z.string().min(1),
   STORAGE_BUCKET: z.string().min(1),
   STORAGE_FORCE_PATH_STYLE: z.string().transform((v) => v === "true"),
+  ADZUNA_APP_ID: z.string().optional(),
+  ADZUNA_APP_KEY: z.string().optional(),
+  REED_API_KEY: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({
