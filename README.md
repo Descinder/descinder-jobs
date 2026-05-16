@@ -90,3 +90,18 @@ Accepted product decision (review F4): employers see *withdrawn* applications in
 Deferred: seeker email notification on employer status change → Plan 2d (Resend).
 
 Next: Plan 2b-iv (ingestion: Adzuna UK/US/AU/CA + Reed UK, §6 degradation mapping, ingestion_runs, admin trigger).
+
+## Plan 2b-iv — Third-Party Ingestion (complete, reviewed, remediated)
+
+- Pure mappers (`lib/shared/ingest-map.ts`): Adzuna + Reed → NOT-NULL-safe ingested rows; work_mode/experience inferred via keyword scan; salary_is_predicted (Adzuna only); skills=[]; company_id=null + source_company_name + "Sourced from …"; per-country currency; malformed/empty provider date → safe ISO fallback (both sources)
+- Thin env-guarded clients (Adzuna `it-jobs` UK/US/AU/CA; Reed keyword UK) — SSRF-safe (whitelisted country path, fixed hosts, no user-controlled URL)
+- **Migration 00014**: replaced 00007's *partial* `jobs_source_external_uidx (where external_id is not null)` with a full unique index — the partial index could not be an `ON CONFLICT (source,external_id)` inference target (supabase-js `upsert` emits no predicate). Native rows keep `external_id NULL`; default unique-index NULL-distinct semantics leave unlimited native rows valid.
+- Ingestion repo: idempotent upsert on `(source,external_id)`; `expireUnseen` (source+country+published+`ingested_at < runStart` — provably cannot touch native or other-source rows); `expires_at` 60-day backstop stamped per upsert (rolls forward each run) so a generic expiry sweep handles ingested inventory consistently — **expireUnseen remains the authoritative ingested-expiry mechanism**
+- Ingestion service: injected fetcher (fixtures in CI, real clients in prod), bounded `MAX_PAGES=5`, **expire ONLY on a fully successful run** (partial/failed pull never mass-expires — now explicitly tested); `ingestion_runs.error_message` is sanitized (configured API-key values redacted, length-bounded) since it is admin-readable
+- Admin endpoints: `GET /api/admin/ingestion-runs`, `POST /api/admin/ingestion/run` — admin-gated (401 anon / 403 non-admin / 200 admin) + CSRF on the POST; clear CONFLICT when API keys absent
+- Review verdict SOUND after remediation. AuthZ / SSRF / secret-handling / §6 degradation render / expiry scoping / migration 00014 all SAFE. Remediated: M1 (expires_at backstop), M2 (added expiry-only-on-success e2e), L1 (error sanitization), L2 (Adzuna date fallback).
+- Tests: unit (schemas-ingestion 3, ingest-map 7) + e2e (ingestion-repo; ingestion: fixture→public-feed degraded shape + idempotent + expiry + **expiry-only-on-success** + admin authz 401/403/200)
+
+Deferred to Plan 2d: (a) daily ingestion cron schedule (this plan built the testable service + manual admin trigger; 2d wires pg_cron → secured internal endpoint calling `ingestSource` per (source,country)); (b) **concurrent-run guard** — two simultaneous admin triggers for the same (source,country) could transiently over-expire (self-heals next clean run; admin-only/low-probability); add a per-(source,country) advisory lock / "run in progress" guard when wiring the 2d cron; (c) 2d cron should add a wall-clock timeout (admin manual trigger is bounded by MAX_PAGES but has no overall timeout).
+
+This completes Plan 2b (i jobs-core · ii CV+storage · iii applications · iv ingestion). Next: Plan 2c — AI-CV (Groq→Claude) + Stripe embedded billing + webhooks (+ deferred `employer_publish` gate completion, backend-spec §13 I1).
