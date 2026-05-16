@@ -9,7 +9,11 @@ const APP_SELECT = `
              company:companies ( name, slug ) )
 `;
 
-export type AppRepoRow = Record<string, unknown>;
+export type AppRepoRow = {
+  id: string;
+  job: { id: string; title: string; source: string; source_company_name: string | null; external_apply_url: string | null; company: { name: string; slug: string } | null };
+  [key: string]: unknown;
+};
 
 function normalizeJoin(d: Record<string, unknown>): Record<string, unknown> {
   const j = d.job as unknown;
