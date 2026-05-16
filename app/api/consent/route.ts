@@ -1,36 +1,40 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { ok, fail } from "@/lib/server/http";
+import { parseBody, getSession, assertCsrf } from "@/app/api/_lib/handler";
 import { db } from "@/lib/server/repos/db";
-import { getSession } from "@/app/api/_lib/handler";
+import { AppError } from "@/lib/shared/errors";
+import type { Json } from "@/lib/supabase/types";
+
+const consentSchema = z.object({
+  event_type: z.enum(["terms_accepted", "privacy_accepted", "marketing_opt_in", "cookie_analytics_opt_in"]),
+  policy_version: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "invalid body" }, { status: 400 });
-  }
+  try {
+    const { event_type, policy_version, metadata } = await parseBody(req, consentSchema);
+    const ctx = await getSession();
 
-  const { event_type, policy_version, metadata } = body as {
-    event_type: string;
-    policy_version?: string;
-    metadata?: Record<string, unknown>;
-  };
+    // If a session exists (authenticated user), verify CSRF to prevent forged
+    // consent records under a logged-in user's id (GDPR integrity).
+    if (ctx) {
+      await assertCsrf(ctx);
+    }
 
-  const allowed = ["terms_accepted", "privacy_accepted", "marketing_opt_in", "cookie_analytics_opt_in"];
-  if (!allowed.includes(event_type)) {
-    return NextResponse.json({ error: "invalid event_type" }, { status: 400 });
-  }
+    const metadataValue: Json | null = (metadata ?? null) as Json | null;
 
-  const ctx = await getSession();
+    const { error } = await db().from("consent_log").insert({
+      user_id: ctx?.user.id ?? null,
+      event_type,
+      policy_version: policy_version ?? null,
+      metadata: metadataValue,
+    });
 
-  const { error } = await db().from("consent_log").insert({
-    user_id: ctx?.user.id ?? null,
-    event_type: event_type as "terms_accepted" | "privacy_accepted" | "marketing_opt_in" | "cookie_analytics_opt_in",
-    policy_version: policy_version ?? null,
-    metadata: (metadata ?? null) as any,
-  });
+    if (error) {
+      throw new AppError("INTERNAL");
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true });
+    return ok({ ok: true });
+  } catch (e) { return fail(e); }
 }

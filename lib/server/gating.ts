@@ -1,3 +1,4 @@
+import "server-only";
 import { db } from "@/lib/server/repos/db";
 import type { SessionContext } from "@/lib/server/auth/session";
 export type GateKey = "apply_native" | "ai_cv" | "instant_alerts" | "employer_publish" | "external_apply";
@@ -28,6 +29,7 @@ export function evaluateGate(key: GateKey, settings: Settings, sub: Sub, usage: 
       return { allowed: false, paywallReason: "subscribe_for_instant_alerts" };
     }
     case "employer_publish": {
+      // Plan 2c: when job_posting_paid is enabled, add company-subscription / per-post-payment checks here (mirrors instant_alerts). Until then, toggle-off default = allowed.
       if (settings.job_posting_paid === false) return { allowed: true };
       return { allowed: false, paywallReason: "employer_payment_required" };
     }

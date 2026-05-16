@@ -1,3 +1,4 @@
+import "server-only";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export function generateCsrfToken(): string {
@@ -6,9 +7,9 @@ export function generateCsrfToken(): string {
 
 export function verifyCsrf(
   headerToken: string | null,
-  cookieToken: string | null,
+  expectedToken: string | null,
 ): boolean {
-  if (!headerToken || !cookieToken) return false;
-  if (headerToken.length !== cookieToken.length) return false;
-  return timingSafeEqual(Buffer.from(headerToken), Buffer.from(cookieToken));
+  if (!headerToken || !expectedToken) return false;
+  if (headerToken.length !== expectedToken.length) return false;
+  return timingSafeEqual(Buffer.from(headerToken), Buffer.from(expectedToken));
 }

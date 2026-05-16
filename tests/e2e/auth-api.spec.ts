@@ -10,7 +10,16 @@ test("signup → authed cookie → logout → login", async () => {
   });
   expect(su.status()).toBe(201);
   expect((await su.json()).next).toBe("/onboarding/seeker");
-  const lo = await ctx.post("/api/auth/logout");
+
+  // Retrieve the CSRF token from the cookie set during signup and pass it as the
+  // required x-csrf-token header on authenticated state-changing requests.
+  const cookies = await ctx.storageState();
+  const csrfCookie = cookies.cookies.find((c) => c.name === "ds_csrf");
+  const csrfToken = csrfCookie?.value ?? "";
+
+  const lo = await ctx.post("/api/auth/logout", {
+    headers: { "x-csrf-token": csrfToken },
+  });
   expect(lo.status()).toBe(200);
   const li = await ctx.post("/api/auth/login", { data: { email, password: "test-password-123" } });
   expect(li.status()).toBe(200);

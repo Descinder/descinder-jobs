@@ -1,3 +1,4 @@
+import "server-only";
 import { AppError } from "@/lib/shared/errors";
 import type { SessionContext } from "@/lib/server/auth/session";
 import { db } from "@/lib/server/repos/db";

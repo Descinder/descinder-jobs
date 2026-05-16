@@ -12,4 +12,4 @@ export type SignupInput = z.infer<typeof signupSchema>;
 export const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
 export const magicLinkSchema = z.object({ email: z.string().email() });
 export const forgotSchema = z.object({ email: z.string().email() });
-export const resetSchema = z.object({ token: z.string().min(1), new_password: z.string().min(8).max(200) });
+export const resetSchema = z.object({ new_password: z.string().min(8).max(200) });

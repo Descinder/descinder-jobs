@@ -3,8 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const res = NextResponse.next();
   if (!request.cookies.get("ds_csrf")) {
-    const tmp = crypto.randomUUID().replace(/-/g, "");
-    res.cookies.set("ds_csrf", tmp + tmp.slice(0, 32), {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    res.cookies.set("ds_csrf", token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
