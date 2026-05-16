@@ -49,6 +49,14 @@ test("applications repo: native insert, dup blocked, withdraw scrubs PII, extern
   const mine = await listMyApplications(userId, { source: undefined, page: 1, page_size: 20 } as never);
   expect(mine.rows.length).toBeGreaterThanOrEqual(2);
 
+  // BUG CHECK: source filter should report total matching only the filtered source,
+  // not all applications for the user. Currently listMyApplications returns the DB
+  // count (all sources) even when a source filter is applied in-memory.
+  const externalOnly = await listMyApplications(userId, { source: "external", page: 1, page_size: 20 } as never);
+  expect(externalOnly.rows.length).toBe(1); // only the external stub
+  // total should equal the filtered count, but the bug returns all-sources count (2)
+  expect(externalOnly.total).toBe(externalOnly.rows.length);
+
   await db().from("applications").delete().eq("user_id", userId);
   await db().from("external_apply_clicks").delete().eq("job_id", ext!.id);
   await db().from("jobs").delete().in("id", [nat!.id, ext!.id]);

@@ -48,19 +48,23 @@ export async function listMyApplications(
   userId: string, f: ApplicationsFilter,
 ): Promise<{ rows: AppRepoRow[]; total: number }> {
   const from = (f.page - 1) * f.page_size;
-  const { data, error, count } = await db().from("applications")
-    .select(APP_SELECT, { count: "exact" }).eq("user_id", userId)
+  // Use !inner so PostgREST applies embedded-column filters to the parent count too.
+  const innerSelect = APP_SELECT.replace("job:jobs (", "job:jobs!inner (");
+  let q = db().from("applications")
+    .select(innerSelect, { count: "exact" }).eq("user_id", userId);
+  // Push source filter into the DB query so pagination + count are correct.
+  // PostgREST embedded-filter key uses the real table name, not the alias.
+  if (f.source === "native") {
+    q = q.eq("jobs.source", "native");
+  } else if (f.source === "external") {
+    q = q.neq("jobs.source", "native");
+  }
+  const { data, error, count } = await q
     .order("submitted_at", { ascending: false })
     .range(from, from + f.page_size - 1);
   if (error) throw new Error(`listMyApplications failed: ${error.message}`);
-  const rows = (data ?? []).map((d) => normalizeJoin(d as Record<string, unknown>) as AppRepoRow);
-  const filtered = f.source
-    ? rows.filter((r) => {
-        const src = ((r.job as Record<string, unknown>)?.source as string) ?? "native";
-        return f.source === "external" ? src !== "native" : src === "native";
-      })
-    : rows;
-  return { rows: filtered, total: count ?? filtered.length };
+  const rows = (data ?? []).map((d) => normalizeJoin(d as unknown as Record<string, unknown>) as AppRepoRow);
+  return { rows, total: count ?? rows.length };
 }
 
 export async function listApplicationsForJob(jobId: string): Promise<AppRepoRow[]> {
@@ -93,12 +97,13 @@ export async function logExternalClick(jobId: string, userId: string | null): Pr
 }
 
 export async function upsertExternalStub(jobId: string, userId: string): Promise<string> {
-  const { data: existing } = await db().from("applications").select("id")
+  const { error: upErr } = await db().from("applications").upsert(
+    { job_id: jobId, user_id: userId, status: "submitted", external_status: "applied" } as never,
+    { onConflict: "job_id,user_id", ignoreDuplicates: true },
+  );
+  if (upErr) throw new Error(`upsertExternalStub failed: ${upErr.message}`);
+  const { data, error } = await db().from("applications").select("id")
     .eq("job_id", jobId).eq("user_id", userId).maybeSingle();
-  if (existing) return existing.id;
-  const { data, error } = await db().from("applications")
-    .insert({ job_id: jobId, user_id: userId, status: "submitted", external_status: "applied" })
-    .select("id").single();
-  if (error || !data) throw new Error(`upsertExternalStub failed: ${error?.message}`);
+  if (error || !data) throw new Error(`upsertExternalStub read-back failed: ${error?.message}`);
   return data.id;
 }

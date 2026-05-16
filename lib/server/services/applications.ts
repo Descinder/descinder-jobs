@@ -48,6 +48,9 @@ export async function externalApply(
 ): Promise<{ redirectUrl: string }> {
   const job = await getJobById(jobId);
   if (!job || job.status !== "published") throw new AppError("NOT_FOUND", "Job not found");
+  if ((job.source as string) === "native" || (job.apply_method as string) === "native") {
+    throw new AppError("CONFLICT", "This job is applied to on Descinder, not externally");
+  }
   const url = job.external_apply_url as string | null;
   if (!url) throw new AppError("CONFLICT", "This job has no external application URL");
   await logExternalClick(jobId, user?.id ?? null);
