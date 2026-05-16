@@ -73,3 +73,20 @@ Quarantined (skipped with in-file reason, to be un-skipped + rewritten in Plan 3
 - `tests/e2e/signup-employer.spec.ts` — same; equivalent backend flow proven by `employer-jobs.spec.ts`
 
 Process going forward: each implementation cluster runs a review agent on its files AND the relevant tests; every plan checkpoint runs the FULL `npm test` + `npm run test:e2e` and reports the true count (green, or with explicitly-quarantined known-stale specs — never silently red).
+
+## Plan 2b-iii — Applications (complete, reviewed, remediated)
+
+- Migration 00013: `applications.external_status` (seeker self-report vocab, CHECK-constrained — DB rejects out-of-vocab, pg 23514)
+- Native apply: `featureGate("apply_native")` → 402 PAYWALL (free), 409 dup, native+published only, **cv_file_id ownership re-verified server-side** (cross-user CV-attach confirmed blocked)
+- External apply: never gated, anon-allowed, idempotent subscriber stub (race-safe upsert), native-job guard (can't get a free stub for a native job)
+- Unified `/api/me/applications` (DB-level source filter + correct filtered `total`), seeker external self-status, withdraw scrubs cover_letter+cv_file_id (GDPR)
+- Application detail + CV presigned-GET — `canViewApplication` = applicant OR owning company member OR admin, else 404 (no existence leak; null-owner external apps → applicant/admin only)
+- Employer applicants + native status (company-member only; cross-tenant 403); seeker/employer status vocabularies disjoint
+- Saved jobs (idempotent) + content reports
+- Review verdict SOUND after remediation (F1 source-filter pagination/count, F2 race-safe stub, F3 native guard). No Critical; both top abuse paths SAFE.
+- Tests: 62 unit + e2e (applications-repo incl. F1 negative, saved-reports-repo, apply-flow, external-apply, employer-applicants, saved-reports). FULL suite: 62 unit / e2e 25 pass + 2 quarantined.
+
+Accepted product decision (review F4): employers see *withdrawn* applications in the applicants list with `withdrawn=true` and PII already scrubbed (cover_letter/cv null) — intentional (employer learns the candidate withdrew); no PII leak. Revisit in Plan 3 UI if undesirable.
+Deferred: seeker email notification on employer status change → Plan 2d (Resend).
+
+Next: Plan 2b-iv (ingestion: Adzuna UK/US/AU/CA + Reed UK, §6 degradation mapping, ingestion_runs, admin trigger).
