@@ -5,18 +5,20 @@ type SubRow = {
   current_period_end: string | null; cancel_at_period_end: boolean;
 } | null;
 
-const ACTIVE = new Set(["active", "trialing", "past_due"]);
-// past_due still has access until the dunning window closes (Stripe semantics);
-// 'canceled'/'incomplete'/'incomplete_expired'/'unpaid' are NOT active.
+// MUST match gating `hasActiveSub` (active/trialing only) so the DTO never
+// over-reports entitlement vs the authoritative gate. `past_due` is surfaced
+// separately as `pastDue` (dunning UI) — it does NOT count as active here.
+const ACTIVE = new Set(["active", "trialing"]);
 
 export function toBillingOverview(s: SubRow) {
-  if (!s) return { status: "none", plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false, active: false };
+  if (!s) return { status: "none", plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false, active: false, pastDue: false };
   return {
     status: s.status,
     plan: s.plan_key,
     currentPeriodEnd: s.current_period_end,
     cancelAtPeriodEnd: s.cancel_at_period_end,
     active: ACTIVE.has(s.status),
+    pastDue: s.status === "past_due",
   };
 }
 

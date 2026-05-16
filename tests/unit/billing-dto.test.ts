@@ -9,15 +9,18 @@ describe("toBillingOverview", () => {
     });
     expect(o).toEqual({
       status: "active", plan: "seeker_monthly",
-      currentPeriodEnd: "2026-06-17T00:00:00Z", cancelAtPeriodEnd: false, active: true,
+      currentPeriodEnd: "2026-06-17T00:00:00Z", cancelAtPeriodEnd: false, active: true, pastDue: false,
     });
     expect(toBillingOverview(null)).toEqual({
-      status: "none", plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false, active: false,
+      status: "none", plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false, active: false, pastDue: false,
     });
   });
-  it("trialing counts as active; canceled does not", () => {
+  it("trialing counts as active; canceled does not; past_due is NOT active but flagged", () => {
     expect(toBillingOverview({ status: "trialing", plan_key: "seeker_monthly", current_period_end: null, cancel_at_period_end: false }).active).toBe(true);
     expect(toBillingOverview({ status: "canceled", plan_key: "seeker_monthly", current_period_end: null, cancel_at_period_end: false }).active).toBe(false);
+    const pd = toBillingOverview({ status: "past_due", plan_key: "seeker_monthly", current_period_end: null, cancel_at_period_end: false });
+    expect(pd.active).toBe(false); // matches gating hasActiveSub (no entitlement over-report)
+    expect(pd.pastDue).toBe(true);
   });
 });
 describe("toPaymentMethodDTO", () => {

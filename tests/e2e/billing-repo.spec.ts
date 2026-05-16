@@ -14,23 +14,39 @@ test("billing repo: subscription upsert keyed on stripe_subscription_id; event d
   const { userId } = await signUpWithPassword(`billrepo+${stamp}@example.test`, "test-password-123", { name: "BR" });
   const subId = `sub_test_${stamp}`;
 
-  await upsertSubscription({
+  const tActive = new Date(Date.now() - 60_000).toISOString();
+  const tCancel = new Date().toISOString();
+  const a1 = await upsertSubscription({
     owner_type: "user", owner_id: userId, plan_key: "seeker_monthly",
     status: "active", stripe_subscription_id: subId, stripe_customer_id: `cus_${stamp}`,
     current_period_start: new Date().toISOString(),
     current_period_end: new Date(Date.now() + 30 * 864e5).toISOString(),
-    cancel_at_period_end: false,
+    cancel_at_period_end: false, last_event_at: tActive,
   });
-  await upsertSubscription({
+  expect(a1.applied).toBe(true);
+  const a2 = await upsertSubscription({
     owner_type: "user", owner_id: userId, plan_key: "seeker_monthly",
     status: "canceled", stripe_subscription_id: subId, stripe_customer_id: `cus_${stamp}`,
     current_period_start: null, current_period_end: null, cancel_at_period_end: true,
+    last_event_at: tCancel,
   });
+  expect(a2.applied).toBe(true);
   const sub = await getSubscription("user", userId);
   expect(sub!.status).toBe("canceled"); // upsert updated the same row, not duplicated
   const { count } = await db().from("subscriptions").select("id", { count: "exact", head: true })
     .eq("stripe_subscription_id", subId);
   expect(count).toBe(1);
+
+  // STALE event (older last_event_at than what's persisted) must be SKIPPED
+  // (Stripe does not guarantee ordered delivery — review HIGH #2).
+  const stale = await upsertSubscription({
+    owner_type: "user", owner_id: userId, plan_key: "seeker_monthly",
+    status: "active", stripe_subscription_id: subId, stripe_customer_id: `cus_${stamp}`,
+    current_period_start: null, current_period_end: null, cancel_at_period_end: false,
+    last_event_at: tActive, // older than the persisted tCancel
+  });
+  expect(stale.applied).toBe(false);
+  expect((await getSubscription("user", userId))!.status).toBe("canceled"); // unchanged
 
   expect(await isEventProcessed(`evt_${stamp}`)).toBe(false);
   await markEventProcessed(`evt_${stamp}`);

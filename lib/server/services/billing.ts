@@ -156,6 +156,10 @@ export async function createJobPostPayment(
   const { data: setting } = await db().from("app_settings")
     .select("value").eq("key", "job_post_price_gbp").maybeSingle();
   const priceGbp = Number((setting as { value: unknown } | null)?.value ?? 99);
+  // Never create a £0/negative/NaN charge if the setting is misconfigured.
+  if (!Number.isFinite(priceGbp) || priceGbp <= 0) {
+    throw new AppError("CONFLICT", "Job-post price is not configured correctly");
+  }
   const customerId = await ensureCompanyCustomer(companyId, billingEmail);
   const pi = await getStripe().paymentIntents.create({
     amount: Math.round(priceGbp * 100),

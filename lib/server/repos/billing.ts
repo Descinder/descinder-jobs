@@ -11,15 +11,26 @@ export type SubscriptionUpsert = {
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  last_event_at: string | null;
 };
 
 // Keyed on the unique stripe_subscription_id (Plan 2a 00001). Webhook-driven
 // reconciliation is the source of truth for status/period.
-export async function upsertSubscription(s: SubscriptionUpsert): Promise<void> {
+// Stripe does NOT guarantee ordered delivery — if the persisted row was last
+// written by a NEWER source event than the incoming one, skip (a stale replayed
+// event must not clobber current state). Returns whether the write was applied.
+export async function upsertSubscription(s: SubscriptionUpsert): Promise<{ applied: boolean }> {
+  if (s.last_event_at) {
+    const { data: existing } = await db().from("subscriptions")
+      .select("last_event_at").eq("stripe_subscription_id", s.stripe_subscription_id).maybeSingle();
+    const prev = (existing as { last_event_at: string | null } | null)?.last_event_at ?? null;
+    if (prev && Date.parse(prev) > Date.parse(s.last_event_at)) return { applied: false };
+  }
   const { error } = await db()
     .from("subscriptions")
     .upsert(s as never, { onConflict: "stripe_subscription_id" });
   if (error) throw new Error(`upsertSubscription failed: ${error.message}`);
+  return { applied: true };
 }
 
 export type SubscriptionRow = {
