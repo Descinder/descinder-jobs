@@ -56,10 +56,13 @@ export async function sendMagicLink(email: string, redirectTo: string): Promise<
 }
 
 export async function sendPasswordReset(email: string, redirectTo: string): Promise<void> {
-  const res = await fetch(`${BASE}/recover`, {
+  // GoTrue: redirect_to is a query param on /recover (matches the /otp pattern);
+  // nesting it under `options` in the body is silently ignored.
+  const url = `${BASE}/recover?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const res = await fetch(url, {
     method: "POST",
     headers: HEADERS,
-    body: JSON.stringify({ email, options: { redirect_to: redirectTo } }),
+    body: JSON.stringify({ email }),
   });
   if (!res.ok) throw new Error(`gotrue recover failed: ${res.status}`);
 }
