@@ -63,3 +63,13 @@ Next: Plan 2b-ii (applications: native apply gated, external-click, unified list
 Deployment note: production must create the R2 `cvs` bucket in Cloudflare + set STORAGE_* to R2 endpoint/creds (region `auto`); no code change.
 
 Next: Plan 2b-iii (applications: native apply gated + cv_file_id, external-click, unified list, status/withdraw, application detail + CV-access authz, saved jobs, reports).
+
+## Test discipline + quarantine note
+
+`npm test` (51 vitest unit) and `npm run test:e2e` (18 passed, 2 skipped) are both green/honest as of Plan 2b-ii.
+
+Quarantined (skipped with in-file reason, to be un-skipped + rewritten in Plan 3):
+- `tests/e2e/profile-edit.spec.ts` — Plan-1 UI; onboarding/editor stubbed pending Plan 3 /api wiring
+- `tests/e2e/signup-employer.spec.ts` — same; equivalent backend flow proven by `employer-jobs.spec.ts`
+
+Process going forward: each implementation cluster runs a review agent on its files AND the relevant tests; every plan checkpoint runs the FULL `npm test` + `npm run test:e2e` and reports the true count (green, or with explicitly-quarantined known-stale specs — never silently red).

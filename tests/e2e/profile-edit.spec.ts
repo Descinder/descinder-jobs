@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-test("seeker can edit profile", async ({ page }) => {
+// QUARANTINED until Plan 3 (frontend translation). Plan-1 UI e2e: drives
+// signup → /onboarding/seeker → submit → /profile → edit. Plan 2a Task 20
+// intentionally stubbed the Plan-1 onboarding/editor components
+// (`throw "Not wired — Plan 3"`) since their /api wiring is Plan 3 work, so the
+// onboarding "Continue" submit no longer navigates. The backend path is proven
+// elsewhere (jobs-api / employer-jobs hit /api directly and pass). Plan 3 must
+// un-skip and rewrite this against the wired UI.
+test.skip("seeker can edit profile", async ({ page }) => {
   const email = `pf+${Date.now()}@example.test`;
   await page.goto("/signup");
   await page.getByLabel("Full name").fill("PF Tester");

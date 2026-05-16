@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-test("employer can sign up and create a company", async ({ page }) => {
+// QUARANTINED until Plan 3 (frontend translation). Plan-1 UI e2e: drives
+// signup → /onboarding/company → submit → expects /dashboard. Plan 2a Task 20
+// intentionally stubbed the Plan-1 onboarding component (`throw "Not wired —
+// Plan 3"`) since its /api wiring is Plan 3 work, so the "Continue" submit no
+// longer navigates. The equivalent backend flow IS proven by
+// employer-jobs.spec.ts (signup → POST /api/companies → POST /api/jobs →
+// public list) which passes. Plan 3 must un-skip and rewrite against wired UI.
+test.skip("employer can sign up and create a company", async ({ page }) => {
   const email = `employer+${Date.now()}@example.test`;
   await page.goto("/signup");
   await page.getByLabel("Full name").fill("Test Employer");
