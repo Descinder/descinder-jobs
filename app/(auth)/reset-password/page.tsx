@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -23,7 +22,6 @@ const fadeUp = {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -33,11 +31,21 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const { error: err } = await supabase.auth.updateUser({ password });
-    setSubmitting(false);
-    if (err) { setError(err.message); return; }
-    setDone(true);
-    setTimeout(() => router.push("/login"), 1800);
+    try {
+      const res = await fetch("/api/auth/password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_password: password }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Password reset failed");
+      setDone(true);
+      setTimeout(() => router.push("/login"), 1800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Password reset failed");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

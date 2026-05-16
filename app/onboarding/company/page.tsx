@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -31,7 +30,6 @@ function slugify(s: string): string {
 
 export default function CompanyOnboardingPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
@@ -45,60 +43,8 @@ export default function CompanyOnboardingPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Not logged in");
-      setSubmitting(false);
-      return;
-    }
-
-    const baseSlug = slugify(name) || `company-${Date.now()}`;
-    let slug = baseSlug;
-    for (let i = 1; i < 50; i++) {
-      const { data: existing } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-      if (!existing) break;
-      slug = `${baseSlug}-${i}`;
-    }
-
-    const { data: company, error: companyErr } = await supabase
-      .from("companies")
-      .insert({
-        name,
-        slug,
-        website: website || null,
-        location: location || null,
-        size,
-        description: description || null,
-      })
-      .select()
-      .single();
-
-    if (companyErr || !company) {
-      setError(companyErr?.message ?? "Failed to create company");
-      setSubmitting(false);
-      return;
-    }
-
-    const { error: memberErr } = await supabase
-      .from("company_members")
-      .insert({ company_id: company.id, user_id: user.id, role: "owner" });
-
-    if (memberErr) {
-      setError(memberErr.message);
-      setSubmitting(false);
-      return;
-    }
-
-    setSubmitting(false);
-    router.push("/dashboard");
-    router.refresh();
+    // TODO(Plan 3): wire to /api/company/onboard or equivalent endpoint
+    throw new Error("Not wired — Plan 3 frontend translation");
   }
 
   return (

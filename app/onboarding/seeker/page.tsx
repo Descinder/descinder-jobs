@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -23,7 +22,6 @@ const fadeUp = {
 
 export default function SeekerOnboardingPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [headline, setHeadline] = useState("");
   const [location, setLocation] = useState("");
@@ -36,32 +34,8 @@ export default function SeekerOnboardingPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Not logged in");
-      setSubmitting(false);
-      return;
-    }
-    const skills = skillsRaw
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const { error: err } = await supabase.from("job_seeker_profiles").upsert({
-      user_id: user.id,
-      headline: headline || null,
-      location: location || null,
-      bio: bio || null,
-      skills,
-    });
-    setSubmitting(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    router.push("/dashboard");
-    router.refresh();
+    // TODO(Plan 3): wire to /api/profile/seeker or equivalent endpoint
+    throw new Error("Not wired — Plan 3 frontend translation");
   }
 
   return (

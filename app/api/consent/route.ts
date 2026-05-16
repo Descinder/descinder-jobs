@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/server/repos/db";
+import { getSession } from "@/app/api/_lib/handler";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -18,11 +19,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid event_type" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const ctx = await getSession();
 
-  const { error } = await supabase.from("consent_log").insert({
-    user_id: user?.id ?? null,
+  const { error } = await db().from("consent_log").insert({
+    user_id: ctx?.user.id ?? null,
     event_type: event_type as "terms_accepted" | "privacy_accepted" | "marketing_opt_in" | "cookie_analytics_opt_in",
     policy_version: policy_version ?? null,
     metadata: (metadata ?? null) as any,

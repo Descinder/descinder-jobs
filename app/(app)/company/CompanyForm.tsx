@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/supabase/types";
 
@@ -195,7 +194,6 @@ function SaveButton({ state }: { state: SaveState }) {
 // ─── Root export ──────────────────────────────────────────────────────────────
 export function CompanyForm({ company }: { company: Company }) {
   const router = useRouter();
-  const supabase = createClient();
   const [name, setName] = useState(company.name);
   const [website, setWebsite] = useState(company.website ?? "");
   const [location, setLocation] = useState(company.location ?? "");
@@ -208,26 +206,8 @@ export function CompanyForm({ company }: { company: Company }) {
     e.preventDefault();
     setSaveState("saving");
     setError(null);
-    const { error: err } = await supabase
-      .from("companies")
-      .update({
-        name,
-        website: website || null,
-        location: location || null,
-        size,
-        description: description || null,
-      })
-      .eq("id", company.id);
-
-    if (err) {
-      setError(err.message);
-      setSaveState("error");
-      return;
-    }
-
-    setSaveState("saved");
-    router.refresh();
-    setTimeout(() => setSaveState("idle"), 2400);
+    // TODO(Plan 3): wire to /api/company or equivalent endpoint
+    throw new Error("Not wired — Plan 3 frontend translation");
   }
 
   return (

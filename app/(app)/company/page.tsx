@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/server/repos/db";
 import { CompanyForm } from "./CompanyForm";
 
 export default async function CompanyPage() {
   const user = await requireRole("employer");
-  const supabase = await createClient();
-  const { data: membership } = await supabase
+  const { data: membership } = await db()
     .from("company_members")
     .select("company_id, companies(*)")
     .eq("user_id", user.id)

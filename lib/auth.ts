@@ -1,15 +1,19 @@
+import "server-only";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { readSession, SESSION_COOKIE } from "@/lib/server/auth/session";
+import { db } from "@/lib/server/repos/db";
 
 export async function getCurrentUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const jar = await cookies();
+  const sessionId = jar.get(SESSION_COOKIE)?.value;
+  const ctx = await readSession(sessionId);
+  if (!ctx) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile } = await db()
     .from("users")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", ctx.user.id)
     .single();
 
   return profile;

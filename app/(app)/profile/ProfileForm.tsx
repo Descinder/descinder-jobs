@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/supabase/types";
 
@@ -181,7 +180,6 @@ export function ProfileForm({
   role: string;
 }) {
   const router = useRouter();
-  const supabase = createClient();
   const [name, setName] = useState(initialName);
   const [headline, setHeadline] = useState(seeker?.headline ?? "");
   const [location, setLocation] = useState(seeker?.location ?? "");
@@ -214,41 +212,8 @@ export function ProfileForm({
     e.preventDefault();
     setSaveState("saving");
     setError(null);
-
-    const { error: nameErr } = await supabase
-      .from("users")
-      .update({ name: name || null })
-      .eq("id", userId);
-
-    if (nameErr) {
-      setError(nameErr.message);
-      setSaveState("error");
-      return;
-    }
-
-    if (isSeeker) {
-      const skills = parsedSkills;
-      const { error: profileErr } = await supabase
-        .from("job_seeker_profiles")
-        .upsert({
-          user_id: userId,
-          headline: headline || null,
-          location: location || null,
-          bio: bio || null,
-          skills,
-        });
-      if (profileErr) {
-        setError(profileErr.message);
-        setSaveState("error");
-        return;
-      }
-    }
-
-    setSaveState("saved");
-    router.refresh();
-
-    // Reset to idle after 2.4 s so button is re-usable
-    setTimeout(() => setSaveState("idle"), 2400);
+    // TODO(Plan 3): wire to /api/profile or equivalent endpoint
+    throw new Error("Not wired — Plan 3 frontend translation");
   }
 
   return (

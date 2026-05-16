@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
 // ─── Spring preset ────────────────────────────────────────────────────────────
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -62,7 +61,6 @@ export function SettingsForm({
   marketingConsent: boolean;
 }) {
   const router = useRouter();
-  const supabase = createClient();
   const [marketing, setMarketing] = useState(initialMarketing);
   const [saving, setSaving] = useState(false);
   const [savedMarketing, setSavedMarketing] = useState(false);
@@ -71,17 +69,8 @@ export function SettingsForm({
     setMarketing(next);
     setSaving(true);
     setSavedMarketing(false);
-    await supabase
-      .from("users")
-      .update({
-        marketing_consent: next,
-        marketing_consent_at: next ? new Date().toISOString() : null,
-      })
-      .eq("id", userId);
-    setSaving(false);
-    setSavedMarketing(true);
-    router.refresh();
-    setTimeout(() => setSavedMarketing(false), 2200);
+    // TODO(Plan 3): wire to /api/settings/marketing or equivalent endpoint
+    throw new Error("Not wired — Plan 3 frontend translation");
   }
 
   return (

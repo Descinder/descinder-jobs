@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { createClient } from "@/lib/supabase/client";
 import { POLICY_VERSION } from "@/lib/consent";
 import { Briefcase, Search, AlertCircle, Loader2 } from "lucide-react";
 
@@ -28,7 +27,6 @@ type Role = "job_seeker" | "employer";
 
 export default function SignupPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -44,61 +42,22 @@ export default function SignupPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name },
-          emailRedirectTo: `${window.location.origin}/verify`,
-        },
-      });
-      if (signUpError) throw signUpError;
-      const userId = data.user?.id;
-      if (!userId) throw new Error("Signup failed — no user id returned");
-
-      await supabase
-        .from("users")
-        .update({
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
           role,
-          acquisition_source: (acquisitionSource || null) as
-            | "google" | "social_linkedin" | "social_twitter" | "social_other"
-            | "referral" | "press_blog" | "event_university" | "paid_ad" | "other" | null,
+          accepted_terms: acceptedTerms,
           marketing_consent: marketingOptIn,
-          marketing_consent_at: marketingOptIn ? new Date().toISOString() : null,
-        })
-        .eq("id", userId);
-
-      await fetch("/api/consent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_type: "terms_accepted",
-          policy_version: POLICY_VERSION,
-          metadata: { user_id: userId },
+          acquisition_source: acquisitionSource || undefined,
         }),
       });
-      await fetch("/api/consent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_type: "privacy_accepted",
-          policy_version: POLICY_VERSION,
-          metadata: { user_id: userId },
-        }),
-      });
-      if (marketingOptIn) {
-        await fetch("/api/consent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event_type: "marketing_opt_in",
-            policy_version: POLICY_VERSION,
-            metadata: { user_id: userId },
-          }),
-        });
-      }
-
-      router.push(role === "job_seeker" ? "/onboarding/seeker" : "/onboarding/company");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Signup failed");
+      router.push(json.next ?? (role === "job_seeker" ? "/onboarding/seeker" : "/onboarding/company"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
     } finally {
