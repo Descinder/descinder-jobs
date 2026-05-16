@@ -41,3 +41,14 @@ Known follow-ups (tracked in specs):
 - `sessions` purge cron + DSAR export of `cv_generations`/`ai_tailored` → Plan 2d
 
 Next: Plan 2b (jobs/applications/CV/ingestion services + endpoints).
+
+## Plan 2b-i — Jobs Core (complete)
+
+- Schemas + pure DTO mappers (native/ingested shape divergence, data-minimized; adapted to Zod 4)
+- Repos: jobs (list/filter/sort/paginate, detail, similar, employer CRUD), companies, profile
+- Services: jobs/companies/profile with `requireRole`/`requireCompanyMember` authz + `employer_publish` gating
+- Endpoints: GET `/api/jobs`, `/api/jobs/:id`, `/api/jobs/:id/similar`, `/api/companies/:slug`; POST `/api/companies`; GET/PUT `/api/me/company`; POST `/api/jobs` + PATCH/close/repost; GET `/api/me/jobs`; PUT `/api/me/seeker-profile`; GET/PUT `/api/me/profile`; GET `/api/me/dashboard`
+- Bad filter input → 422 (not masked 500); all mutations CSRF-checked
+- Tests: unit (schemas, dto) + e2e (jobs-repo, companies-repo, jobs-api public browse, employer post flow) — all green; tsc clean
+
+Next: Plan 2b-ii (applications: native apply gated, external-click, unified list, status/withdraw, application detail + CV-access authz, saved jobs, reports).
