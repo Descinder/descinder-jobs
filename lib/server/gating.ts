@@ -9,7 +9,11 @@ export type GateResult = { allowed: boolean; paywallReason?: string };
 function hasActiveSub(sub: Sub): boolean {
   return !!sub && (sub.status === "active" || sub.status === "trialing");
 }
-export function evaluateGate(key: GateKey, settings: Settings, sub: Sub, usage: Usage): GateResult {
+export type EmployerCtx = { employerPaid: boolean };
+export function evaluateGate(
+  key: GateKey, settings: Settings, sub: Sub, usage: Usage,
+  employer: EmployerCtx = { employerPaid: false },
+): GateResult {
   switch (key) {
     case "external_apply": return { allowed: true };
     case "apply_native": {
@@ -29,8 +33,9 @@ export function evaluateGate(key: GateKey, settings: Settings, sub: Sub, usage: 
       return { allowed: false, paywallReason: "subscribe_for_instant_alerts" };
     }
     case "employer_publish": {
-      // Plan 2c: when job_posting_paid is enabled, add company-subscription / per-post-payment checks here (mirrors instant_alerts). Until then, toggle-off default = allowed.
       if (settings.job_posting_paid !== true) return { allowed: true };
+      if (sub && sub.plan_key === "company_monthly" && hasActiveSub(sub)) return { allowed: true };
+      if (employer.employerPaid) return { allowed: true };
       return { allowed: false, paywallReason: "employer_payment_required" };
     }
   }
@@ -41,8 +46,32 @@ async function loadSettings(): Promise<Settings> {
   for (const row of data ?? []) out[row.key] = row.value;
   return out;
 }
-export async function featureGate(user: SessionContext["user"], key: GateKey): Promise<GateResult> {
+export async function featureGate(
+  user: SessionContext["user"],
+  key: GateKey,
+  ctx?: { companyId?: string; jobId?: string },
+): Promise<GateResult> {
   const settings = await loadSettings();
+  if (key === "employer_publish") {
+    // The COMPANY's subscription (not the acting user's) + a succeeded per-post
+    // payment for this specific job.
+    let companySub: Sub = null;
+    let employerPaid = false;
+    if (ctx?.companyId) {
+      const { data: cs } = await db().from("subscriptions")
+        .select("status, plan_key").eq("owner_type", "company").eq("owner_id", ctx.companyId)
+        .order("started_at", { ascending: false }).limit(1).maybeSingle();
+      companySub = (cs as Sub) ?? null;
+      if (ctx.jobId) {
+        const { count } = await db().from("payments")
+          .select("id", { count: "exact", head: true })
+          .eq("owner_type", "company").eq("owner_id", ctx.companyId)
+          .eq("purpose", "job_post").eq("related_id", ctx.jobId).eq("status", "succeeded");
+        employerPaid = (count ?? 0) > 0;
+      }
+    }
+    return evaluateGate(key, settings, companySub, { aiUses: 0, aiCap: 0 }, { employerPaid });
+  }
   const { data: sub } = await db().from("subscriptions")
     .select("status, plan_key").eq("owner_type", "user").eq("owner_id", user.id)
     .order("started_at", { ascending: false }).limit(1).maybeSingle();

@@ -36,7 +36,7 @@ export async function employerCreateJob(
   const u = requireRole(user, "employer");
   const companyId = await memberCompanyId(u);
   if (input.status === "published") {
-    const gate = await featureGate(u, "employer_publish");
+    const gate = await featureGate(u, "employer_publish", { companyId });
     if (!gate.allowed) throw new AppError("PAYWALL", "Publishing requires payment", { paywall_reason: gate.paywallReason });
   }
   const id = await createJob({ ...input, company_id: companyId });
@@ -51,7 +51,7 @@ export async function employerUpdateJob(
   if (!owner) throw new AppError("NOT_FOUND", "Job not found");
   await requireCompanyMember(u, owner);
   if (patch.status === "published") {
-    const gate = await featureGate(u, "employer_publish");
+    const gate = await featureGate(u, "employer_publish", { companyId: owner, jobId });
     if (!gate.allowed) {
       throw new AppError("PAYWALL", "Publishing requires payment", { paywall_reason: gate.paywallReason });
     }
@@ -72,7 +72,7 @@ export async function employerRepostJob(user: SessionContext["user"] | null, job
   const owner = await getJobOwnerCompany(jobId);
   if (!owner) throw new AppError("NOT_FOUND", "Job not found");
   await requireCompanyMember(u, owner);
-  const gate = await featureGate(u, "employer_publish");
+  const gate = await featureGate(u, "employer_publish", { companyId: owner, jobId });
   if (!gate.allowed) {
     throw new AppError("PAYWALL", "Publishing requires payment", { paywall_reason: gate.paywallReason });
   }
