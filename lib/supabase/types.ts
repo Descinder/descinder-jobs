@@ -336,9 +336,12 @@ export type Database = {
           filename: string
           id: string
           is_primary: boolean
+          kind: Database["public"]["Enums"]["cv_kind"]
           mime_type: string
           r2_object_key: string
           size_bytes: number
+          source_cv_id: string | null
+          tailored_for_job_id: string | null
           uploaded_at: string
           user_id: string
         }
@@ -346,9 +349,12 @@ export type Database = {
           filename: string
           id?: string
           is_primary?: boolean
+          kind?: Database["public"]["Enums"]["cv_kind"]
           mime_type: string
           r2_object_key: string
           size_bytes: number
+          source_cv_id?: string | null
+          tailored_for_job_id?: string | null
           uploaded_at?: string
           user_id: string
         }
@@ -356,15 +362,112 @@ export type Database = {
           filename?: string
           id?: string
           is_primary?: boolean
+          kind?: Database["public"]["Enums"]["cv_kind"]
           mime_type?: string
           r2_object_key?: string
           size_bytes?: number
+          source_cv_id?: string | null
+          tailored_for_job_id?: string | null
           uploaded_at?: string
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "cv_files_source_cv_id_fkey"
+            columns: ["source_cv_id"]
+            isOneToOne: false
+            referencedRelation: "cv_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_files_tailored_for_job_id_fkey"
+            columns: ["tailored_for_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cv_files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_generations: {
+        Row: {
+          ai_model_used: string
+          ai_provider: string
+          base_cv_id: string | null
+          created_at: string
+          error_message: string | null
+          generated_cv_id: string | null
+          id: string
+          input_tokens: number | null
+          job_id: string | null
+          latency_ms: number | null
+          output_tokens: number | null
+          prompt_version: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          ai_model_used: string
+          ai_provider: string
+          base_cv_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          generated_cv_id?: string | null
+          id?: string
+          input_tokens?: number | null
+          job_id?: string | null
+          latency_ms?: number | null
+          output_tokens?: number | null
+          prompt_version: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          ai_model_used?: string
+          ai_provider?: string
+          base_cv_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          generated_cv_id?: string | null
+          id?: string
+          input_tokens?: number | null
+          job_id?: string | null
+          latency_ms?: number | null
+          output_tokens?: number | null
+          prompt_version?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_generations_base_cv_id_fkey"
+            columns: ["base_cv_id"]
+            isOneToOne: false
+            referencedRelation: "cv_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_generations_generated_cv_id_fkey"
+            columns: ["generated_cv_id"]
+            isOneToOne: false
+            referencedRelation: "cv_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_generations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_generations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -442,6 +545,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ingestion_runs: {
+        Row: {
+          category_filter: string | null
+          country: string | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          jobs_expired: number
+          jobs_inserted: number
+          jobs_updated: number
+          source: Database["public"]["Enums"]["job_source"]
+          started_at: string
+          success: boolean
+        }
+        Insert: {
+          category_filter?: string | null
+          country?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          jobs_expired?: number
+          jobs_inserted?: number
+          jobs_updated?: number
+          source: Database["public"]["Enums"]["job_source"]
+          started_at?: string
+          success?: boolean
+        }
+        Update: {
+          category_filter?: string | null
+          country?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          jobs_expired?: number
+          jobs_inserted?: number
+          jobs_updated?: number
+          source?: Database["public"]["Enums"]["job_source"]
+          started_at?: string
+          success?: boolean
+        }
+        Relationships: []
       }
       job_alerts: {
         Row: {
@@ -550,23 +695,30 @@ export type Database = {
       jobs: {
         Row: {
           apply_method: Database["public"]["Enums"]["job_apply_method"]
-          company_id: string
+          company_id: string | null
+          country: string | null
           created_at: string
           description: string
           employment_type: Database["public"]["Enums"]["job_employment_type"]
           experience_level: Database["public"]["Enums"]["job_experience_level"]
           expires_at: string | null
           external_apply_url: string | null
+          external_id: string | null
           featured: boolean
           featured_until: string | null
           id: string
+          ingested_at: string | null
           location: string | null
           posted_at: string | null
           salary_currency: string
+          salary_is_predicted: boolean
           salary_max: number | null
           salary_min: number | null
           search_vector: unknown
           skills_required: string[]
+          source: Database["public"]["Enums"]["job_source"]
+          source_attribution: string | null
+          source_company_name: string | null
           status: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at: string
@@ -574,23 +726,30 @@ export type Database = {
         }
         Insert: {
           apply_method?: Database["public"]["Enums"]["job_apply_method"]
-          company_id: string
+          company_id?: string | null
+          country?: string | null
           created_at?: string
           description: string
           employment_type: Database["public"]["Enums"]["job_employment_type"]
           experience_level: Database["public"]["Enums"]["job_experience_level"]
           expires_at?: string | null
           external_apply_url?: string | null
+          external_id?: string | null
           featured?: boolean
           featured_until?: string | null
           id?: string
+          ingested_at?: string | null
           location?: string | null
           posted_at?: string | null
           salary_currency?: string
+          salary_is_predicted?: boolean
           salary_max?: number | null
           salary_min?: number | null
           search_vector?: unknown
           skills_required?: string[]
+          source?: Database["public"]["Enums"]["job_source"]
+          source_attribution?: string | null
+          source_company_name?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at?: string
@@ -598,23 +757,30 @@ export type Database = {
         }
         Update: {
           apply_method?: Database["public"]["Enums"]["job_apply_method"]
-          company_id?: string
+          company_id?: string | null
+          country?: string | null
           created_at?: string
           description?: string
           employment_type?: Database["public"]["Enums"]["job_employment_type"]
           experience_level?: Database["public"]["Enums"]["job_experience_level"]
           expires_at?: string | null
           external_apply_url?: string | null
+          external_id?: string | null
           featured?: boolean
           featured_until?: string | null
           id?: string
+          ingested_at?: string | null
           location?: string | null
           posted_at?: string | null
           salary_currency?: string
+          salary_is_predicted?: boolean
           salary_max?: number | null
           salary_min?: number | null
           search_vector?: unknown
           skills_required?: string[]
+          source?: Database["public"]["Enums"]["job_source"]
+          source_attribution?: string | null
+          source_company_name?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
           updated_at?: string
@@ -666,6 +832,21 @@ export type Database = {
           related_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
+        }
+        Relationships: []
+      }
+      processed_stripe_events: {
+        Row: {
+          processed_at: string
+          stripe_event_id: string
+        }
+        Insert: {
+          processed_at?: string
+          stripe_event_id: string
+        }
+        Update: {
+          processed_at?: string
+          stripe_event_id?: string
         }
         Relationships: []
       }
@@ -759,6 +940,53 @@ export type Database = {
           },
         ]
       }
+      sessions: {
+        Row: {
+          created_at: string
+          csrf_token: string
+          expires_at: string
+          gotrue_refresh_token: string
+          id: string
+          ip: string | null
+          last_seen_at: string
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          csrf_token: string
+          expires_at: string
+          gotrue_refresh_token: string
+          id?: string
+          ip?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          csrf_token?: string
+          expires_at?: string
+          gotrue_refresh_token?: string
+          id?: string
+          ip?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -807,6 +1035,8 @@ export type Database = {
             | Database["public"]["Enums"]["acquisition_source"]
             | null
           acquisition_source_detail: string | null
+          ai_cv_uses_reset_at: string
+          ai_cv_uses_this_period: number
           approval_decided_at: string | null
           approval_decided_by: string | null
           approval_rejection_reason: string | null
@@ -837,6 +1067,8 @@ export type Database = {
             | Database["public"]["Enums"]["acquisition_source"]
             | null
           acquisition_source_detail?: string | null
+          ai_cv_uses_reset_at?: string
+          ai_cv_uses_this_period?: number
           approval_decided_at?: string | null
           approval_decided_by?: string | null
           approval_rejection_reason?: string | null
@@ -867,6 +1099,8 @@ export type Database = {
             | Database["public"]["Enums"]["acquisition_source"]
             | null
           acquisition_source_detail?: string | null
+          ai_cv_uses_reset_at?: string
+          ai_cv_uses_this_period?: number
           approval_decided_at?: string | null
           approval_decided_by?: string | null
           approval_rejection_reason?: string | null
@@ -919,6 +1153,8 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_company_member: { Args: { p_company_id: string }; Returns: boolean }
+      is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
     }
     Enums: {
       acquisition_source:
@@ -945,9 +1181,11 @@ export type Database = {
         | "privacy_accepted"
         | "marketing_opt_in"
         | "cookie_analytics_opt_in"
+      cv_kind: "uploaded_base" | "profile_built" | "ai_tailored"
       job_apply_method: "native" | "external"
       job_employment_type: "full_time" | "part_time" | "contract" | "internship"
       job_experience_level: "entry" | "mid" | "senior" | "lead"
+      job_source: "native" | "adzuna" | "reed"
       job_status: "draft" | "published" | "closed" | "expired"
       job_work_mode: "remote" | "hybrid" | "on_site"
       payment_purpose:
@@ -1115,9 +1353,11 @@ export const Constants = {
         "marketing_opt_in",
         "cookie_analytics_opt_in",
       ],
+      cv_kind: ["uploaded_base", "profile_built", "ai_tailored"],
       job_apply_method: ["native", "external"],
       job_employment_type: ["full_time", "part_time", "contract", "internship"],
       job_experience_level: ["entry", "mid", "senior", "lead"],
+      job_source: ["native", "adzuna", "reed"],
       job_status: ["draft", "published", "closed", "expired"],
       job_work_mode: ["remote", "hybrid", "on_site"],
       payment_purpose: [
