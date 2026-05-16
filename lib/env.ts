@@ -6,6 +6,7 @@ const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
+  SESSION_COOKIE_SECRET: z.string().min(32),
 });
 
 const clientEnvSchema = z.object({
@@ -32,4 +33,7 @@ if (!parsed.success) {
   throw new Error("Invalid environment variables");
 }
 
-export const env = parsed.data;
+// `env` is typed as the server schema so server-only modules can access all
+// fields without casts. On the client only NEXT_PUBLIC_* fields are populated
+// at runtime; accessing server-only keys from client code is a programming error.
+export const env = parsed.data as z.infer<typeof serverEnvSchema>;
