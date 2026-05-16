@@ -41,6 +41,15 @@ export function inferExperience(title: string): "entry" | "mid" | "senior" | "le
   return "mid";
 }
 
+// Accept an ISO-8601 timestamp; fall back to now() if absent or unparseable
+// (resilience: a malformed provider date must not abort an otherwise-good run
+// via a timestamptz insert error).
+function isoOrNow(s?: string): string {
+  if (!s) return new Date().toISOString();
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? new Date().toISOString() : new Date(t).toISOString();
+}
+
 type RawAdzuna = {
   id: string; title: string; description: string; created: string; redirect_url: string;
   salary_min?: number; salary_max?: number; salary_is_predicted?: string;
@@ -75,7 +84,7 @@ export function mapAdzunaJob(r: RawAdzuna, country: string): IngestedJobInsert {
     source_attribution: "Sourced from Adzuna",
     company_id: null,
     status: "published",
-    posted_at: r.created,
+    posted_at: isoOrNow(r.created),
   };
 }
 

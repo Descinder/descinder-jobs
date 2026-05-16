@@ -1,8 +1,19 @@
 import "server-only";
+import { env } from "@/lib/env";
 import { mapAdzunaJob, mapReedJob, type IngestedJobInsert } from "@/lib/shared/ingest-map";
 import { upsertIngestedJob, expireUnseen, recordRun } from "@/lib/server/repos/ingestion";
 
 export type PageFetcher = (page: number) => Promise<unknown[]>;
+
+// ingestion_runs.error_message is admin-readable. Redact any configured API-key
+// value that might appear in a low-level fetch/undici error, and bound length.
+function sanitizeError(msg: string): string {
+  let out = msg;
+  for (const secret of [env.ADZUNA_APP_ID, env.ADZUNA_APP_KEY, env.REED_API_KEY]) {
+    if (secret) out = out.split(secret).join("[redacted]");
+  }
+  return out.slice(0, 500);
+}
 
 const MAX_PAGES = 5; // bounded per run (Adzuna free-tier quota safety; tune in Plan 2d cron)
 
@@ -43,7 +54,7 @@ export async function ingestSource(args: {
     }
   } catch (e) {
     success = false;
-    errorMessage = e instanceof Error ? e.message : "ingestion error";
+    errorMessage = sanitizeError(e instanceof Error ? e.message : "ingestion error");
   }
 
   // inserted vs updated is advisory; `updated` here = distinct jobs processed.

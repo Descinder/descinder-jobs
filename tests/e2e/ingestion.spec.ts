@@ -51,7 +51,7 @@ test("ingestSource (fixture fetcher): ingested jobs appear in public feed with d
   const staleFetch = async (page: number) =>
     page === 1 ? [adzunaFixture(stamp + 999)] : [];
   // seed a stale row by ingesting then running a DIFFERENT set
-  await ingestSource({ source: "adzuna", country: "GB", fetchPage: staleFetch });
+  const rStale = await ingestSource({ source: "adzuna", country: "GB", fetchPage: staleFetch });
   const r3 = await ingestSource({ source: "adzuna", country: "GB", fetchPage }); // stamp+999 not in this set
   expect(r3.success).toBe(true);
   const { data: staleRow } = await db().from("jobs").select("status")
@@ -65,6 +65,40 @@ test("ingestSource (fixture fetcher): ingested jobs appear in public feed with d
 
   await db().from("jobs").delete().eq("source", "adzuna").like("external_id", `E2E-ADZ-${stamp}%`);
   await db().from("jobs").delete().eq("source", "adzuna").eq("external_id", `E2E-ADZ-${stamp + 999}`);
+  await db().from("ingestion_runs").delete().in("id", [r1.runId, r2.runId, rStale.runId, r3.runId]);
+});
+
+test("partial/failed pull does NOT mass-expire (expire only on success)", async () => {
+  const stamp = Date.now();
+  // 1) clean run seeds a published ingested job
+  const seed = async (page: number) =>
+    page === 1 ? [adzunaFixture(stamp)] : [];
+  const r0 = await ingestSource({ source: "adzuna", country: "GB", fetchPage: seed });
+  expect(r0.success).toBe(true);
+
+  // 2) a run whose page 2 THROWS mid-pull (so the seeded job is "unseen" this run
+  //    because the failing fetcher returns a different job on page 1)
+  const fail = async (page: number) => {
+    if (page === 1) return [adzunaFixture(stamp + 1)];
+    throw new Error("upstream 503 simulated");
+  };
+  const rFail = await ingestSource({ source: "adzuna", country: "GB", fetchPage: fail });
+  expect(rFail.success).toBe(false);     // pull failed
+  expect(rFail.expired).toBe(0);         // expiry SKIPPED on a failed run
+
+  // the originally-seeded job must still be published — NOT mass-expired
+  const { data: seededRow } = await db().from("jobs").select("status")
+    .eq("source", "adzuna").eq("external_id", `E2E-ADZ-${stamp}`).single();
+  expect(seededRow!.status).toBe("published");
+
+  // the failed run is still logged with success=false and a sanitized message
+  const { data: runRow } = await db().from("ingestion_runs")
+    .select("id, success, error_message").eq("id", rFail.runId).single();
+  expect(runRow!.success).toBe(false);
+  expect(typeof runRow!.error_message).toBe("string");
+
+  await db().from("jobs").delete().eq("source", "adzuna").like("external_id", `E2E-ADZ-${stamp}%`);
+  await db().from("ingestion_runs").delete().in("id", [r0.runId, rFail.runId]);
 });
 
 test("admin ingestion endpoints reject non-admin (403) and unauth (401)", async () => {

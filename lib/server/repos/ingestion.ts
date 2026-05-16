@@ -2,13 +2,24 @@ import "server-only";
 import { db } from "@/lib/server/repos/db";
 import type { IngestedJobInsert } from "@/lib/shared/ingest-map";
 
-// Upsert keyed on the (source, external_id) unique index (Plan 2a migration 00007).
-// `seenAt` is stamped into ingested_at so a later expireUnseen can find stale rows.
+// Backstop TTL for ingested rows (mirrors native's 60-day expires_at). The
+// AUTHORITATIVE ingested-expiry mechanism is expireUnseen (re-ingestion driven);
+// expires_at is a safety net so that if ingestion stops entirely, a generic
+// expires_at sweep still ages out stale ingested inventory. Because every run
+// upserts the whole row, a re-seen job's expires_at rolls forward each run, so a
+// live job is never prematurely dropped.
+const INGESTED_TTL_MS = 60 * 864e5;
+
+// Upsert keyed on the full (source, external_id) unique index (migration 00014;
+// 00007's partial index could not be an ON CONFLICT target). `seenAt` is stamped
+// into ingested_at so a later expireUnseen can find stale rows, and expires_at is
+// refreshed as a TTL backstop.
 export async function upsertIngestedJob(job: IngestedJobInsert, seenAt: string): Promise<string> {
+  const expiresAt = new Date(Date.parse(seenAt) + INGESTED_TTL_MS).toISOString();
   const { data, error } = await db()
     .from("jobs")
     .upsert(
-      { ...job, ingested_at: seenAt } as never,
+      { ...job, ingested_at: seenAt, expires_at: expiresAt } as never,
       { onConflict: "source,external_id" },
     )
     .select("id")

@@ -51,6 +51,16 @@ describe("mapAdzunaJob", () => {
     expect(j.salary_is_predicted).toBe(false);
     expect(j.salary_currency).toBe("USD");
   });
+  it("malformed/empty created → posted_at falls back to a valid ISO (not NaN)", () => {
+    const bad = mapAdzunaJob({ ...raw, created: "not-a-date" } as never, "GB");
+    expect(Number.isNaN(Date.parse(bad.posted_at))).toBe(false);
+    const empty = mapAdzunaJob({ ...raw, created: undefined } as never, "GB");
+    expect(Number.isNaN(Date.parse(empty.posted_at))).toBe(false);
+  });
+  it("missing company → source_company_name defaults to 'Unknown'", () => {
+    const j = mapAdzunaJob({ ...raw, company: undefined } as never, "GB");
+    expect(j.source_company_name).toBe("Unknown");
+  });
 });
 describe("mapReedJob", () => {
   const raw = {
