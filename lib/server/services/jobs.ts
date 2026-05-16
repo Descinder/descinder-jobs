@@ -50,6 +50,12 @@ export async function employerUpdateJob(
   const owner = await getJobOwnerCompany(jobId);
   if (!owner) throw new AppError("NOT_FOUND", "Job not found");
   await requireCompanyMember(u, owner);
+  if (patch.status === "published") {
+    const gate = await featureGate(u, "employer_publish");
+    if (!gate.allowed) {
+      throw new AppError("PAYWALL", "Publishing requires payment", { paywall_reason: gate.paywallReason });
+    }
+  }
   await updateJob(jobId, patch);
 }
 
@@ -66,7 +72,18 @@ export async function employerRepostJob(user: SessionContext["user"] | null, job
   const owner = await getJobOwnerCompany(jobId);
   if (!owner) throw new AppError("NOT_FOUND", "Job not found");
   await requireCompanyMember(u, owner);
+  const gate = await featureGate(u, "employer_publish");
+  if (!gate.allowed) {
+    throw new AppError("PAYWALL", "Publishing requires payment", { paywall_reason: gate.paywallReason });
+  }
   await setJobStatus(jobId, "published");
+}
+
+export async function similarJobs(id: string): Promise<{ jobs: JobListItem[] }> {
+  const base = await getJobById(id);
+  if (!base || base.status !== "published") throw new AppError("NOT_FOUND", "Job not found");
+  const rows = await getSimilarJobs(id);
+  return { jobs: rows.map((r) => toJobListItem(r as never)) };
 }
 
 export async function employerListOwnJobs(

@@ -30,7 +30,7 @@ export function evaluateGate(key: GateKey, settings: Settings, sub: Sub, usage: 
     }
     case "employer_publish": {
       // Plan 2c: when job_posting_paid is enabled, add company-subscription / per-post-payment checks here (mirrors instant_alerts). Until then, toggle-off default = allowed.
-      if (settings.job_posting_paid === false) return { allowed: true };
+      if (settings.job_posting_paid !== true) return { allowed: true };
       return { allowed: false, paywallReason: "employer_payment_required" };
     }
   }

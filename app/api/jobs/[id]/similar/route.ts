@@ -1,12 +1,10 @@
 import { ok, fail } from "@/lib/server/http";
-import { getSimilarJobs } from "@/lib/server/repos/jobs";
-import { toJobListItem } from "@/lib/shared/dto";
+import { similarJobs } from "@/lib/server/services/jobs";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params;
-    const sim = await getSimilarJobs(id);
-    return ok({ jobs: sim.map((r) => toJobListItem(r as never)) });
+    return ok(await similarJobs(id));
   } catch (e) {
     return fail(e);
   }

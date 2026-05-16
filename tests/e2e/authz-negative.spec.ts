@@ -69,6 +69,16 @@ test("job_seeker gets 403 on all employer-only write endpoints", async () => {
   expect(repost.status()).toBe(403);
 });
 
+test("unauthenticated mutation requests are rejected (401)", async () => {
+  const anon = await request.newContext({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000" });
+  const post = await anon.post("/api/jobs", {
+    data: { title: "x", description: "no session here at all", employment_type: "full_time", work_mode: "remote", experience_level: "mid", apply_method: "native", status: "draft" },
+  });
+  expect(post.status()).toBe(401);
+  const co = await anon.post("/api/companies", { data: { name: "Anon Co", size: "11-50" } });
+  expect(co.status()).toBe(401);
+});
+
 test("cross-tenant: employer A cannot mutate employer B's job", async () => {
   // Create employer B who owns the job
   const empB = await signupAndGetContext("employer", "empB");

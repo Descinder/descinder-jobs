@@ -27,4 +27,15 @@ describe("evaluateGate", () => {
   it("external_apply: always allowed", () => {
     expect(evaluateGate("external_apply", {}, noSub, { aiUses: 0, aiCap: 30 }).allowed).toBe(true);
   });
+  it("employer_publish: allowed when job_posting_paid is false", () => {
+    expect(evaluateGate("employer_publish", { job_posting_paid: false }, null, { aiUses: 0, aiCap: 30 }).allowed).toBe(true);
+  });
+  it("employer_publish: allowed when job_posting_paid key absent (missing → free default)", () => {
+    expect(evaluateGate("employer_publish", {}, null, { aiUses: 0, aiCap: 30 }).allowed).toBe(true);
+  });
+  it("employer_publish: blocked when job_posting_paid is true", () => {
+    const r = evaluateGate("employer_publish", { job_posting_paid: true }, null, { aiUses: 0, aiCap: 30 });
+    expect(r.allowed).toBe(false);
+    expect(r.paywallReason).toBe("employer_payment_required");
+  });
 });
