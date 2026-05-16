@@ -52,3 +52,14 @@ Next: Plan 2b (jobs/applications/CV/ingestion services + endpoints).
 - Tests: unit (schemas, dto) + e2e (jobs-repo, companies-repo, jobs-api public browse, employer post flow) — all green; tsc clean
 
 Next: Plan 2b-ii (applications: native apply gated, external-click, unified list, status/withdraw, application detail + CV-access authz, saved jobs, reports).
+
+## Plan 2b-ii — CV Management + Blob Storage (complete)
+
+- Storage: S3-protocol blob integration (`integrations/storage/blob.ts`) — dev=local Supabase Storage S3, prod=Cloudflare R2 (pure env-swap, verified working). Migration 00012 creates the local `cvs` bucket.
+- CV repo + service (owner-scoped): list, upload-url (presigned PUT, ≤3-base trigger enforced), build-from-profile (deterministic text CV; AI tailoring is Plan 2c; tolerates no-profile-row), exclusive primary, delete (row + object), download (presigned GET, 60s TTL).
+- Endpoints: GET `/api/me/cvs`, POST `/api/me/cvs/upload-url`, POST `/api/me/cvs/build-from-profile`, PATCH `/api/me/cvs/:id/primary`, DELETE `/api/me/cvs/:id`, GET `/api/me/cvs/:id/download`
+- Tests: 51 unit (incl. cv schema) + e2e (blob round-trip, cv-repo incl. cap trigger, full lifecycle, owner-scoping → attacker 404)
+
+Deployment note: production must create the R2 `cvs` bucket in Cloudflare + set STORAGE_* to R2 endpoint/creds (region `auto`); no code change.
+
+Next: Plan 2b-iii (applications: native apply gated + cv_file_id, external-click, unified list, status/withdraw, application detail + CV-access authz, saved jobs, reports).
