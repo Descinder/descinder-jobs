@@ -44,12 +44,15 @@ export async function signInWithPassword(email: string, password: string): Promi
 }
 
 export async function sendMagicLink(email: string, redirectTo: string): Promise<void> {
-  const res = await fetch(`${BASE}/magiclink`, {
+  // Current GoTrue: POST /otp with redirect_to as a query param (matches @supabase/auth-js).
+  // create_user:true mirrors the SDK's shouldCreateUser default for passwordless sign-in.
+  const url = `${BASE}/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const res = await fetch(url, {
     method: "POST",
     headers: HEADERS,
-    body: JSON.stringify({ email, options: { redirect_to: redirectTo } }),
+    body: JSON.stringify({ email, create_user: true }),
   });
-  if (!res.ok) throw new Error(`gotrue magiclink failed: ${res.status}`);
+  if (!res.ok) throw new Error(`gotrue otp failed: ${res.status}`);
 }
 
 export async function sendPasswordReset(email: string, redirectTo: string): Promise<void> {

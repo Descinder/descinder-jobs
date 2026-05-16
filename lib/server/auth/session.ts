@@ -15,8 +15,8 @@ function encrypt(plain: string): string {
   return [iv.toString("hex"), tag.toString("hex"), enc.toString("hex")].join(".");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- consumed by later tasks (callback/reset routes)
-function decrypt(blob: string): string {
+// Consumed by later tasks (callback/reset routes) to recover the stored GoTrue refresh token.
+export function decrypt(blob: string): string {
   const [ivH, tagH, dataH] = blob.split(".");
   const decipher = createDecipheriv("aes-256-gcm", KEY, Buffer.from(ivH, "hex"));
   decipher.setAuthTag(Buffer.from(tagH, "hex"));
