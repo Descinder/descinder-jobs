@@ -105,3 +105,55 @@ export function toMeProfile(r: ProfileRow) {
       : null,
   };
 }
+
+type AppJob = {
+  id: string; title: string; source: "native" | "adzuna" | "reed";
+  company: { name: string; slug: string } | null;
+  source_company_name: string | null; external_apply_url: string | null;
+};
+type AppRow = {
+  id: string; status: string; external_status: string | null; withdrawn: boolean;
+  cover_letter: string | null; cv_file_id: string | null; submitted_at: string;
+  job: AppJob;
+};
+
+export type ApplicationListItem = {
+  id: string; jobId: string; jobTitle: string; company: string;
+  isExternal: boolean; displayStatus: string; withdrawn: boolean; submittedAt: string;
+};
+
+function appIsExternal(r: AppRow): boolean {
+  return r.job.source !== "native";
+}
+function appCompany(r: AppRow): string {
+  return r.job.company?.name ?? r.job.source_company_name ?? "Unknown";
+}
+
+export function toApplicationListItem(r: AppRow): ApplicationListItem {
+  const external = appIsExternal(r);
+  return {
+    id: r.id,
+    jobId: r.job.id,
+    jobTitle: r.job.title,
+    company: appCompany(r),
+    isExternal: external,
+    displayStatus: external ? (r.external_status ?? "applied") : r.status,
+    withdrawn: r.withdrawn,
+    submittedAt: r.submitted_at,
+  };
+}
+
+export type ApplicationDetail = ApplicationListItem & {
+  coverLetter: string | null;
+  cvFileId: string | null;
+  externalUrl: string | null;
+};
+
+export function toApplicationDetail(r: AppRow): ApplicationDetail {
+  return {
+    ...toApplicationListItem(r),
+    coverLetter: r.cover_letter,
+    cvFileId: r.cv_file_id,
+    externalUrl: r.job.external_apply_url,
+  };
+}
