@@ -859,6 +859,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          identifier: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          identifier: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          identifier?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           action_taken: string | null
@@ -998,9 +1019,12 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
+          current_period_start: string | null
           id: string
+          last_event_at: string | null
           owner_id: string
           owner_type: Database["public"]["Enums"]["subscription_owner_type"]
           plan_key: string
@@ -1011,9 +1035,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
+          last_event_at?: string | null
           owner_id: string
           owner_type: Database["public"]["Enums"]["subscription_owner_type"]
           plan_key: string
@@ -1024,9 +1051,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
+          last_event_at?: string | null
           owner_id?: string
           owner_type?: Database["public"]["Enums"]["subscription_owner_type"]
           plan_key?: string
@@ -1157,6 +1187,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_rate_limit: {
+        Args: { p_bucket: string; p_identifier: string; p_window_start: string }
+        Returns: number
+      }
+      consume_ai_cv_credit: {
+        Args: { p_cap: number; p_user: string }
+        Returns: boolean
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1164,6 +1202,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
+      refund_ai_cv_credit: { Args: { p_user: string }; Returns: undefined }
     }
     Enums: {
       acquisition_source:
