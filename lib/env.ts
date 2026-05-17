@@ -30,6 +30,11 @@ const serverEnvSchema = z.object({
   // Only set true where there is NO Cloudflare edge and the origin is fronted
   // by a TRUSTED proxy (local dev / CI). Never set in the CF production deploy.
   RATE_LIMIT_TRUST_FORWARDED: z.string().optional(),
+  // Per-IP rate limiting is meaningful only behind a real edge (Cloudflare):
+  // production sets this "true". Off in local/CI (every request shares the
+  // loopback IP, so per-IP buckets are nonsensical there). Per-USER limits are
+  // always active regardless; the IP-resolution + gating logic is unit-tested.
+  RATE_LIMIT_IP_ENABLED: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({

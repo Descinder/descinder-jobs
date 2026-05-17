@@ -1,7 +1,16 @@
 import "server-only";
 import { AppError } from "@/lib/shared/errors";
+import { env } from "@/lib/env";
 import { checkRateLimit } from "@/lib/server/repos/rate-limit";
 import { ipFrom } from "@/lib/server/net";
+
+// Per-IP limiting is only sound behind a real edge (Cloudflare). Production
+// sets RATE_LIMIT_IP_ENABLED=true; local/CI leave it unset (loopback = one
+// shared IP, so per-IP buckets are meaningless and would just self-DoS the
+// test suite). Per-USER limits remain active everywhere.
+export function ipRateLimitingEnabled(): boolean {
+  return env.RATE_LIMIT_IP_ENABLED === "true";
+}
 
 // Per-IP fixed-window guard (backend-spec §9: auth + cost endpoints need per-IP
 // AND per-user). Throws RATE_LIMITED when the IP exceeds the bucket.
@@ -18,6 +27,7 @@ import { ipFrom } from "@/lib/server/net";
 export async function rateLimitIp(
   req: Request, bucket: string, limit: number, windowSeconds: number,
 ): Promise<void> {
+  if (!ipRateLimitingEnabled()) return;
   const ip = ipFrom(req);
   if (ip === "unknown") return;
   const { allowed } = await checkRateLimit(`ip:${bucket}`, ip, limit, windowSeconds);
