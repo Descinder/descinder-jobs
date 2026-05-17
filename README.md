@@ -183,3 +183,13 @@ Deferred to 3b/3c/3d: seeker/employer/admin screens; the 2 quarantined Plan-1 sp
 - Tests: e2e fe-seeker-onboarding-profile, fe-seeker-dashboard (free+subscriber), fe-cv, fe-ai-cv, fe-settings-billing — all against live API + local Supabase
 
 Deferred: notification/marketing/email-change/delete-account + AI-CV PDF export (no backend — disabled, not faked); apply-island stays inline-paywall in `(public)`.
+
+## Plan 3c — Frontend Employer (complete, reviewed, remediated)
+
+- Company onboarding (`POST /api/companies`); role-aware dashboard (seeker branch unchanged + employer branch from `/api/me/company`+`/api/me/jobs`, no fabricated endpoint); **`signup-employer.spec.ts` un-quarantined & passing**
+- Post-a-job (draft/publish, schema-exact: apply_method/size REQUIRED enums — caught pre-emptively), edit/close, and Repost reachable via an actionable not-published panel (closed→relist, draft→publish; review H1/M1 fix); featured add-on deferred (disabled, not faked)
+- Applicants list + application detail (cover letter, CV via backend presigned `{url,filename}`, employer status vocab) + company editor (migrated off server requireRole to client `apiSend`)
+- Review verdict: no security CRITICAL/HIGH (authz server-enforced, CSRF, no XSS/leak, deferral honesty all SAFE); H1/M1/T1 (repost UI-unreachable + no test) remediated + repost e2e added; screen-map §9c reconciled (no employer-dashboard, app DTOs lack candidate identity, jobDetail 404s non-published, employer status vocab, etc.)
+- Tests: e2e fe-employer-onboarding-dashboard, fe-employer-jobs (+repost), fe-employer-applicants (cross-tenant 403 at API+UI) — live API + local Supabase
+
+**Plan 3 frontend: both long-standing Plan-1 quarantined specs (profile-edit 3b, signup-employer 3c) now cleared.**
