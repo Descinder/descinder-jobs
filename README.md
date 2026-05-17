@@ -146,3 +146,17 @@ This completes Plan 2c-i. Next: Plan 2c-ii — AI-CV (Groq→Claude fallback, tr
 Deferred: hard PII erasure incl. R2 (force-delete is soft-disable until then) + transactional wrapper for irreversible deletes → Plan 2d-ii / hardening. Realtime settings-invalidation broadcast → Plan 3. Instant-alerts subsystem (no data model) → dedicated later plan.
 
 Next: Plan 2d-ii — secured cron dispatcher + jobs (daily ingestion+expiry, reset_ai_cv counters, sessions purge, purge stale tailored CVs, retention/anonymisation) + Resend email + DSAR export (incl. cv_generations/ai_tailored + R2 erasure) + per-IP rate limiting.
+
+## Plan 2d-ii — Cron + Email + DSAR + Per-IP Rate-Limit (complete, reviewed, remediated)
+
+- Secured cron dispatcher `POST /api/internal/cron/[job]` — constant-time `X-Cron-Secret` only (m2m, no session/CSRF), zod-validated job (unknown→404), unconfigured→409
+- 6 idempotent system jobs (`cron.ts`, system-audited, injected deps so CI uses fixtures; idempotency proven by an e2e double-run): daily_ingestion (Adzuna×4+Reed; `ok` reflects per-source success; then expiry sweep), expiry_sweep, reset_ai_cv_counters, purge_sessions (two-delete; no PostgREST or-footgun), purge_stale_tailored_cvs, retention_purge (soft-deleted >30d → per-user audited erasure)
+- Resend email: env-guarded, no-key no-op (never fails the triggering flow), **all interpolated values HTML-escaped** (no name-injection), MVP templates
+- DSAR: `POST /api/me/data-export` (auth+CSRF, **per-IP 10/day + per-user 3/day**, marks `failed` on build error) → JSON bundle (profile+applications+cv_generations+cv manifest) to R2 + emailed signed link; **`eraseUser` deletes R2 objects then the canonical `auth.users` row** (FK-cascades all public rows + GoTrue identity — complete GDPR erasure), returns orphaned keys for audit
+- Per-IP rate limiting on auth login/signup/forgot + AI-CV generate, keyed on **`cf-connecting-ip` only** (spoofable `x-forwarded-for` honoured solely under `RATE_LIMIT_TRUST_FORWARDED` in local/CI; prod fail-closed) — closes 2c-ii's §9 deferral
+- Review verdict SOUND after remediation (commit 7cb86a7): C1 GoTrue erasure, H1 IP-spoof, H2 DSAR-DoS, M1 email-escape, M2/M3 cron all fixed. SAFE: cron secret constant-time, job idempotency, erasure ordering, DSAR scoping/no-leak, secret handling, limiter math/fail-closed
+- No migration / no types-regen. Tests: unit (cron-schema, email-resend incl. escape) + e2e (rate-limit-ip, data-export incl. auth-cascade erasure, cron 6 jobs + idempotency, cron-endpoints)
+
+Deferred (tracked, non-blocking): reset-anchor product decision; app_settings-driven retention windows; revoked-session forensic window; orphaned-key auto-retry; DSAR sessions/consent_log completeness; pg_cron schedule SQL (deploy artifact). Instant-alerts + digests → dedicated later plan (no alerts data model).
+
+**This completes Plan 2d** (i admin/moderation · ii cron/email/DSAR/rate-limit), and the entire backend-first build (Plans 1, 2a, 2b, 2c, 2d). Next: Plan 3 — prototype→production frontend translation (CSS→Tailwind, mock→live, wired to `/api/*`) + un-skip the 2 quarantined Plan-1 e2e specs. Separately: dedicated instant-alerts plan + deployment.
