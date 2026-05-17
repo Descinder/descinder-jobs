@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
+import { usePaywall } from "@/lib/client/use-paywall";
 import { Loading, ErrorState } from "@/components/shell/screen-states";
 
 // Verified POST /api/me/ai-cv/generate (lib/shared/schemas/ai-cv.ts):
@@ -53,6 +54,8 @@ export default function AiCvGeneratePage() {
   const [history, setHistory] = useState<GenItem[] | null>(null);
   const [st, setSt] = useState<"loading" | "ok" | "error">("loading");
 
+  const { raisePaywall, hasProvider } = usePaywall();
+
   const [jobId, setJobId] = useState("");
   const [baseText, setBaseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +96,10 @@ export default function AiCvGeneratePage() {
           const reason =
             (err.details as { paywall_reason?: string } | undefined)
               ?.paywall_reason ?? "subscribe_for_ai_cv";
+          // Prefer the app-wide paywall modal (provider mounted in the (app)
+          // layout). Keep the inline notice as a fallback if no provider —
+          // and so the e2e/visual paywall messaging stays present.
+          if (hasProvider) raisePaywall(reason);
           setPaywall(PAYWALL_COPY[reason] ?? PAYWALL_COPY.subscribe_for_ai_cv);
         } else if (err.code === "CONFLICT" || err.status === 409) {
           setError(

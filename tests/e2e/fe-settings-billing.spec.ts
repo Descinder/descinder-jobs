@@ -79,3 +79,47 @@ test("settings: account email, change-password link, data export success", async
     await cleanup(userId);
   }
 });
+
+// ── Part B — Subscription & billing (Plan 3b Task 6) ─────────────────────────
+// CI has NO Stripe keys → POST /api/me/billing/subscribe returns 409 CONFLICT.
+// The billing page must show the Subscribe CTA, and on click surface the
+// CONFLICT-graceful notice WITHOUT a Stripe redirect and WITHOUT an uncaught
+// error (URL stays on our origin).
+test("billing: no-sub seeker → Subscribe → CONFLICT-graceful, stays on origin", async ({
+  page,
+}) => {
+  const { ctx, userId } = await signupSeeker("fe-billing");
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  try {
+    const state = await ctx.storageState();
+    await page.context().addCookies(state.cookies);
+
+    await page.goto(`${base}/settings/billing`);
+    await expect(
+      page.getByRole("heading", { name: /Subscription & billing/i }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    // Fresh seeker → no active sub → Subscribe CTA present.
+    const subscribeBtn = page.getByRole("button", {
+      name: /Subscribe — £14\.99\/mo/i,
+    });
+    await expect(subscribeBtn).toBeVisible();
+
+    await subscribeBtn.click();
+
+    // CONFLICT-graceful notice appears (no Stripe configured in CI).
+    await expect(
+      page.getByText(/isn't configured on this environment/i),
+    ).toBeVisible({ timeout: 15_000 });
+
+    // No Stripe redirect — URL stays on our origin.
+    expect(new URL(page.url()).origin).toBe(new URL(base).origin);
+    expect(page.url()).toContain("/settings/billing");
+
+    // No uncaught page error.
+    expect(errors, errors.join("\n")).toEqual([]);
+  } finally {
+    await cleanup(userId);
+  }
+});
