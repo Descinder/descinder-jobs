@@ -22,6 +22,9 @@ const serverEnvSchema = z.object({
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_PRICE_SEEKER_MONTHLY: z.string().optional(),
   STRIPE_PRICE_COMPANY_MONTHLY: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  AI_PROVIDER_MODE: z.enum(["both", "claude_only"]).optional(),
 });
 
 const clientEnvSchema = z.object({
