@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import type { JobsResponse } from "@/lib/client/types";
 import { JobCard } from "@/components/jobs/job-card";
@@ -21,18 +21,31 @@ export default function HomePage() {
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
 
+  // Monotonic request token: a slower EARLIER fetch (e.g. the initial
+  // unfiltered load) must never overwrite a newer filtered one. Without this,
+  // under a contended server the initial response can resolve after the
+  // post-"Apply filters" response and clobber the filtered list with the full
+  // feed (order/load-dependent — invisible in isolation, fails under load).
+  const reqRef = useRef(0);
+
   const load = useCallback(async () => {
+    const token = ++reqRef.current;
     setStatus("loading");
     try {
       const res = await apiGet<JobsResponse>(`/api/jobs?${qs(filters ?? {}, page)}`);
+      if (token !== reqRef.current) return; // a newer request superseded this one
       setData(res);
       // saved-jobs/ids returns { jobIds } and is 200 for anon ({jobIds:[]}).
       try {
         const ids = await apiGet<{ jobIds: string[] }>("/api/me/saved-jobs/ids");
+        if (token !== reqRef.current) return;
         setSaved(new Set(ids.jobIds));
       } catch { /* defensive: treat as no saved ids */ }
+      if (token !== reqRef.current) return;
       setStatus("ok");
-    } catch { setStatus("error"); }
+    } catch {
+      if (token === reqRef.current) setStatus("error");
+    }
   }, [filters, page]);
 
   useEffect(() => { load(); }, [load]);
