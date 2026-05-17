@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 // longer navigates. The equivalent backend flow IS proven by
 // employer-jobs.spec.ts (signup → POST /api/companies → POST /api/jobs →
 // public list) which passes. Plan 3 must un-skip and rewrite against wired UI.
-test.skip("employer can sign up and create a company", async ({ page }) => {
+test("employer can sign up and create a company", async ({ page }) => {
   const email = `employer+${Date.now()}@example.test`;
   await page.goto("/signup");
   await page.getByLabel("Full name").fill("Test Employer");
