@@ -11,7 +11,7 @@ import {
   listCompanies, setCompanySuspended, deleteCompany,
   listAdminJobs, setJobStatusAdmin, deleteJobAdmin, setJobFeatured,
   listReports, resolveReport, getSettings, setSetting,
-  listApprovals, decideUserApproval,
+  listApprovals, decideUserApproval, decideCompanyApproval,
 } from "@/lib/server/repos/admin";
 
 type Admin = SessionContext["user"];
@@ -50,8 +50,10 @@ export async function adminUnsuspendUser(admin: Admin, userId: string) {
 }
 export async function adminForceDeleteUser(admin: Admin, userId: string) {
   if (userId === admin.id) throw new AppError("CONFLICT", "Cannot delete your own admin account");
-  await softDeleteUser(userId);
+  // Audit BEFORE the irreversible write (no transaction available) so a
+  // post-delete audit failure can't yield a silent unaudited destruction.
   await recordAudit({ actorId: admin.id, actorType: "admin", action: "user.force_delete", targetType: "user", targetId: userId, metadata: null });
+  await softDeleteUser(userId);
 }
 
 // ── Companies ──────────────────────────────────────────────────────────────
@@ -63,8 +65,8 @@ export async function adminSuspendCompany(admin: Admin, companyId: string, suspe
   await recordAudit({ actorId: admin.id, actorType: "admin", action: suspended ? "company.suspend" : "company.unsuspend", targetType: "company", targetId: companyId, metadata: { reason } });
 }
 export async function adminDeleteCompany(admin: Admin, companyId: string) {
-  await deleteCompany(companyId);
   await recordAudit({ actorId: admin.id, actorType: "admin", action: "company.delete", targetType: "company", targetId: companyId, metadata: null });
+  await deleteCompany(companyId); // cascades the company's jobs (FK on delete cascade)
 }
 
 // ── Jobs ───────────────────────────────────────────────────────────────────
@@ -76,8 +78,8 @@ export async function adminUnpublishJob(admin: Admin, jobId: string) {
   await recordAudit({ actorId: admin.id, actorType: "admin", action: "job.unpublish", targetType: "job", targetId: jobId, metadata: null });
 }
 export async function adminDeleteJob(admin: Admin, jobId: string) {
-  await deleteJobAdmin(jobId);
   await recordAudit({ actorId: admin.id, actorType: "admin", action: "job.delete", targetType: "job", targetId: jobId, metadata: null });
+  await deleteJobAdmin(jobId);
 }
 export async function adminSetJobFeatured(admin: Admin, jobId: string, featured: boolean, until: string | null) {
   await setJobFeatured(jobId, featured, until);
@@ -116,10 +118,19 @@ export async function adminListApprovals(_admin: Admin) {
   const { users, companies } = await listApprovals();
   return { users: users.map((u) => toAdminUser(u as never)), companies: companies.map((c) => toAdminCompany(c as never)) };
 }
+// The :id may be a pending user OR a pending company (both surfaced by the
+// approvals queue). Try user first, then company; 404 only if neither pending.
 export async function adminDecideApproval(
-  admin: Admin, userId: string, decision: "approve" | "reject", reason: string | null,
+  admin: Admin, id: string, decision: "approve" | "reject", reason: string | null,
 ) {
-  const ok = await decideUserApproval(userId, decision === "approve", admin.id, reason);
-  if (!ok) throw new AppError("NOT_FOUND", "No pending approval for that user");
-  await recordAudit({ actorId: admin.id, actorType: "admin", action: `approval.${decision}`, targetType: "user", targetId: userId, metadata: { reason } });
+  const approve = decision === "approve";
+  if (await decideUserApproval(id, approve, admin.id, reason)) {
+    await recordAudit({ actorId: admin.id, actorType: "admin", action: `approval.${decision}`, targetType: "user", targetId: id, metadata: { reason } });
+    return;
+  }
+  if (await decideCompanyApproval(id, approve, admin.id, reason)) {
+    await recordAudit({ actorId: admin.id, actorType: "admin", action: `approval.${decision}`, targetType: "company", targetId: id, metadata: { reason } });
+    return;
+  }
+  throw new AppError("NOT_FOUND", "No pending approval for that id");
 }

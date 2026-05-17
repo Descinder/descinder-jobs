@@ -30,7 +30,7 @@ test("admin can suspend a user (session invalidated) and the action is audit-log
 
   const { data: au } = await db().from("audit_log").select("action, metadata, actor_id").eq("target_id", victimId).eq("action", "user.suspend").single();
   expect((au as { actor_id: string }).actor_id).toBe(adminId);
-  expect(((au as { metadata: { reason: string } }).metadata).reason).toBe("spam ring");
+  expect((au as unknown as { metadata: { reason: string } }).metadata.reason).toBe("spam ring");
 
   // unsuspend restores access
   expect((await admin.post(`/api/admin/users/${victimId}/unsuspend`, { headers: { "x-csrf-token": csrf } })).status()).toBe(200);
@@ -52,11 +52,15 @@ test("admin resolves a report; settings PATCH persists + is audited; cannot self
   const { data: rr } = await db().from("reports").select("status").eq("id", repId).single();
   expect((rr as { status: string }).status).toBe("actioned");
 
-  const flag = `e2e_flag_${Date.now()}`;
-  const ps = await admin.patch("/api/admin/settings", { headers: { "x-csrf-token": csrf }, data: { key: flag, value: true } });
+  // allow-listed key with correct value type (unknown keys / wrong types are
+  // rejected — H1 hardening); restore the seeded default afterwards.
+  const ps = await admin.patch("/api/admin/settings", { headers: { "x-csrf-token": csrf }, data: { key: "signup_disabled", value: true } });
   expect(ps.status()).toBe(200);
-  const { data: setting } = await db().from("app_settings").select("value").eq("key", flag).single();
+  const { data: setting } = await db().from("app_settings").select("value").eq("key", "signup_disabled").single();
   expect((setting as { value: unknown }).value).toBe(true);
+  // wrong value type for a boolean key is rejected (422), not silently coerced
+  const bad = await admin.patch("/api/admin/settings", { headers: { "x-csrf-token": csrf }, data: { key: "signup_disabled", value: "false" } });
+  expect(bad.status()).toBe(422);
   const { count: auditCount } = await db().from("audit_log").select("id", { count: "exact", head: true }).eq("action", "settings.update").eq("actor_id", adminId);
   expect((auditCount ?? 0)).toBeGreaterThanOrEqual(1);
 
@@ -65,7 +69,7 @@ test("admin resolves a report; settings PATCH persists + is audited; cannot self
   expect(selfDel.status()).toBe(409);
 
   await db().from("reports").delete().eq("id", repId);
-  await db().from("app_settings").delete().eq("key", flag);
+  await db().from("app_settings").update({ value: false } as never).eq("key", "signup_disabled"); // restore seeded default
   await db().from("audit_log").delete().eq("actor_id", adminId);
   await db().from("users").delete().eq("id", adminId);
 });

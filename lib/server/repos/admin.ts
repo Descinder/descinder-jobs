@@ -132,3 +132,18 @@ export async function decideUserApproval(
   if (error) throw new Error(`decideUserApproval failed: ${error.message}`);
   return (data ?? []).length > 0; // false if not pending (idempotent / not found)
 }
+
+// companies appear in the approvals queue too (company_approval_required) —
+// approve/reject must work for them, keyed by the same :id param.
+export async function decideCompanyApproval(
+  companyId: string, approve: boolean, adminId: string, reason: string | null,
+): Promise<boolean> {
+  const { data, error } = await db().from("companies").update({
+    approval_status: approve ? "approved" : "rejected",
+    approval_decided_at: new Date().toISOString(),
+    approval_decided_by: adminId,
+    approval_rejection_reason: approve ? null : reason,
+  } as never).eq("id", companyId).eq("approval_status", "pending").select("id");
+  if (error) throw new Error(`decideCompanyApproval failed: ${error.message}`);
+  return (data ?? []).length > 0;
+}
