@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiSend, ApiError } from "@/lib/client/api";
 import { AlertCircle, Loader2, Sparkles, MailCheck } from "lucide-react";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -33,17 +34,11 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Login failed");
+      await apiSend("POST", "/api/auth/login", { email, password });
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof ApiError ? err.message : "Login failed");
     } finally {
       setSubmitting(false);
     }
@@ -53,16 +48,10 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Failed to send magic link");
+      await apiSend("POST", "/api/auth/magic-link", { email });
       setMagicLinkSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send magic link");
+      setError(err instanceof ApiError ? err.message : "Failed to send magic link");
     } finally {
       setSubmitting(false);
     }

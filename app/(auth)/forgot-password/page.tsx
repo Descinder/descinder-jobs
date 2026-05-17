@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, MailCheck } from "lucide-react";
+import { apiSend } from "@/lib/client/api";
+import { MailCheck } from "lucide-react";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
 
@@ -22,22 +23,17 @@ const fadeUp = {
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    // No account enumeration: always show the same neutral confirmation,
+    // regardless of whether the email exists or the request errored.
     try {
-      const res = await fetch("/api/auth/password/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Failed to send reset link");
+      await apiSend("POST", "/api/auth/password/forgot", { email });
+    } catch {
+      /* swallow — neutral response either way */
+    } finally {
       setSent(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset link");
     }
   }
 
@@ -114,22 +110,6 @@ export default function ForgotPasswordPage() {
                 required
               />
             </motion.div>
-
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ ...spring }}
-                  className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/8 px-3 py-2.5 text-sm text-destructive"
-                >
-                  <AlertCircle size={14} strokeWidth={2} className="mt-0.5 shrink-0" />
-                  <span>{error}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <motion.div variants={fadeUp}>
               <Button

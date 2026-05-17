@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { POLICY_VERSION } from "@/lib/consent";
-import { Briefcase, Search, AlertCircle, Loader2 } from "lucide-react";
+import { apiSend, ApiError } from "@/lib/client/api";
+import { Briefcase, Search, AlertCircle, Loader2, MailCheck } from "lucide-react";
 
 // ─── Spring presets ───────────────────────────────────────────────────────────
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -36,33 +37,50 @@ export default function SignupPage() {
   const [acquisitionSource, setAcquisitionSource] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+    setError(null); setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          role,
-          accepted_terms: acceptedTerms,
-          marketing_consent: marketingOptIn,
-          acquisition_source: acquisitionSource || undefined,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Signup failed");
-      router.push(json.next ?? (role === "job_seeker" ? "/onboarding/seeker" : "/onboarding/company"));
+      const res = await apiSend<{ next?: string; pending_confirmation?: boolean }>(
+        "POST", "/api/auth/signup",
+        { email, password, name, role, acquisition_source: acquisitionSource || undefined, marketing_consent: marketingOptIn, accepted_terms: acceptedTerms },
+      );
+      if (res.pending_confirmation) { setPendingConfirmation(true); return; }
+      router.push(res.next ?? "/dashboard");
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed");
-    } finally {
-      setSubmitting(false);
-    }
+      setError(err instanceof ApiError ? err.message : "Could not create account.");
+    } finally { setSubmitting(false); }
+  }
+
+  if (pendingConfirmation) {
+    return (
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-5"
+      >
+        <motion.div
+          variants={fadeUp}
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-muted/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+        >
+          <MailCheck size={20} strokeWidth={1.5} className="text-foreground" />
+        </motion.div>
+        <motion.div variants={fadeUp} className="space-y-1.5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            We sent a confirmation link to{" "}
+            <span className="font-medium text-foreground">{email}</span>. Follow it to
+            finish setting up your account.
+          </p>
+        </motion.div>
+      </motion.div>
+    );
   }
 
   return (

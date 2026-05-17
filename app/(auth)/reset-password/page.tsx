@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiSend, ApiError } from "@/lib/client/api";
 import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -32,17 +33,13 @@ export default function ResetPasswordPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/password/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ new_password: password }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Password reset failed");
+      // Token is carried by the callback-set cookie per the built backend —
+      // do NOT add a token body field.
+      await apiSend("POST", "/api/auth/password/reset", { new_password: password });
       setDone(true);
       setTimeout(() => router.push("/login"), 1800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Password reset failed");
+      setError(err instanceof ApiError ? err.message : "Password reset failed");
     } finally {
       setSubmitting(false);
     }
