@@ -8,9 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/lib/supabase/types";
+import { apiSend, ApiError } from "@/lib/client/api";
 
-type SeekerProfile = Database["public"]["Tables"]["job_seeker_profiles"]["Row"];
+// Matches lib/shared/dto.ts#toMeProfile seeker block (camelCase). The PUT
+// /api/me/seeker-profile body uses the snake_case seekerProfileSchema instead.
+type SeekerView = {
+  headline: string | null;
+  bio: string | null;
+  location: string | null;
+  yearsExperience: number | null;
+  skills: string[];
+  desiredRoleTypes: string[];
+  portfolioUrl: string | null;
+  githubUrl: string | null;
+  linkedinUrl: string | null;
+} | null;
 
 // ─── Spring preset (matches project-wide convention) ─────────────────────────
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -169,14 +181,12 @@ function SaveButton({ state }: { state: SaveState }) {
 
 // ─── Root export ──────────────────────────────────────────────────────────────
 export function ProfileForm({
-  userId,
   name: initialName,
   seeker,
   role,
 }: {
-  userId: string;
   name: string;
-  seeker: SeekerProfile | null;
+  seeker: SeekerView;
   role: string;
 }) {
   const router = useRouter();
@@ -212,8 +222,24 @@ export function ProfileForm({
     e.preventDefault();
     setSaveState("saving");
     setError(null);
-    // TODO(Plan 3): wire to /api/profile or equivalent endpoint
-    throw new Error("Not wired — Plan 3 frontend translation");
+    try {
+      // 1) PUT /api/me/profile — name only (updateProfileSchema).
+      await apiSend("PUT", "/api/me/profile", { name: name.trim() });
+      // 2) PUT /api/me/seeker-profile — seekerProfileSchema (snake_case).
+      if (isSeeker) {
+        await apiSend("PUT", "/api/me/seeker-profile", {
+          headline: headline || undefined,
+          location: location || undefined,
+          bio: bio || undefined,
+          skills: parsedSkills,
+        });
+      }
+      setSaveState("saved");
+      router.refresh();
+    } catch (err) {
+      setSaveState("error");
+      setError(err instanceof ApiError ? err.message : "Could not save.");
+    }
   }
 
   return (

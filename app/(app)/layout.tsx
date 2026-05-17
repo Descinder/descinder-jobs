@@ -1,26 +1,26 @@
-import { Nav } from "@/components/nav";
+import { SiteHeader } from "@/components/shell/site-header";
 import { AppAmbient } from "@/components/app-ambient";
-import { requireUser } from "@/lib/auth";
+import { AuthGate } from "./AuthGate";
 
-export default async function AppLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireUser();
-
   return (
     <div className="relative min-h-dvh bg-background">
       {/* Ambient background — client component, pointer-events-none, fixed */}
       <AppAmbient />
 
-      {/* Sticky nav */}
-      <Nav user={{ name: user.name, role: user.role }} />
+      {/* Shared shell header (3a) */}
+      <SiteHeader />
 
-      {/* Main content */}
-      <main className="relative z-10 mx-auto max-w-350 px-6 py-10 md:px-10">
-        {children}
-      </main>
+      {/* Client auth-gate: anon → /login; server still enforces per-endpoint */}
+      <AuthGate>
+        <main className="relative z-10 mx-auto max-w-350 px-6 py-10 md:px-10">
+          {children}
+        </main>
+      </AuthGate>
     </div>
   );
 }
