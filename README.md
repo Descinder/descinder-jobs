@@ -132,3 +132,17 @@ This completes Plan 2c-i. Next: Plan 2c-ii — AI-CV (Groq→Claude fallback, tr
 - Tests: unit (schemas-ai-cv, ai-cv-prompt incl. sentinel, ai-cv-dto) + e2e (ai-cv: success/refund/cap/post-gen-failure, rate-limit-repo, ai-cv-endpoints)
 
 **This completes Plan 2c** (i billing+gate · ii AI-CV). Next: Plan 2d — admin/moderation + cron (daily ingestion schedule, `reset_ai_cv_monthly_counters`, sessions purge, retention, per-IP rate limiting, DSAR export incl. `cv_generations`/`ai_tailored` + R2-object erasure, instant-alert fan-out), then Plan 3 (frontend translation + un-skip the 2 quarantined Plan-1 e2e specs), then deployment.
+
+## Plan 2d-i — Admin & Moderation + Audit Log (complete, reviewed, remediated)
+
+- Admin control plane (backend-spec §6), all `requireRole(admin)` (401 anon / 403 non-admin) + CSRF on mutations + `await ctx.params`: metrics; users (suspend/unsuspend/force-delete); companies (suspend/unsuspend/delete→cascades jobs); jobs (unpublish/delete/featured); reports queue (resolve); settings (GET/PATCH); audit-log view; approvals (users AND companies, approve/reject, idempotent 404)
+- Every state-changing admin action → `audit_log` (`actor_type='admin'`); the 3 irreversible deletes audit-FIRST (no silent unaudited destruction). Reusable `audit` repo (2d-ii cron reuses with `actor_type='system'`)
+- Suspension/force-delete take effect immediately — `readSession` already nulls `suspended_at`/`deleted_at` users (single session path, no cache; e2e proves 200→suspend→401→unsuspend→200)
+- `settings` PATCH is a typed ALLOW-LIST of the 14 real keys with per-key value-type validation (rejects unknown keys + the string-vs-boolean footgun that would silently invert gating)
+- Admin self-delete guarded (409); data-minimised hand-mapped DTOs; supabase-js parameterised (no injection); no migration / no types-regen
+- Review verdict SOUND after remediation (H1 settings allow-list, M1 audit-first deletes, M3 company approvals; plan enum-cast defect fixed). SAFE: authz on all 19 routes, CSRF, immediate suspension, self-delete guard, approval idempotency, data minimization, audit attribution, metrics↔gating consistency
+- Tests: unit (schemas-admin incl. allow-list footgun, admin-dto) + e2e (admin-repo, admin-endpoints authz matrix, admin-moderation suspend/audit/report/settings-type-reject/self-delete-guard)
+
+Deferred: hard PII erasure incl. R2 (force-delete is soft-disable until then) + transactional wrapper for irreversible deletes → Plan 2d-ii / hardening. Realtime settings-invalidation broadcast → Plan 3. Instant-alerts subsystem (no data model) → dedicated later plan.
+
+Next: Plan 2d-ii — secured cron dispatcher + jobs (daily ingestion+expiry, reset_ai_cv counters, sessions purge, purge stale tailored CVs, retention/anonymisation) + Resend email + DSAR export (incl. cv_generations/ai_tailored + R2 erasure) + per-IP rate limiting.
