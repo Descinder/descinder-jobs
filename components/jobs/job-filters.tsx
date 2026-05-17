@@ -5,7 +5,9 @@ export type JobFilterValues = {
   q: string; country: string; work_mode: string; employment_type: string;
   experience_level: string; source: string; salary_min: string; salary_max: string; sort: string;
 };
-const EMPTY: JobFilterValues = { q: "", country: "", work_mode: "", employment_type: "", experience_level: "", source: "", salary_min: "", salary_max: "", sort: "recent" };
+// sort MUST match jobFiltersSchema's enum exactly ("newest"|"relevant"|
+// "salary"). "recent" is NOT accepted → every Apply would 422.
+const EMPTY: JobFilterValues = { q: "", country: "", work_mode: "", employment_type: "", experience_level: "", source: "", salary_min: "", salary_max: "", sort: "newest" };
 
 export function JobFilters({ onApply }: { onApply: (v: JobFilterValues) => void }) {
   const [v, setV] = useState<JobFilterValues>(EMPTY);
@@ -39,7 +41,7 @@ export function JobFilters({ onApply }: { onApply: (v: JobFilterValues) => void 
         <input aria-label="Max salary" inputMode="numeric" placeholder="Max £" value={v.salary_max} onChange={set("salary_max")} className="w-1/2 rounded-lg border border-[oklch(0.90_0.02_264)] bg-white px-3 py-2 text-sm" />
       </div>
       <select aria-label="Sort" value={v.sort} onChange={set("sort")} className="rounded-lg border border-[oklch(0.90_0.02_264)] bg-white px-3 py-2 text-sm">
-        <option value="recent">Most recent</option><option value="salary">Highest salary</option>
+        <option value="newest">Most recent</option><option value="relevant">Most relevant</option><option value="salary">Highest salary</option>
       </select>
       <button type="submit" className="rounded-lg bg-[oklch(0.22_0.08_264)] px-4 py-2 text-sm font-semibold text-white hover:bg-[oklch(0.28_0.08_264)]">Apply filters</button>
     </form>
