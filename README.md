@@ -160,3 +160,15 @@ Next: Plan 2d-ii — secured cron dispatcher + jobs (daily ingestion+expiry, res
 Deferred (tracked, non-blocking): reset-anchor product decision; app_settings-driven retention windows; revoked-session forensic window; orphaned-key auto-retry; DSAR sessions/consent_log completeness; pg_cron schedule SQL (deploy artifact). Instant-alerts + digests → dedicated later plan (no alerts data model).
 
 **This completes Plan 2d** (i admin/moderation · ii cron/email/DSAR/rate-limit), and the entire backend-first build (Plans 1, 2a, 2b, 2c, 2d). Next: Plan 3 — prototype→production frontend translation (CSS→Tailwind, mock→live, wired to `/api/*`) + un-skip the 2 quarantined Plan-1 e2e specs. Separately: dedicated instant-alerts plan + deployment.
+
+## Plan 3a — Frontend Foundation + Public + Auth (complete, reviewed, remediated)
+
+- Typed client API (`lib/client/api.ts`): csrf double-submit, JSON/network failures → typed ApiError (never an unhandled throw), `apiGet`/`apiSend`; `useSession` (loading/anon/authed/**error** — a 5xx never flips an authed user to logged-out CTAs); client DTO types mirror `lib/shared/dto.ts`
+- Auth-aware `SiteHeader` + shared Loading/Error/Empty primitives + `(public)` shell (home moved under it)
+- Home = live jobs list (filter rail w/ explicit Apply, §6 degraded-card rules, optimistic save→anon-login, pagination); job detail (native vs ingested) with the corrected apply/report state machine (anon→/signup, free→402 paywall, subscriber→cover-letter form→Applied ✓, external→backend `redirectUrl`); company profile (`{company,openJobs}`, 404 if not native); pricing (anon→signup, CONFLICT-graceful); legal under shell
+- Auth wired to `/api/*` (signup→server `next` onboarding redirect, login+magic-link, neutral forgot, reset via callback-cookie token); onboarding de-stubbed to non-throwing placeholders (3b/3c wire them)
+- Review verdict SOUND after remediation (commit 90a866a): 3 blocking contract-mismatch defects (C1 native-apply body, C2 external `redirectUrl`, H2 report) + H3/M1/M2 fixed; security posture (CSRF, no-client-trust, no XSS/redirect/storage leak) verified SAFE. Authed e2e added to close the false-green gap.
+- Screen-backend-map reconciled (new §9): jobIds, `{company,openJobs}`, `/api/me/billing*`, redirectUrl, cover_letter-required, logout, signup `{user,next}`, reset `{new_password}`
+- Tests: unit (client-api) + e2e (fe-public-jobs, fe-job-detail incl. authed apply/external, fe-pricing-company, fe-auth) against live API + local Supabase
+
+Deferred to 3b/3c/3d: seeker/employer/admin screens; the 2 quarantined Plan-1 specs (`profile-edit`→3b, `signup-employer`→3c) stay skipped until wired. Backend follow-up: `external-click` lacks `assertCsrf` (L1).
