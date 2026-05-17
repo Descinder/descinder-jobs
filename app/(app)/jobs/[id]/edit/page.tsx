@@ -124,8 +124,34 @@ export default function EditJobPage({
 
   if (st === "loading") return <Loading />;
   if (st === "notfound")
+    // Drafts/closed jobs aren't fetchable via the public detail endpoint, so the
+    // full edit form can't prefill — but Repost (publish) and Close DON'T need a
+    // prefill, so surface them here as actions instead of a dead end. Repost a
+    // closed role to relist it, or a draft to publish it.
     return (
-      <ErrorState message="This job isn't available to edit. Drafts and closed roles can't be opened here." />
+      <main className="mx-auto max-w-[640px] px-6 py-10">
+        <h1 className="text-xl font-semibold text-[oklch(0.22_0.08_264)]">This role isn&apos;t currently published</h1>
+        <p className="mt-2 text-sm text-[oklch(0.50_0.03_264)]">
+          Drafts and closed roles can&apos;t be edited inline. You can publish it (repost) or close it; full editing is available once it&apos;s live.
+        </p>
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={() => action("repost")}
+            disabled={busy}
+            className="rounded-xl bg-[oklch(0.22_0.08_264)] px-4 py-2 text-sm font-semibold text-white hover:bg-[oklch(0.28_0.08_264)] disabled:opacity-50"
+          >
+            {busy ? "Working…" : "Publish (repost)"}
+          </button>
+          <button
+            onClick={() => action("close")}
+            disabled={busy}
+            className="rounded-xl border border-[oklch(0.90_0.02_264)] px-4 py-2 text-sm font-medium text-[oklch(0.22_0.08_264)] hover:bg-[oklch(0.97_0.01_264)] disabled:opacity-50"
+          >
+            Close
+          </button>
+        </div>
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      </main>
     );
   if (st === "error")
     return <ErrorState message="Couldn't load this job." />;

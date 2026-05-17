@@ -92,3 +92,46 @@ test("employer posts a job via UI → edit persists → close reflects", async (
   }
   await db().from("users").delete().eq("id", userId);
 });
+
+// T1 (review): Repost must be reachable. A closed job 404s the edit prefill, so
+// the edit page surfaces an actionable "Publish (repost)" panel instead of a
+// dead end. Closed → repost via UI → published again.
+test("closed job → /edit shows repost panel → Publish (repost) republishes", async ({ page }) => {
+  const stamp = Date.now();
+  const email = `fe-emp-repost+${stamp}@example.test`;
+  const ctx = await request.newContext({ baseURL: base });
+  expect((await ctx.post("/api/auth/signup", { data: { email, password: "test-password-123", name: "Repost Emp", role: "employer", marketing_consent: false, accepted_terms: true } })).status()).toBe(201);
+  const csrf = (await ctx.storageState()).cookies.find((c) => c.name === "ds_csrf")?.value ?? "";
+  expect((await ctx.post("/api/companies", { headers: { "x-csrf-token": csrf }, data: { name: `FE Repost Co ${stamp}`, size: "11-50" } })).status()).toBe(201);
+  const userId = (await (await ctx.get("/api/me/profile")).json()).id as string;
+  await page.context().addCookies((await ctx.storageState()).cookies);
+
+  // create a published native job, then close it (API — setup speed)
+  const create = await ctx.post("/api/jobs", {
+    headers: { "x-csrf-token": csrf },
+    data: { title: `FE Repost Role ${stamp}`, description: "ten plus chars here", employment_type: "full_time", work_mode: "remote", experience_level: "mid", apply_method: "native", status: "published", salary_currency: "GBP" },
+  });
+  expect(create.status()).toBe(201);
+  const jobId = (await create.json()).id as string;
+  expect((await ctx.post(`/api/jobs/${jobId}/close`, { headers: { "x-csrf-token": csrf }, data: {} })).status()).toBe(200);
+  expect((await ctx.get(`/api/jobs/${jobId}`)).status()).toBe(404); // closed → not publicly fetchable
+
+  // UI: edit page shows the not-published action panel (not a dead error)
+  page.on("dialog", (d) => d.accept());
+  await page.goto(`${base}/jobs/${jobId}/edit`);
+  await expect(page.getByText(/isn't currently published/i)).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: /Publish \(repost\)/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+
+  // republished → fetchable again
+  await expect.poll(async () => (await ctx.get(`/api/jobs/${jobId}`)).status()).toBe(200);
+
+  const { data: cm } = await db().from("company_members").select("company_id").eq("user_id", userId).maybeSingle();
+  const companyId = cm?.company_id as string | undefined;
+  if (companyId) {
+    await db().from("jobs").delete().eq("company_id", companyId);
+    await db().from("company_members").delete().eq("company_id", companyId);
+    await db().from("companies").delete().eq("id", companyId);
+  }
+  await db().from("users").delete().eq("id", userId);
+});
