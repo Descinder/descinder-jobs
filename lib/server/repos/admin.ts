@@ -9,7 +9,7 @@ const REPORT_COLS = "id, target_type, target_id, reason, description, status, ac
 export async function listUsers(f: { q?: string; role?: string; limit?: number } = {}) {
   let qb = db().from("users").select(USER_COLS).order("created_at", { ascending: false }).limit(f.limit ?? 100);
   if (f.q) qb = qb.ilike("email", `%${f.q}%`);
-  if (f.role) qb = qb.eq("role", f.role);
+  if (f.role) qb = qb.eq("role", f.role as never);
   const { data, error } = await qb;
   if (error) throw new Error(`listUsers failed: ${error.message}`);
   return (data ?? []) as { id: string }[] & Record<string, unknown>[];
@@ -58,8 +58,8 @@ export async function deleteCompany(companyId: string): Promise<void> {
 
 export async function listAdminJobs(f: { source?: string; status?: string; limit?: number } = {}) {
   let qb = db().from("jobs").select(JOB_COLS).order("created_at", { ascending: false }).limit(f.limit ?? 100);
-  if (f.source) qb = qb.eq("source", f.source);
-  if (f.status) qb = qb.eq("status", f.status);
+  if (f.source) qb = qb.eq("source", f.source as never);
+  if (f.status) qb = qb.eq("status", f.status as never);
   const { data, error } = await qb;
   if (error) throw new Error(`listAdminJobs failed: ${error.message}`);
   return (data ?? []) as { id: string }[] & Record<string, unknown>[];
@@ -84,7 +84,7 @@ export async function setJobFeatured(jobId: string, featured: boolean, until: st
 
 export async function listReports(status?: string) {
   let qb = db().from("reports").select(REPORT_COLS).order("created_at", { ascending: false }).limit(200);
-  if (status) qb = qb.eq("status", status);
+  if (status) qb = qb.eq("status", status as never);
   const { data, error } = await qb;
   if (error) throw new Error(`listReports failed: ${error.message}`);
   return (data ?? []) as { id: string }[] & Record<string, unknown>[];
