@@ -1,16 +1,12 @@
-import { redirect } from "next/navigation";
-import { requireRole } from "@/lib/auth";
-import { db } from "@/lib/server/repos/db";
 import { CompanyForm } from "./CompanyForm";
 
-export default async function CompanyPage() {
-  const user = await requireRole("employer");
-  const { data: membership } = await db()
-    .from("company_members")
-    .select("company_id, companies(*)")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership?.companies) redirect("/onboarding/company");
+// Plan 3c: migrated off the legacy server `requireRole("employer")` + direct
+// `db()` read (lib/auth) to a pure client page. CompanyForm now self-fetches
+// GET /api/me/company and saves via PUT /api/me/company (owner-only enforced
+// server-side in lib/server/services/companies.ts#updateOwnCompany — the
+// client never carries the trust). No company yet → CompanyForm shows a prompt
+// to finish onboarding.
+export default function CompanyPage() {
   return (
     <div className="space-y-8">
       <div>
@@ -19,7 +15,7 @@ export default async function CompanyPage() {
           How your organisation appears on listings and intern profiles.
         </p>
       </div>
-      <CompanyForm company={membership.companies} />
+      <CompanyForm />
     </div>
   );
 }

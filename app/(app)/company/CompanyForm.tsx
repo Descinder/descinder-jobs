@@ -1,16 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/lib/supabase/types";
+import { apiGet, apiSend, ApiError } from "@/lib/client/api";
+import { Loading, ErrorState, EmptyState } from "@/components/shell/screen-states";
 
-type Company = Database["public"]["Tables"]["companies"]["Row"];
+// GET /api/me/company → toCompanyPublic shape (lib/shared/dto.ts):
+// { name, slug, logoUrl, website, description, location, size }.
+type CompanyPublic = {
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  website: string | null;
+  description: string | null;
+  location: string | null;
+  size: string | null;
+};
+
+// PUT /api/me/company uses updateCompanySchema = createCompanySchema.partial()
+// (lib/shared/schemas/jobs.ts). Keys: name (1..160), website? (must be a valid
+// URL), location? (<=200), size? (REQUIRED enum on create — Cluster A §9c — so
+// always send a valid enum value here too), description? (<=5000). We always
+// post a size from this fixed enum so the partial PUT never trips the enum.
+const SIZE_VALUES = ["1-10", "11-50", "51-200", "201-500", "501+"] as const;
+type SizeValue = (typeof SIZE_VALUES)[number];
+function coerceSize(s: string | null): SizeValue {
+  return (SIZE_VALUES as readonly string[]).includes(s ?? "")
+    ? (s as SizeValue)
+    : "1-10";
+}
 
 // ─── Spring preset ────────────────────────────────────────────────────────────
 const spring = { type: "spring" as const, stiffness: 100, damping: 20 };
@@ -192,23 +216,85 @@ function SaveButton({ state }: { state: SaveState }) {
 }
 
 // ─── Root export ──────────────────────────────────────────────────────────────
-export function CompanyForm({ company }: { company: Company }) {
-  const router = useRouter();
-  const [name, setName] = useState(company.name);
-  const [website, setWebsite] = useState(company.website ?? "");
-  const [location, setLocation] = useState(company.location ?? "");
-  const [size, setSize] = useState(company.size ?? "1-10");
-  const [description, setDescription] = useState(company.description ?? "");
+export function CompanyForm() {
+  const [loadSt, setLoadSt] = useState<
+    "loading" | "ok" | "no-company" | "error"
+  >("loading");
+  const [name, setName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [location, setLocation] = useState("");
+  const [size, setSize] = useState<SizeValue>("1-10");
+  const [description, setDescription] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    apiGet<CompanyPublic>("/api/me/company")
+      .then((c) => {
+        if (!alive) return;
+        setName(c.name);
+        setWebsite(c.website ?? "");
+        setLocation(c.location ?? "");
+        setSize(coerceSize(c.size));
+        setDescription(c.description ?? "");
+        setLoadSt("ok");
+      })
+      .catch((e) => {
+        if (!alive) return;
+        if (e instanceof ApiError && e.status === 404)
+          setLoadSt("no-company");
+        else setLoadSt("error");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaveState("saving");
     setError(null);
-    // TODO(Plan 3): wire to /api/company or equivalent endpoint
-    throw new Error("Not wired — Plan 3 frontend translation");
+    try {
+      // size is always a valid enum value (coerced on load + select-bound);
+      // website only sent when non-empty (schema requires a valid URL).
+      await apiSend<CompanyPublic>("PUT", "/api/me/company", {
+        name,
+        website: website || undefined,
+        location: location || undefined,
+        size,
+        description: description || undefined,
+      });
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 2500);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Could not save your company.",
+      );
+      setSaveState("error");
+    }
   }
+
+  if (loadSt === "loading") return <Loading />;
+  if (loadSt === "error")
+    return <ErrorState message="Couldn't load your company." />;
+  if (loadSt === "no-company")
+    return (
+      <div>
+        <EmptyState
+          title="No company yet"
+          hint="Set up your company profile to start posting roles."
+        />
+        <div className="mt-4 flex justify-center">
+          <Link
+            href="/onboarding/company"
+            className="rounded-lg bg-[oklch(0.22_0.08_264)] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            Set up company
+          </Link>
+        </div>
+      </div>
+    );
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_300px]">
@@ -286,7 +372,7 @@ export function CompanyForm({ company }: { company: Company }) {
                 "disabled:cursor-not-allowed disabled:opacity-50"
               )}
               value={size}
-              onChange={(e) => setSize(e.target.value)}
+              onChange={(e) => setSize(e.target.value as SizeValue)}
             >
               <option value="1-10">1–10 people</option>
               <option value="11-50">11–50 people</option>
