@@ -193,3 +193,15 @@ Deferred: notification/marketing/email-change/delete-account + AI-CV PDF export 
 - Tests: e2e fe-employer-onboarding-dashboard, fe-employer-jobs (+repost), fe-employer-applicants (cross-tenant 403 at API+UI) — live API + local Supabase
 
 **Plan 3 frontend: both long-standing Plan-1 quarantined specs (profile-edit 3b, signup-employer 3c) now cleared.**
+
+## Plan 3d — Frontend Admin (complete, reviewed) — PLAN 3 COMPLETE
+
+- Admin shell (client gate: 401→/login, non-admin→403 panel no-loop, 5xx fail-safe; 9-link subnav) + metrics dashboard (5 real counts, no fabricated tiles)
+- Users/companies/jobs moderation (suspend/unsuspend/force-delete/delete/unpublish/featured) with confirms + 409 self-delete surfaced; reports queue resolve; ingestion runs + manual trigger (CONFLICT-graceful); allow-listed typed settings (boolean/number — H1 trap avoided); audit log; approvals (single-endpoint decide)
+- Review verdict SAFE — no CRITICAL/HIGH/MEDIUM; authz server-enforced (FE shapes only, real 403 proven), CSRF, no XSS/leak, deferral honesty all SAFE; the one LOW (untested FE-shaped bodies) closed with a contract e2e (job-featured/approvals — persisted+audited, no 422)
+- Screen-map §9d reconciled (lean metrics, list envelopes, settings allow-list+types, single approvals endpoint, raw ingestion-runs shape)
+- Tests: e2e fe-admin-access (anon/non-admin/admin matrix, real 403), fe-admin-moderation (suspend→immediate-401, report resolve, settings type-correct flip, job-featured+approvals contract) — live API + local Supabase
+
+**PLAN 3 COMPLETE**: 3a public+auth · 3b seeker · 3c employer · 3d admin. Full prototype→production frontend translation done; both Plan-1 quarantined specs cleared (0 skipped); e2e runs against the production server with retries (deterministic). The whole product (backend Plans 1–2d + frontend Plan 3) is built, reviewed, and gated.
+
+Next: deployment (R2, GitHub, Cloudflare Pages, remote Supabase London, all API keys + CRON_SECRET/RESEND/RATE_LIMIT_IP_ENABLED/Stripe/AI/ingestion, pg_cron schedule SQL, ICO, DPAs) + the dedicated instant-alerts plan (unbuilt alerts data model + matching + throttled fan-out + digests).
