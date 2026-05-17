@@ -25,6 +25,8 @@ const serverEnvSchema = z.object({
   GROQ_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_PROVIDER_MODE: z.enum(["both", "claude_only"]).optional(),
+  CRON_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({
