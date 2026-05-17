@@ -22,16 +22,32 @@ export function readCsrfCookie(): string {
 
 async function parse<T>(res: Response): Promise<T> {
   const text = await res.text();
-  const body = text ? JSON.parse(text) : null;
+  let body: unknown = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    // Non-JSON body (5xx HTML page, proxy error, truncated) → typed ApiError,
+    // never an unhandled SyntaxError that breaks the calling screen.
+    throw new ApiError("INTERNAL", res.statusText || "Unexpected server response", res.status);
+  }
   if (!res.ok) {
-    const e = body?.error ?? {};
+    const e = (body as { error?: { code?: string; message?: string; details?: unknown } } | null)?.error ?? {};
     throw new ApiError(e.code ?? "INTERNAL", e.message ?? "Request failed", res.status, e.details);
   }
   return body as T;
 }
 
+// Network failures (offline, DNS, abort) → typed ApiError, never a raw TypeError.
+async function doFetch(path: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(path, init);
+  } catch {
+    throw new ApiError("NETWORK", "Network request failed", 0);
+  }
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
-  return parse<T>(await fetch(path, { method: "GET", credentials: "same-origin" }));
+  return parse<T>(await doFetch(path, { method: "GET", credentials: "same-origin" }));
 }
 
 export async function apiSend<T>(
@@ -40,7 +56,7 @@ export async function apiSend<T>(
   body?: unknown,
 ): Promise<T> {
   return parse<T>(
-    await fetch(path, {
+    await doFetch(path, {
       method,
       credentials: "same-origin",
       headers: {

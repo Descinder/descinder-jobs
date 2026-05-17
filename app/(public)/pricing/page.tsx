@@ -13,14 +13,14 @@ export default function PricingPage() {
     try {
       await apiGet("/api/me/profile"); // 401 → anon
     } catch (e) {
-      if (e instanceof ApiError && e.status === 401) { router.push("/signup?next=/pricing"); return; }
+      if (e instanceof ApiError && e.status === 401) { router.push("/signup"); return; }
     }
     try {
       await apiSend("POST", "/api/me/billing/subscribe", { plan: "seeker_monthly" });
       router.push("/settings/billing");
     } catch (e) {
       if (e instanceof ApiError && e.code === "CONFLICT") setMsg("Subscriptions aren't available on this environment yet.");
-      else if (e instanceof ApiError && e.status === 401) router.push("/signup?next=/pricing");
+      else if (e instanceof ApiError && e.status === 401) router.push("/signup");
       else setMsg("Couldn't start checkout. Try again.");
     } finally { setBusy(false); }
   }

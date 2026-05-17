@@ -19,7 +19,7 @@ export function SiteHeader() {
         <nav className="flex items-center gap-5 text-sm">
           <Link href="/" className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Jobs</Link>
           <Link href="/pricing" className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Pricing</Link>
-          {s.status === "loading" && <span className="h-4 w-16 animate-pulse rounded bg-[oklch(0.97_0.01_264)]" />}
+          {(s.status === "loading" || s.status === "error") && <span className="h-4 w-16 animate-pulse rounded bg-[oklch(0.97_0.01_264)]" />}
           {s.status === "anon" && (
             <>
               <Link href="/login" className="text-[oklch(0.22_0.08_264)] hover:opacity-80">Log in</Link>
