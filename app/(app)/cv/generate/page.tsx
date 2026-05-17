@@ -81,6 +81,16 @@ export default function AiCvGeneratePage() {
     setError(null);
     setPaywall(null);
     setResult(null);
+    // Targeted client guard so a pasted URL/slug gets clear guidance instead of
+    // a generic "Validation failed" 422 (server still enforces the real check).
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(jobId.trim())) {
+      setError("Enter a valid job ID (the UUID from a job's page URL).");
+      return;
+    }
+    if (baseText.trim().length < 50) {
+      setError("Paste at least 50 characters of your base CV.");
+      return;
+    }
     setSubmitting(true);
     try {
       const out = await apiSend<{ generatedCvId: string; provider: string }>(

@@ -58,23 +58,38 @@ export default function CvManagementPage() {
   // Verified two-step upload. createUploadUrl (lib/server/services/cv.ts)
   // accepts { filename, mime_type, size_bytes } (snake_case) and returns
   // { cvId, uploadUrl }; then PUT the bytes to the presigned URL directly.
+  // Browsers report file.type inconsistently ("" or application/octet-stream
+  // for .docx on some OSes) → the backend mime_type enum would 422 a perfectly
+  // valid CV. Derive from the extension, fall back to the browser MIME.
+  function resolveMime(file: File): string {
+    const ext = file.name.toLowerCase().split(".").pop() ?? "";
+    const byExt: Record<string, string> = {
+      pdf: "application/pdf",
+      doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      txt: "text/plain",
+    };
+    return byExt[ext] ?? file.type;
+  }
+
   async function upload(file: File) {
     setActionError(null);
     setBusy(true);
     try {
+      const mimeType = resolveMime(file);
       const { uploadUrl } = await apiSend<{ cvId: string; uploadUrl: string }>(
         "POST",
         "/api/me/cvs/upload-url",
         {
           filename: file.name,
-          mime_type: file.type,
+          mime_type: mimeType,
           size_bytes: file.size,
         },
       );
       const put = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
-        headers: { "Content-Type": file.type },
+        headers: { "Content-Type": mimeType },
       });
       if (!put.ok) throw new Error("upload failed");
       await reload();
