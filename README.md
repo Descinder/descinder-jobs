@@ -172,3 +172,14 @@ Deferred (tracked, non-blocking): reset-anchor product decision; app_settings-dr
 - Tests: unit (client-api) + e2e (fe-public-jobs, fe-job-detail incl. authed apply/external, fe-pricing-company, fe-auth) against live API + local Supabase
 
 Deferred to 3b/3c/3d: seeker/employer/admin screens; the 2 quarantined Plan-1 specs (`profile-edit`→3b, `signup-employer`→3c) stay skipped until wired. Backend follow-up: `external-click` lacks `assertCsrf` (L1).
+
+## Plan 3b — Frontend Seeker (complete, reviewed, remediated)
+
+- App-shell client `AuthGate` (401→/login, fail-safe on 5xx) + `SiteHeader`; seeker onboarding → `PUT /api/me/seeker-profile` → dashboard
+- Dashboard (live `/api/me/dashboard`: free upsell vs subscriber CTAs via `canApplyNative`); profile editor (GET/PUT profile + seeker-profile, "Saved." state) — **`profile-edit.spec.ts` un-quarantined & passing**
+- CV management (list base/tailored, presigned-PUT upload with extension-derived MIME, build-from-profile, primary, delete, signed download) + applications list (external-status PATCH); AI-CV generator (generate + history, 402-paywall/409-CONFLICT graceful, client UUID/baseText guards, PDF deferred)
+- Settings (account + subscription summary + data-export; unbuilt toggles visibly disabled, not faked); subscription & billing (embedded Stripe Elements, `redirect:"if_required"`, CONFLICT-graceful when keys absent) + app-wide paywall modal/`usePaywall`
+- Review verdict SAFE — no CRITICAL/HIGH; contracts/CSRF/auth-gate/client-trust/XSS/Elements/data-minimization/deferral-honesty all verified. Remediated M1 (CV mime from extension — valid .docx no longer 422s) + M2 (jobId UUID guard); screen-map §9b reconciled (dashboard/profile/cvs/applications/ai-cv/billing/settings divergences)
+- Tests: e2e fe-seeker-onboarding-profile, fe-seeker-dashboard (free+subscriber), fe-cv, fe-ai-cv, fe-settings-billing — all against live API + local Supabase
+
+Deferred: notification/marketing/email-change/delete-account + AI-CV PDF export (no backend — disabled, not faked); apply-island stays inline-paywall in `(public)`.
