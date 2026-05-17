@@ -6,9 +6,11 @@ import { signUpWithPassword, signInWithPassword } from "@/lib/server/auth/gotrue
 import { createSession, sessionCookieOptions, SESSION_COOKIE, CSRF_COOKIE } from "@/lib/server/auth/session";
 import { db } from "@/lib/server/repos/db";
 import { AppError } from "@/lib/shared/errors";
+import { rateLimitIp } from "@/lib/server/rate-ip";
 
 export async function POST(req: Request) {
   try {
+    await rateLimitIp(req, "auth_signup", 10, 3600); // 10 signups / hr / IP
     const input = await parseBody(req, signupSchema);
     const { userId } = await signUpWithPassword(input.email, input.password, { name: input.name });
     const { error: upErr } = await db().from("users").update({

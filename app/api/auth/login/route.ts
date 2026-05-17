@@ -6,9 +6,11 @@ import { signInWithPassword } from "@/lib/server/auth/gotrue";
 import { createSession, sessionCookieOptions, SESSION_COOKIE, CSRF_COOKIE } from "@/lib/server/auth/session";
 import { db } from "@/lib/server/repos/db";
 import { AppError } from "@/lib/shared/errors";
+import { rateLimitIp } from "@/lib/server/rate-ip";
 
 export async function POST(req: Request) {
   try {
+    await rateLimitIp(req, "auth_login", 20, 900); // 20 / 15 min / IP — brute-force guard
     const input = await parseBody(req, loginSchema);
     let auth;
     try { auth = await signInWithPassword(input.email, input.password); }
