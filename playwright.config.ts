@@ -11,6 +11,12 @@ export default defineConfig({
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
+  // Standard flaky-mitigation for a single shared local server running ~70
+  // tests serially: a genuine bug fails BOTH attempts (still red); a
+  // load/latency flake passes on retry and is reported as "flaky" (surfaced,
+  // not masked). Paired with the production webServer this makes the gate
+  // deterministic without hiding real failures.
+  retries: 1,
   tsconfig: "./tsconfig.e2e.json",
   use: {
     baseURL: "http://localhost:3000",
