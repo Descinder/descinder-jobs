@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/server/repos/db";
 import { putText, deleteObject } from "@/lib/server/integrations/storage/blob";
+import { deleteAuthUser } from "@/lib/server/auth/gotrue";
 
 // GDPR right of ACCESS (backend-spec §9a): a machine-readable bundle of the
 // user's data + a manifest of their CV / ai_tailored objects (manifest, not
@@ -34,9 +35,16 @@ export async function buildDataExport(
 }
 
 // GDPR right of ERASURE: delete the user's blob objects FIRST (row cascade
-// alone orphans PII in R2 — backend-spec §9a), then hard-delete the user (FK
-// `on delete cascade` removes cv_files/cv_generations/applications/sessions/…).
-export async function eraseUser(userId: string): Promise<{ objectsDeleted: number }> {
+// alone orphans PII in R2 — backend-spec §9a), then delete the CANONICAL
+// auth.users record — public.users.id REFERENCES auth.users(id) ON DELETE
+// CASCADE, so this removes the public row AND every child
+// (cv_files/cv_generations/applications/sessions/subscriptions/…) AND the
+// GoTrue identity (email/password hash). Deleting only public.users would
+// leave the email permanently orphaned in auth.users (incomplete erasure).
+// Returns the orphaned keys (if any R2 delete failed) so the caller can audit.
+export async function eraseUser(
+  userId: string,
+): Promise<{ objectsDeleted: number; orphanedKeys: string[] }> {
   const { data: cvs } = await db().from("cv_files").select("r2_object_key").eq("user_id", userId);
   const { data: exps } = await db().from("data_export_requests").select("r2_object_key").eq("user_id", userId);
   const keys = [
@@ -44,10 +52,11 @@ export async function eraseUser(userId: string): Promise<{ objectsDeleted: numbe
     ...((exps ?? []) as { r2_object_key: string | null }[]).map((r) => r.r2_object_key),
   ].filter((k): k is string => !!k);
   let objectsDeleted = 0;
+  const orphanedKeys: string[] = [];
   for (const k of keys) {
-    try { await deleteObject(k); objectsDeleted++; } catch { /* best-effort; continue */ }
+    try { await deleteObject(k); objectsDeleted++; } catch { orphanedKeys.push(k); }
   }
-  const { error } = await db().from("users").delete().eq("id", userId);
-  if (error) throw new Error(`eraseUser: delete failed: ${error.message}`);
-  return { objectsDeleted };
+  // Cascades public.users + all child rows + the GoTrue identity (C1 fix).
+  await deleteAuthUser(userId);
+  return { objectsDeleted, orphanedKeys };
 }

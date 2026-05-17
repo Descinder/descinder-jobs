@@ -93,3 +93,17 @@ export async function adminUpdatePassword(userId: string, newPassword: string): 
   });
   if (!res.ok) throw new Error(`gotrue admin password update failed: ${res.status}`);
 }
+
+// GDPR erasure: delete the canonical auth.users record. public.users.id
+// REFERENCES auth.users(id) ON DELETE CASCADE, so this cascades the public
+// row and every child (cv_files/cv_generations/applications/sessions/…).
+// Idempotent: a 404 (already gone) is treated as success.
+export async function deleteAuthUser(userId: string): Promise<void> {
+  const res = await fetch(`${BASE}/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: HEADERS,
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`gotrue admin user delete failed: ${res.status}`);
+  }
+}

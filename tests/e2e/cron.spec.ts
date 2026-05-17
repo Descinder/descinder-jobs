@@ -97,3 +97,26 @@ test("retention_purge erases users soft-deleted past the grace window (R2 + rows
   expect(r.ok).toBe(true);
   expect((await db().from("users").select("id").eq("id", userId).maybeSingle()).data).toBeNull();
 });
+
+test("idempotency: re-running a job is a safe no-op (expiry_sweep twice)", async () => {
+  const stamp = Date.now();
+  const { data: co } = await db().from("companies").insert({ name: `Idem ${stamp}`, slug: `idem-${stamp}`, size: "11-50" } as never).select("id").single();
+  const companyId = (co as { id: string }).id;
+  const { data: j } = await db().from("jobs").insert({
+    company_id: companyId, source: "native", title: `Idem ${stamp}`, description: "ten plus chars",
+    employment_type: "full_time", work_mode: "remote", experience_level: "mid", status: "published",
+    posted_at: new Date().toISOString(), salary_currency: "GBP",
+    expires_at: new Date(Date.now() - 86400000).toISOString(),
+  } as never).select("id").single();
+  const jobId = (j as { id: string }).id;
+
+  const r1 = await runCronJob("expiry_sweep", {});
+  const r2 = await runCronJob("expiry_sweep", {});
+  expect(r1.ok).toBe(true);
+  expect(r2.ok).toBe(true); // second run still safe
+  expect((r2.detail as { expired: number }).expired).toBe(0); // nothing left to expire
+  expect((await db().from("jobs").select("status").eq("id", jobId).single()).data!.status).toBe("expired");
+
+  await db().from("jobs").delete().eq("company_id", companyId);
+  await db().from("companies").delete().eq("id", companyId);
+});

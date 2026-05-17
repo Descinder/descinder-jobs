@@ -27,6 +27,9 @@ const serverEnvSchema = z.object({
   AI_PROVIDER_MODE: z.enum(["both", "claude_only"]).optional(),
   CRON_SECRET: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
+  // Only set true where there is NO Cloudflare edge and the origin is fronted
+  // by a TRUSTED proxy (local dev / CI). Never set in the CF production deploy.
+  RATE_LIMIT_TRUST_FORWARDED: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({

@@ -9,6 +9,12 @@ describe("renderEmail", () => {
     const d = renderEmail("account_deletion", { name: "Sam" });
     expect(d.html).toContain("Sam");
   });
+  it("HTML-escapes user-controlled values (no HTML/script injection via name)", () => {
+    const d = renderEmail("account_deletion", { name: '<img src=x onerror=alert(1)>"evil"' });
+    expect(d.html).not.toContain("<img");
+    expect(d.html).toContain("&lt;img");
+    expect(d.html).toContain("&quot;evil&quot;");
+  });
   it("exposes the known templates", () => {
     expect(Object.keys(EMAIL_TEMPLATES).sort()).toEqual(["account_deletion", "data_export_ready"].sort());
   });

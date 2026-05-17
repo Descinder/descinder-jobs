@@ -31,6 +31,7 @@ export async function runCronJob(
   const now = deps.now ?? new Date();
   const nowIso = now.toISOString();
   let detail: Record<string, unknown> = {};
+  let ok = true;
 
   if (job === "expiry_sweep") {
     const { data, error } = await db().from("jobs").update({ status: "expired" } as never)
@@ -69,7 +70,15 @@ export async function runCronJob(
       .select("id").not("deleted_at", "is", null).lt("deleted_at", cutoff);
     let erased = 0;
     for (const u of (due ?? []) as { id: string }[]) {
-      await eraseUser(u.id);
+      // Audit EACH irreversible erasure as it happens (mirrors 2d-i's
+      // audit-before-destroy) so a later audit failure can't lose the record
+      // of a GDPR mass-erasure.
+      const r = await eraseUser(u.id);
+      await recordAudit({
+        actorId: null, actorType: "system", action: "cron.retention_purge.erase",
+        targetType: "user", targetId: u.id,
+        metadata: { objectsDeleted: r.objectsDeleted, orphanedKeys: r.orphanedKeys },
+      });
       erased++;
     }
     detail = { erased };
@@ -98,12 +107,21 @@ export async function runCronJob(
     // expiry sweep follows ingestion daily (spec §8)
     await db().from("jobs").update({ status: "expired" } as never)
       .eq("status", "published").not("expires_at", "is", null).lt("expires_at", nowIso);
-    detail = { runs };
+    const failed = runs.filter((r) => r.success !== true).length;
+    detail = { runs, failedSources: failed };
+    // total ingestion outage must NOT report ok:true (ops/alerting keys on this)
+    ok = failed < runs.length || runs.length === 0;
   }
 
-  await recordAudit({
-    actorId: null, actorType: "system", action: `cron.${job}`,
-    targetType: "cron", targetId: null, metadata: detail,
-  });
-  return { ok: true, detail };
+  // Job already ran; an audit-write failure must not mask completion (the
+  // GDPR-significant retention_purge already audited each erasure above).
+  try {
+    await recordAudit({
+      actorId: null, actorType: "system", action: `cron.${job}`,
+      targetType: "cron", targetId: null, metadata: detail,
+    });
+  } catch (e) {
+    console.error(`[cron] ${job} ran but summary audit failed:`, e instanceof Error ? e.message : e);
+  }
+  return { ok, detail };
 }

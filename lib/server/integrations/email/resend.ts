@@ -24,10 +24,20 @@ export const EMAIL_TEMPLATES: Record<string, Template> = {
   },
 };
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 export function renderEmail(template: keyof typeof EMAIL_TEMPLATES | string, data: TemplateData) {
   const t = EMAIL_TEMPLATES[template];
   if (!t) throw new Error(`Unknown email template: ${template}`);
-  return { subject: t.subject(data), html: t.html(data) };
+  // Single choke point: every interpolated value is HTML-escaped before it
+  // reaches a template (user-controlled `name` etc. can't inject HTML/links).
+  const safe: TemplateData = {};
+  for (const [k, v] of Object.entries(data)) safe[k] = escapeHtml(String(v ?? ""));
+  return { subject: t.subject(safe), html: t.html(safe) };
 }
 
 export type SendResult = { sent: boolean; reason?: string };
