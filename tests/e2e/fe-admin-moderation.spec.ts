@@ -241,3 +241,44 @@ test("admin resolves a seeded report + flips an allow-listed setting via the UI 
   await db().from("reports").delete().eq("id", reportId);
   await db().from("users").delete().eq("id", adminId);
 });
+
+// Review LOW closure: the FE builds {featured} / {decision} bodies (vs the
+// no-body mutations proven elsewhere). Prove those exact shapes pass the live
+// schema (the 3b/3c 422-class risk) end-to-end with an authed admin + audit.
+test("admin job-featured PATCH {featured} and approvals PATCH {decision} — exact FE bodies accepted, persisted, audited", async () => {
+  const api = await request.newContext({ baseURL: base });
+  const stamp = Date.now();
+  await api.post("/api/auth/signup", {
+    data: { email: `fe-admmod3-admin+${stamp}@example.test`, password: "test-password-123", name: "Mod Admin 3", role: "job_seeker", marketing_consent: false, accepted_terms: true },
+  });
+  const adminId = (await (await api.get("/api/me/profile")).json()).id as string;
+  await db().from("users").update({ role: "admin" } as never).eq("id", adminId);
+  const csrf = (await api.storageState()).cookies.find((c) => c.name === "ds_csrf")?.value ?? "";
+
+  // seed a company + published job, and a pending-approval user
+  const { data: co } = await db().from("companies").insert({ name: `AdmFeat ${stamp}`, slug: `admfeat-${stamp}`, size: "11-50" } as never).select("id").single();
+  const { data: job } = await db().from("jobs").insert({
+    company_id: (co as { id: string }).id, source: "native", title: `AdmFeat Role ${stamp}`,
+    description: "ten plus chars here", employment_type: "full_time", work_mode: "remote",
+    experience_level: "mid", status: "published", posted_at: new Date().toISOString(), salary_currency: "GBP",
+  } as never).select("id").single();
+  const jobId = (job as { id: string }).id;
+  await db().from("users").update({ approval_status: "pending" } as never).eq("id", adminId);
+
+  // exact FE-shaped body: job featured PATCH { featured:true }
+  const feat = await api.patch(`/api/admin/jobs/${jobId}/featured`, { headers: { "x-csrf-token": csrf }, data: { featured: true } });
+  expect(feat.status()).toBe(200);
+  expect((await db().from("jobs").select("featured").eq("id", jobId).single()).data!.featured).toBe(true);
+  expect((await db().from("audit_log").select("id", { count: "exact", head: true }).eq("action", "job.featured").eq("target_id", jobId)).count ?? 0).toBeGreaterThanOrEqual(1);
+
+  // exact FE-shaped body: approvals PATCH { decision:"approve" } (single endpoint)
+  const dec = await api.patch(`/api/admin/approvals/${adminId}`, { headers: { "x-csrf-token": csrf }, data: { decision: "approve" } });
+  expect(dec.status()).toBe(200);
+  expect((await db().from("users").select("approval_status").eq("id", adminId).single()).data!.approval_status).toBe("approved");
+
+  await db().from("audit_log").delete().eq("target_id", jobId);
+  await db().from("audit_log").delete().eq("actor_id", adminId);
+  await db().from("jobs").delete().eq("id", jobId);
+  await db().from("companies").delete().eq("id", (co as { id: string }).id);
+  await db().from("users").delete().eq("id", adminId);
+});
