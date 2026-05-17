@@ -88,3 +88,28 @@ test("tailorCv: at cap → PAYWALL, no provider call, no generation row", async 
   await db().from("jobs").delete().eq("id", jobId);
   await db().from("users").delete().eq("id", userId);
 });
+
+test("tailorCv: POST-generation failure (oversized output) refunds credit + records failed + no cv row", async () => {
+  const stamp = Date.now() + 3;
+  const { userId, jobId } = await seed(stamp);
+  // generation "succeeds" but the output exceeds the cv_files 5MB CHECK → the
+  // service must compensate (refund + failed audit + no orphan), not lose quota.
+  const huge = async (): Promise<GenerationResult> =>
+    ({ text: "A".repeat(6 * 1024 * 1024), provider: "groq", model: "llama-3.3-70b-versatile", inputTokens: 1, outputTokens: 1 });
+  await expect(tailorCv({
+    user: { id: userId, email: `aicv+${stamp}@example.test`, role: "job_seeker" } as never,
+    jobId, baseText: "Experienced engineer. ".repeat(10), generate: huge,
+  })).rejects.toThrow();
+
+  const { data: u } = await db().from("users").select("ai_cv_uses_this_period").eq("id", userId).single();
+  expect((u as { ai_cv_uses_this_period: number }).ai_cv_uses_this_period).toBe(0); // refunded, not lost
+  const { data: gen } = await db().from("cv_generations").select("success").eq("user_id", userId).maybeSingle();
+  expect((gen as { success: boolean } | null)?.success).toBe(false); // audit row written
+  const { count: cvCount } = await db().from("cv_files").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("kind", "ai_tailored");
+  expect(cvCount ?? 0).toBe(0); // no orphan cv_files row
+
+  await db().from("cv_generations").delete().eq("user_id", userId);
+  await db().from("subscriptions").delete().eq("owner_id", userId);
+  await db().from("jobs").delete().eq("id", jobId);
+  await db().from("users").delete().eq("id", userId);
+});
