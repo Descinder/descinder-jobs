@@ -1,0 +1,53 @@
+import "server-only";
+import { randomUUID } from "node:crypto";
+import { db } from "@/lib/server/repos/db";
+import { putText, deleteObject } from "@/lib/server/integrations/storage/blob";
+
+// GDPR right of ACCESS (backend-spec §9a): a machine-readable bundle of the
+// user's data + a manifest of their CV / ai_tailored objects (manifest, not
+// embedded blobs — avoids streaming large objects; the manifest lists keys).
+// (ZIP packaging of the binaries is a hardening follow-up; JSON satisfies the
+// access right for MVP.)
+export async function buildDataExport(
+  userId: string, requestId: string,
+): Promise<{ objectKey: string }> {
+  const [profile, apps, gens, cvs] = await Promise.all([
+    db().from("users").select("id, email, name, role, created_at, acquisition_source, marketing_consent").eq("id", userId).single(),
+    db().from("applications").select("id, job_id, status, external_status, withdrawn, submitted_at").eq("user_id", userId),
+    db().from("cv_generations").select("id, job_id, ai_provider, ai_model_used, success, created_at").eq("user_id", userId),
+    db().from("cv_files").select("id, r2_object_key, filename, kind, uploaded_at").eq("user_id", userId),
+  ]);
+  const bundle = {
+    exported_at: new Date().toISOString(),
+    profile: profile.data ?? null,
+    applications: apps.data ?? [],
+    cv_generations: gens.data ?? [],
+    cv_files_manifest: cvs.data ?? [],
+  };
+  const objectKey = `exports/${randomUUID()}.json`;
+  await putText(objectKey, JSON.stringify(bundle, null, 2), "application/json");
+  const { error } = await db().from("data_export_requests").update({
+    status: "complete", r2_object_key: objectKey, completed_at: new Date().toISOString(),
+  } as never).eq("id", requestId);
+  if (error) throw new Error(`buildDataExport: mark complete failed: ${error.message}`);
+  return { objectKey };
+}
+
+// GDPR right of ERASURE: delete the user's blob objects FIRST (row cascade
+// alone orphans PII in R2 — backend-spec §9a), then hard-delete the user (FK
+// `on delete cascade` removes cv_files/cv_generations/applications/sessions/…).
+export async function eraseUser(userId: string): Promise<{ objectsDeleted: number }> {
+  const { data: cvs } = await db().from("cv_files").select("r2_object_key").eq("user_id", userId);
+  const { data: exps } = await db().from("data_export_requests").select("r2_object_key").eq("user_id", userId);
+  const keys = [
+    ...((cvs ?? []) as { r2_object_key: string | null }[]).map((r) => r.r2_object_key),
+    ...((exps ?? []) as { r2_object_key: string | null }[]).map((r) => r.r2_object_key),
+  ].filter((k): k is string => !!k);
+  let objectsDeleted = 0;
+  for (const k of keys) {
+    try { await deleteObject(k); objectsDeleted++; } catch { /* best-effort; continue */ }
+  }
+  const { error } = await db().from("users").delete().eq("id", userId);
+  if (error) throw new Error(`eraseUser: delete failed: ${error.message}`);
+  return { objectsDeleted };
+}
