@@ -49,3 +49,14 @@ export async function deleteObject(key: string): Promise<void> {
     new DeleteObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: key }),
   );
 }
+
+export async function putText(key: string, text: string, contentType = "text/markdown"): Promise<void> {
+  await client.send(
+    new PutObjectCommand({
+      Bucket: env.STORAGE_BUCKET,
+      Key: key,
+      Body: text,
+      ContentType: contentType,
+    }),
+  );
+}
