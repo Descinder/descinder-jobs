@@ -16,10 +16,15 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
   },
+  // Run against a PRODUCTION server, not `next dev`. `next dev` compiles each
+  // route on first hit and recompiles on change — under a long serial suite
+  // that causes intermittent cold-start / ERR_CONNECTION_REFUSED on unrelated
+  // specs. A built `next start` has no per-route compilation and is
+  // deterministic, and it exercises the bundle that actually ships.
   webServer: {
-    command: "npm run dev",
+    command: "npm run build && npm run start",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 240_000,
   },
 });
