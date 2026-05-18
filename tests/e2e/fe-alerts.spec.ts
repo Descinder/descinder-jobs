@@ -22,6 +22,23 @@ test("alerts UI: create (daily) → listed; instant by free user → downgrade n
   const state = await ctx.storageState();
   await page.context().addCookies(state.cookies);
 
+  // Deterministically exercise the downgrade path regardless of the shared
+  // app_settings defaults: instant must be a PAID feature (else everyone gets
+  // instant and no downgrade happens) and the global kill-switch must be on.
+  // Capture prior values and restore them in cleanup (app_settings is a shared
+  // singleton table; e2e runs workers:1 so this is safe serially).
+  async function getSetting(key: string): Promise<unknown> {
+    const { data } = await db().from("app_settings").select("value").eq("key", key).maybeSingle();
+    return (data as { value: unknown } | null)?.value;
+  }
+  async function setSetting(key: string, value: unknown) {
+    await db().from("app_settings").upsert({ key, value } as never, { onConflict: "key" });
+  }
+  const priorPaid = await getSetting("instant_alerts_paid");
+  const priorEnabled = await getSetting("feature_alerts_enabled");
+  await setSetting("instant_alerts_paid", true);
+  await setSetting("feature_alerts_enabled", true);
+
   await page.goto(`${base}/alerts`);
   await expect(page.getByRole("heading", { name: /Job alerts/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("alert-row")).toHaveCount(0);
@@ -72,7 +89,12 @@ test("alerts UI: create (daily) → listed; instant by free user → downgrade n
     .click();
   await expect(page.getByTestId("alert-row")).toHaveCount(1);
 
-  // Cleanup.
+  // Cleanup — restore app_settings to exactly its prior state (delete the key
+  // if it didn't exist before, otherwise put the prior value back).
+  if (priorPaid === undefined) await db().from("app_settings").delete().eq("key", "instant_alerts_paid");
+  else await setSetting("instant_alerts_paid", priorPaid);
+  if (priorEnabled === undefined) await db().from("app_settings").delete().eq("key", "feature_alerts_enabled");
+  else await setSetting("feature_alerts_enabled", priorEnabled);
   await db().from("job_alerts").delete().eq("user_id", userId);
   await db().from("users").delete().eq("id", userId);
 });

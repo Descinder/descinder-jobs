@@ -96,8 +96,10 @@ function filterSummary(f: Record<string, unknown>): string {
   if (f.experience_level) parts.push(String(f.experience_level));
   if (f.country) parts.push(String(f.country));
   if (f.source) parts.push(String(f.source));
-  if (f.salary_min) parts.push(`≥ ${String(f.salary_min)}`);
-  if (f.salary_max) parts.push(`≤ ${String(f.salary_max)}`);
+  // `!= null` not truthiness: a stored salary_min/max of 0 is a real filter
+  // ("≥ 0") and must NOT be hidden as if unset (server-state honesty).
+  if (f.salary_min != null && f.salary_min !== "") parts.push(`≥ ${String(f.salary_min)}`);
+  if (f.salary_max != null && f.salary_max !== "") parts.push(`≤ ${String(f.salary_max)}`);
   return parts.length ? parts.join(" · ") : "All jobs";
 }
 
@@ -149,6 +151,31 @@ export default function AlertsPage() {
     setNotice(null);
     if (!form.name.trim()) {
       setActionError("Give your alert a name.");
+      return;
+    }
+    // Client-side guards so the user gets a FIELD-SPECIFIC message instead of
+    // the server's generic "Validation failed" (the API is still the
+    // authority — this only improves the message, never bypasses it).
+    if (form.country.trim() && !/^[A-Za-z]{2}$/.test(form.country.trim())) {
+      setActionError("Country must be a 2-letter code (e.g. GB).");
+      return;
+    }
+    for (const [k, label] of [
+      ["salary_min", "Salary min"] as const,
+      ["salary_max", "Salary max"] as const,
+    ]) {
+      const raw = form[k].trim();
+      if (raw && (!Number.isInteger(Number(raw)) || Number(raw) < 0)) {
+        setActionError(`${label} must be a whole number of 0 or more.`);
+        return;
+      }
+    }
+    if (
+      form.salary_min.trim() &&
+      form.salary_max.trim() &&
+      Number(form.salary_min) > Number(form.salary_max)
+    ) {
+      setActionError("Salary min can't be greater than salary max.");
       return;
     }
     setSaving(true);
@@ -400,7 +427,7 @@ export default function AlertsPage() {
         <div className="mt-4 flex gap-3">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || deletingId !== null}
             className="rounded-lg bg-[oklch(0.22_0.08_264)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Saving…" : editId ? "Save changes" : "Create alert"}
@@ -450,13 +477,14 @@ export default function AlertsPage() {
               </div>
               <button
                 onClick={() => startEdit(a)}
-                className="text-sm font-medium text-[oklch(0.32_0.07_264)] hover:underline"
+                disabled={saving || deletingId !== null}
+                className="text-sm font-medium text-[oklch(0.32_0.07_264)] hover:underline disabled:opacity-60"
               >
                 Edit
               </button>
               <button
                 onClick={() => remove(a.id)}
-                disabled={deletingId === a.id}
+                disabled={saving || deletingId === a.id}
                 className="text-sm font-medium text-[oklch(0.48_0.14_20)] hover:underline disabled:opacity-60"
               >
                 {deletingId === a.id ? "Deleting…" : "Delete"}
