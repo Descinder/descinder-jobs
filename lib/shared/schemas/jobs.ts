@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { httpUrl } from "@/lib/shared/schemas/url";
 
 const employment = z.enum(["full_time", "part_time", "contract", "internship"]);
 const workMode = z.enum(["remote", "hybrid", "on_site"]);
@@ -36,7 +37,7 @@ const createJobObject = z.object({
   salary_currency: z.string().length(3).default("GBP"),
   skills_required: z.array(z.string().min(1).max(60)).max(50).default([]),
   apply_method: applyMethod,
-  external_apply_url: z.string().url().optional(),
+  external_apply_url: httpUrl.optional(),
   status: z.enum(["draft", "published"]),
 });
 
@@ -56,7 +57,7 @@ export type UpdateJobInput = z.infer<typeof updateJobSchema>;
 
 export const createCompanySchema = z.object({
   name: z.string().min(1).max(160),
-  website: z.string().url().optional(),
+  website: httpUrl.optional(),
   location: z.string().max(200).optional(),
   size: z.enum(["1-10", "11-50", "51-200", "201-500", "501+"]),
   description: z.string().max(5000).optional(),
@@ -72,9 +73,9 @@ export const seekerProfileSchema = z.object({
   years_experience: z.number().int().min(0).max(70).optional(),
   skills: z.array(z.string().min(1).max(60)).max(80).default([]),
   desired_role_types: z.array(z.string().max(60)).max(20).default([]),
-  portfolio_url: z.string().url().optional(),
-  github_url: z.string().url().optional(),
-  linkedin_url: z.string().url().optional(),
+  portfolio_url: httpUrl.optional(),
+  github_url: httpUrl.optional(),
+  linkedin_url: httpUrl.optional(),
 });
 export type SeekerProfileInput = z.infer<typeof seekerProfileSchema>;
 
