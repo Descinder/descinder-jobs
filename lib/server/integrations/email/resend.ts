@@ -22,6 +22,14 @@ export const EMAIL_TEMPLATES: Record<string, Template> = {
     html: (d) =>
       `<p>Hi ${d.name ?? "there"}, your Descinder account and personal data have been deleted.</p>`,
   },
+  job_alert: {
+    subject: (d) => `${d.count} new role${d.count === "1" ? "" : "s"} for "${d.alertName}"`,
+    html: (d) =>
+      `<p>${d.count} new role${d.count === "1" ? "" : "s"} match your ${d.frequency} alert ` +
+      `<strong>${d.alertName}</strong>:</p>` +
+      `<pre style="font-family:inherit;white-space:pre-wrap">${d.items}</pre>` +
+      `<p><a href="${d.manageUrl}">View &amp; manage your alerts</a></p>`,
+  },
 };
 
 function escapeHtml(s: string): string {
