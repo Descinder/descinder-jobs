@@ -84,6 +84,12 @@ export async function runCronJob(
       erased++;
     }
     detail = { erased };
+    // C-1 observability: stamp last successful retention purge so ops/an admin
+    // can detect the silent "cron never scheduled" failure mode.
+    await db().from("app_settings").upsert(
+      { key: "retention_purge_last_ok", value: now.toISOString() } as never,
+      { onConflict: "key" },
+    );
   } else if (job === "daily_ingestion") {
     const sources = deps.sources ?? [
       { source: "adzuna" as const, country: "GB" },

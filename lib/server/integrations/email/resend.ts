@@ -14,8 +14,10 @@ export const EMAIL_TEMPLATES: Record<string, Template> = {
   data_export_ready: {
     subject: () => "Your Descinder data export is ready",
     html: (d) =>
-      `<p>Your data export is ready. It will expire in 7 days.</p>` +
-      `<p><a href="${d.downloadUrl}">Download your data</a></p>`,
+      `<p>Your data export is ready.</p>` +
+      `<p><a href="${d.downloadUrl}">Download your data</a> (this link is ` +
+      `short-lived for security — if it has expired, request a fresh link ` +
+      `from your account settings).</p>`,
   },
   account_deletion: {
     subject: () => "Your Descinder account has been deleted",

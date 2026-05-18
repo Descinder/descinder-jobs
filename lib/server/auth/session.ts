@@ -16,11 +16,19 @@ function encrypt(plain: string): string {
 }
 
 // Consumed by later tasks (callback/reset routes) to recover the stored GoTrue refresh token.
+// L-2: never let a malformed/tampered stored blob throw a raw crypto error
+// into a caller. Returns "" on any failure; callers treat that as "no usable
+// refresh token" (forces a clean re-auth rather than a 500).
 export function decrypt(blob: string): string {
-  const [ivH, tagH, dataH] = blob.split(".");
-  const decipher = createDecipheriv("aes-256-gcm", KEY, Buffer.from(ivH, "hex"));
-  decipher.setAuthTag(Buffer.from(tagH, "hex"));
-  return Buffer.concat([decipher.update(Buffer.from(dataH, "hex")), decipher.final()]).toString("utf8");
+  try {
+    const [ivH, tagH, dataH] = blob.split(".");
+    if (!ivH || !tagH || !dataH) return "";
+    const decipher = createDecipheriv("aes-256-gcm", KEY, Buffer.from(ivH, "hex"));
+    decipher.setAuthTag(Buffer.from(tagH, "hex"));
+    return Buffer.concat([decipher.update(Buffer.from(dataH, "hex")), decipher.final()]).toString("utf8");
+  } catch {
+    return "";
+  }
 }
 
 export type SessionContext = {

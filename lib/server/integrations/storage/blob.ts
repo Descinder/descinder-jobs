@@ -60,3 +60,8 @@ export async function putText(key: string, text: string, contentType = "text/mar
     }),
   );
 }
+
+export async function downloadObject(key: string): Promise<string> {
+  const res = await client.send(new GetObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: key }));
+  return res.Body!.transformToString();
+}
