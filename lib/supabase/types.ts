@@ -595,7 +595,7 @@ export type Database = {
         Row: {
           created_at: string
           filters: Json
-          frequency: string
+          frequency: Database["public"]["Enums"]["alert_frequency"]
           id: string
           is_premium: boolean
           last_run_at: string | null
@@ -606,7 +606,7 @@ export type Database = {
         Insert: {
           created_at?: string
           filters?: Json
-          frequency: string
+          frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_premium?: boolean
           last_run_at?: string | null
@@ -617,7 +617,7 @@ export type Database = {
         Update: {
           created_at?: string
           filters?: Json
-          frequency?: string
+          frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_premium?: boolean
           last_run_at?: string | null

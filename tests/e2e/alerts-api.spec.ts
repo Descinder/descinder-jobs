@@ -38,3 +38,36 @@ test("alerts API: auth required; free instant→daily downgrade; owner-scoped; C
   const otherId = (await (await other.get("/api/me/profile")).json()).id as string;
   await db().from("users").delete().in("id", [userId, otherId]);
 });
+
+// Review H1 closure: an instant-ENTITLED user (active sub) creating/patching to
+// instant must be stored is_premium=true (grandfather, spec §307) so a later
+// instant_alerts_paid flip keeps 4b firing it. This path was untested — which
+// is exactly why H1 (PATCH-to-instant never set is_premium) slipped.
+test("instant-entitled user: create instant + PATCH daily→instant both set isPremium (grandfather)", async () => {
+  const ctx = await request.newContext({ baseURL: base });
+  await ctx.post("/api/auth/signup", { data: { email: `alprem+${Date.now()}@example.test`, password: "test-password-123", name: "AP", role: "job_seeker", marketing_consent: false, accepted_terms: true } });
+  const csrf = (await ctx.storageState()).cookies.find((c) => c.name === "ds_csrf")?.value ?? "";
+  const userId = (await (await ctx.get("/api/me/profile")).json()).id as string;
+  // active subscription → instant_alerts gate allowed (instant_alerts_paid default true)
+  await db().from("subscriptions").insert({ owner_type: "user", owner_id: userId, plan_key: "seeker_monthly", status: "active", started_at: new Date().toISOString() } as never);
+
+  // create instant → entitled → frequency stays instant, isPremium true, not downgraded
+  const c = await ctx.post("/api/me/alerts", { headers: { "x-csrf-token": csrf }, data: { name: "Inst", frequency: "instant", filters: { work_mode: "remote" } } });
+  expect(c.status()).toBe(201);
+  const cb = await c.json();
+  expect(cb.downgraded).toBeFalsy();
+  expect(cb.alert.frequency).toBe("instant");
+  expect(cb.alert.isPremium).toBe(true);
+
+  // create a daily alert, then PATCH it to instant → must also set isPremium (H1)
+  const d = await ctx.post("/api/me/alerts", { headers: { "x-csrf-token": csrf }, data: { name: "Day", frequency: "daily" } });
+  const dailyId = (await d.json()).alert.id as string;
+  const up = await ctx.patch(`/api/me/alerts/${dailyId}`, { headers: { "x-csrf-token": csrf }, data: { frequency: "instant" } });
+  expect(up.status()).toBe(200);
+  const ub = await up.json();
+  expect(ub.alert.frequency).toBe("instant");
+  expect(ub.alert.isPremium).toBe(true); // was false on create (daily); PATCH must grandfather
+
+  await db().from("subscriptions").delete().eq("owner_id", userId);
+  await db().from("users").delete().eq("id", userId);
+});

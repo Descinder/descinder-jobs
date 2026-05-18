@@ -13,7 +13,7 @@ export async function matchJobsForAlert(
   const f = (alert.filters ?? {}) as Record<string, unknown>;
   const { rows } = await listJobs({
     ...f,
-    posted_after: since,           // see Step note: confirm listJobs supports this
+    posted_after: since,           // internal listJobs clause (jobs.ts), matcher-only
     sort: "newest",
     page: 1,
     page_size: 50,

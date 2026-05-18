@@ -35,11 +35,15 @@ export async function getAlert(id: string): Promise<AlertRow | null> {
   return (data as AlertRow | null) ?? null;
 }
 
-export async function updateAlert(id: string, patch: AlertUpdateInput): Promise<void> {
+export async function updateAlert(
+  id: string,
+  patch: AlertUpdateInput & { is_premium?: boolean },
+): Promise<void> {
   const upd: Record<string, unknown> = {};
   if (patch.name !== undefined) upd.name = patch.name;
   if (patch.frequency !== undefined) upd.frequency = patch.frequency;
   if (patch.filters !== undefined) upd.filters = patch.filters;
+  if (patch.is_premium !== undefined) upd.is_premium = patch.is_premium;
   if (Object.keys(upd).length === 0) return;
   const { error } = await db().from("job_alerts").update(upd as never).eq("id", id);
   if (error) throw new Error(`updateAlert failed: ${error.message}`);

@@ -1,39 +1,32 @@
--- Job alerts = named saved searches with a delivery frequency. Matching reuses
--- the jobs feed query; alert_deliveries dedups (one job per alert, once).
-create table public.job_alerts (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
-  name text not null check (char_length(name) between 1 and 120),
-  filters jsonb not null default '{}'::jsonb,
-  frequency text not null check (frequency in ('instant','daily','weekly')),
-  is_premium boolean not null default false,
-  last_run_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create index job_alerts_user_idx on public.job_alerts (user_id, created_at desc);
-create index job_alerts_freq_idx on public.job_alerts (frequency);
+-- Plan 4a. job_alerts / alert_deliveries + the alert_frequency enum + owner RLS
+-- ALREADY exist (created in 00001_initial_schema.sql:255-271 and
+-- 00002_rls_policies.sql:202-209). This migration ADAPTS that baseline for the
+-- alerts feature — it is idempotent and replayable on a clean `supabase db
+-- reset` (it must NOT re-create the tables/enum/policies, which would abort).
+-- Adds: last_run_at, updated_at, a name length check, the frequency index
+-- (4b cron lookups), the sent_at / alert_id delivery indexes (purge + dedup),
+-- and the updated_at trigger.
 
-create table public.alert_deliveries (
-  id uuid primary key default gen_random_uuid(),
-  alert_id uuid not null references public.job_alerts(id) on delete cascade,
-  job_id uuid not null references public.jobs(id) on delete cascade,
-  sent_at timestamptz not null default now(),
-  unique (alert_id, job_id)
-);
-create index alert_deliveries_sent_idx on public.alert_deliveries (sent_at);
-create index alert_deliveries_alert_idx on public.alert_deliveries (alert_id);
+alter table public.job_alerts
+  add column if not exists last_run_at timestamptz,
+  add column if not exists updated_at timestamptz not null default now();
 
-alter table public.job_alerts enable row level security;
-alter table public.alert_deliveries enable row level security;
--- Backstop only (the app uses the service-role key which bypasses RLS; these
--- mirror the app-layer ownership rule for defence-in-depth).
-create policy job_alerts_owner on public.job_alerts
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy alert_deliveries_owner on public.alert_deliveries
-  for select using (
-    exists (select 1 from public.job_alerts a where a.id = alert_id and a.user_id = auth.uid())
-  );
+-- `add constraint` is not idempotent; guard it for replay safety.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'job_alerts_name_len'
+  ) then
+    alter table public.job_alerts
+      add constraint job_alerts_name_len check (char_length(name) between 1 and 120);
+  end if;
+end $$;
 
+create index if not exists job_alerts_freq_idx on public.job_alerts (frequency);
+create index if not exists alert_deliveries_sent_idx on public.alert_deliveries (sent_at);
+create index if not exists alert_deliveries_alert_idx on public.alert_deliveries (alert_id);
+
+-- public.set_updated_at() is defined in 00001 (used by users/subscriptions/…).
+drop trigger if exists job_alerts_updated_at on public.job_alerts;
 create trigger job_alerts_updated_at before update on public.job_alerts
   for each row execute function public.set_updated_at();

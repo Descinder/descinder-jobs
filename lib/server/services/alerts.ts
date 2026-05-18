@@ -54,11 +54,16 @@ async function ownedOr404(user: User, id: string) {
 export async function updateMyAlert(user: User, id: string, patch: AlertUpdateInput) {
   const row = await ownedOr404(user, id);
   // Re-apply the instant downgrade rule if frequency is being changed to instant.
-  const next = { ...patch };
+  const next: AlertUpdateInput & { is_premium?: boolean } = { ...patch };
   let downgraded = false;
   if (next.frequency === "instant") {
     const gate = await featureGate(user, "instant_alerts");
-    if (!gate.allowed) { next.frequency = "daily"; downgraded = true; }
+    if (!gate.allowed) {
+      next.frequency = "daily"; // free user → downgrade (spec §298)
+      downgraded = true;
+    } else {
+      next.is_premium = true; // grandfather (spec §307) — symmetric with create; 4b honours it
+    }
   }
   await updateAlert(row.id, next);
   return { alert: toAlertDTO((await getAlert(row.id)) as never), downgraded };
