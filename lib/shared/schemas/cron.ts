@@ -6,6 +6,10 @@ export const CRON_JOBS = [
   "purge_sessions",
   "purge_stale_tailored_cvs",
   "retention_purge",
+  "process_instant_alerts",
+  "digest_daily",
+  "digest_weekly",
+  "purge_alert_deliveries",
 ] as const;
 export const cronJobSchema = z.enum(CRON_JOBS);
 export type CronJob = z.infer<typeof cronJobSchema>;

@@ -6,6 +6,8 @@ import { fetchAdzunaPage } from "@/lib/server/integrations/jobs/adzuna";
 import { fetchReedPage } from "@/lib/server/integrations/jobs/reed";
 import { deleteObject } from "@/lib/server/integrations/storage/blob";
 import { eraseUser } from "@/lib/server/services/data-export";
+import { processAlerts, purgeOldDeliveries } from "@/lib/server/services/alert-fanout";
+import { sendEmail } from "@/lib/server/integrations/email/resend";
 import type { CronJob } from "@/lib/shared/schemas/cron";
 
 export type CronDeps = {
@@ -111,6 +113,14 @@ export async function runCronJob(
     detail = { runs, failedSources: failed };
     // total ingestion outage must NOT report ok:true (ops/alerting keys on this)
     ok = failed < runs.length || runs.length === 0;
+  } else if (job === "process_instant_alerts") {
+    detail = await processAlerts("instant", now, sendEmail);
+  } else if (job === "digest_daily") {
+    detail = await processAlerts("daily", now, sendEmail);
+  } else if (job === "digest_weekly") {
+    detail = await processAlerts("weekly", now, sendEmail);
+  } else if (job === "purge_alert_deliveries") {
+    detail = await purgeOldDeliveries(now);
   }
 
   // Job already ran; an audit-write failure must not mask completion (the

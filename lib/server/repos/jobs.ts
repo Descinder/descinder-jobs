@@ -17,10 +17,13 @@ export type JobRepoRow = {
   [key: string]: unknown;
 };
 
-// `posted_after` is an internal matcher-only param (alert matching), NEVER added
-// to the public jobFiltersSchema — the feed never sends it so feed behaviour is
-// unchanged. JobFilters is imported from the shared schema, so we widen here.
-type JobFiltersInternal = JobFilters & { posted_after?: string };
+// `posted_after` and `sort_oldest` are internal matcher-only params (alert
+// matching), NEVER added to the public jobFiltersSchema — the feed never sends
+// them so feed behaviour is unchanged. `sort_oldest` makes the alert fan-out a
+// true chronological cursor (drain oldest matches first → advance watermark to
+// the newest delivered, never skip past an undelivered match). JobFilters is
+// imported from the shared schema, so we widen here.
+type JobFiltersInternal = JobFilters & { posted_after?: string; sort_oldest?: boolean };
 
 export async function listJobs(f: JobFiltersInternal): Promise<{ rows: JobRepoRow[]; total: number }> {
   let q = db().from("jobs").select(JOB_SELECT, { count: "exact" }).eq("status", "published");
@@ -42,7 +45,11 @@ export async function listJobs(f: JobFiltersInternal): Promise<{ rows: JobRepoRo
   if (typeof f.salary_max === "number") {
     q = q.or(`salary_min.lte.${f.salary_max},salary_min.is.null`);
   }
-  if (f.sort === "newest") q = q.order("posted_at", { ascending: false, nullsFirst: false });
+  if (f.sort_oldest) {
+    // Matcher cursor: oldest matches first, with a deterministic id tiebreak so
+    // pagination/watermark advancement is stable across identical posted_at.
+    q = q.order("posted_at", { ascending: true, nullsFirst: false }).order("id", { ascending: true });
+  } else if (f.sort === "newest") q = q.order("posted_at", { ascending: false, nullsFirst: false });
   else if (f.sort === "salary") q = q.order("salary_max", { ascending: false, nullsFirst: false });
   else q = q.order("featured", { ascending: false }).order("posted_at", { ascending: false, nullsFirst: false });
   const from = (f.page - 1) * f.page_size;

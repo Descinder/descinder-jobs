@@ -216,3 +216,13 @@ Next: deployment (R2, GitHub, Cloudflare Pages, remote Supabase London, all API 
 - Screen-map §9e reconciled. Tests: unit (schemas-alerts, alerts-dto, gating-alerts; gating no-regression) + e2e (alerts-repo, alerts-api incl. grandfather)
 
 Next: Plan 4b (cron `process_instant_alerts`/digests/`purge_alert_deliveries` + Resend templates) then 4c (frontend alerts).
+
+## Plan 4b — Job Alerts: cron fan-out / email / retention (complete, reviewed, remediated)
+
+- `CRON_JOBS` → 10: `process_instant_alerts` / `digest_daily` / `digest_weekly` / `purge_alert_deliveries`, each behind the 2d-ii `X-Cron-Secret` dispatcher + system-audited; `runCronJob` shape unchanged; `cron-schema.test.ts` exact-set updated (strengthened)
+- `processAlerts(freq,now,send)` — one batched `job_alert` email per alert/run (≤25 new matches); `feature_alerts_enabled` global kill-switch suppresses ALL freqs; instant gated+grandfathered, digests free; deleted/suspended/disabled never emailed; 6-month `alert_deliveries` retention purge
+- `job_alert` Resend template via the single `renderEmail`/`escapeHtml` choke point (untrusted ingested titles safe); `sendEmail` never throws / no-ops without key
+- Review verdict: **C1 CRITICAL** silent-data-loss fixed (commit f25d1b6) — newest-first slice + `watermark=now` permanently dropped every match older than the newest 25; fan-out is now a true chronological cursor (oldest-first matcher + `posted_at`, watermark → newest delivered, drains any backlog with zero loss; matcher-only `sort_oldest`, feed untouched). Plus 2 test-honesty fixes: idempotency e2e now asserts the run's own `delivered/emailed` counters (DB unique constraint was masking broken service dedup → false-green); added send-failure-path e2e (real-failure-retry vs not_configured-progress). Send-failure semantics (Cluster A) already remediated earlier (`failed` counter; transient failure → not recorded, watermark held, retried)
+- Screen-map §9f reconciled (supersedes §9e matcher note). Tests: 120 unit green + `cron-alerts.spec.ts` (2 e2e) green
+
+Next: Plan 4c — frontend alerts (`/alerts` management: create/list/edit/delete + free-instant→daily upsell; dashboard instant-alert surface; un-defer the 3b/3c "alerts future plan" note).

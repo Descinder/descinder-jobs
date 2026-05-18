@@ -7,9 +7,9 @@ describe("cronJobSchema", () => {
     expect(cronJobSchema.safeParse("drop_tables").success).toBe(false);
     expect(cronJobSchema.safeParse("").success).toBe(false);
   });
-  it("exposes the six ops jobs", () => {
+  it("exposes the ten ops jobs", () => {
     expect([...CRON_JOBS].sort()).toEqual(
-      ["daily_ingestion", "expiry_sweep", "purge_sessions", "purge_stale_tailored_cvs", "reset_ai_cv_counters", "retention_purge"].sort(),
+      ["daily_ingestion", "expiry_sweep", "purge_sessions", "purge_stale_tailored_cvs", "reset_ai_cv_counters", "retention_purge", "process_instant_alerts", "digest_daily", "digest_weekly", "purge_alert_deliveries"].sort(),
     );
   });
 });
