@@ -237,3 +237,14 @@ Next: Plan 4c — frontend alerts (`/alerts` management: create/list/edit/delete
 - Screen-map §9g reconciled. Tests: 120 unit green + `tests/e2e/fe-alerts.spec.ts` (real authed UI, asserts authoritative DB state) green
 
 Next: Deployment (separate, user-credential work — R2, GitHub, Cloudflare Pages, remote Supabase London, API keys incl. `CRON_SECRET`/`RESEND_API_KEY`, pg_cron schedule, ICO/DPAs). NOT started without the user.
+
+## Plan 5 — Security & legal audit remediation (complete, reviewed, remediated)
+
+- **H-3**: `httpUrl` (http/https-only) replaces `z.string().url()` on every user-surfaced URL (job `external_apply_url`, company `website`, seeker `portfolio/github/linkedin`) — kills the stored-XSS/`javascript:`/`data:`/open-phishing sink (incl. tab/newline/protocol-relative bypasses); ingestion path unaffected
+- **H-1/H-2**: GDPR Art. 15 export now complete (seeker_profile, alerts, saved_jobs, consent_log, subscriptions, payments, sessions, memberships — explicit non-secret allowlists) + owner-scoped `GET /api/me/data-export/download` on-demand re-presign + honest email copy
+- **H-4/M-1**: `POST /api/consent` rate-limited (30/hr/IP) + `metadata` bounded (scalars, ≤10 keys)
+- **C-1 (code)**: `adminForceDeleteUser` now truly erases (R2 + GoTrue identity + cascade) audited before+after; `eraseUser` scrubs `consent_log` (admin AND retention-cron paths); `retention_purge` stamps `app_settings.retention_purge_last_ok` for ops observability
+- **L-1/L-2/M-3**: constant-time SHA-256 digest compares (CSRF + cron secret); `decrypt` returns "" on malformed input; `rateLimitIp` fails CLOSED to a shared "unknown" bucket
+- Review verdict (commit 1f72d85): caught + fixed a **CRITICAL self-introduced regression** — string-only consent `metadata` silently 422'd the real cookie-banner boolean payload (lost every GDPR cookie-consent); now bounded scalars + a regression-guard e2e. Scoped the erasure-test cleanup; corrected a stale rate-ip comment. `httpUrl` bypasses, DSAR secret-absence, erasure ordering/audit-cascade, soft-delete consistency all verified SOUND
+- **Deferred (documented):** M-2 (audit/consent retention policy — needs legal decision), M-4 (CSRF rotation — low marginal value behind SameSite+opaque session), C-1 deployment half (pg_cron scheduling + stale-`retention_purge_last_ok` alarm — deployment workstream)
+- Screen-map §9h reconciled. Tests: unit (url-schema, sec-hardening) + e2e (sec-dsar, sec-consent, sec-erasure), all green
