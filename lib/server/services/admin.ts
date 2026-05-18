@@ -7,12 +7,13 @@ import {
   toAdminUser, toAdminCompany, toAdminJob, toAdminReport, toAuditEntry, toSettingItem,
 } from "@/lib/shared/admin-dto";
 import {
-  listUsers, setUserSuspended, softDeleteUser,
+  listUsers, setUserSuspended,
   listCompanies, setCompanySuspended, deleteCompany,
   listAdminJobs, setJobStatusAdmin, deleteJobAdmin, setJobFeatured,
   listReports, resolveReport, getSettings, setSetting,
   listApprovals, decideUserApproval, decideCompanyApproval,
 } from "@/lib/server/repos/admin";
+import { eraseUser } from "@/lib/server/services/data-export";
 
 type Admin = SessionContext["user"];
 
@@ -52,8 +53,11 @@ export async function adminForceDeleteUser(admin: Admin, userId: string) {
   if (userId === admin.id) throw new AppError("CONFLICT", "Cannot delete your own admin account");
   // Audit BEFORE the irreversible write (no transaction available) so a
   // post-delete audit failure can't yield a silent unaudited destruction.
+  // C-1: "force delete" must actually ERASE now (R2 objects + GoTrue identity
+  // + cascade), not merely soft-delete and hope the retention cron runs.
   await recordAudit({ actorId: admin.id, actorType: "admin", action: "user.force_delete", targetType: "user", targetId: userId, metadata: null });
-  await softDeleteUser(userId);
+  const r = await eraseUser(userId);
+  await recordAudit({ actorId: admin.id, actorType: "admin", action: "user.force_delete.erased", targetType: "user", targetId: userId, metadata: { objectsDeleted: r.objectsDeleted, orphanedKeys: r.orphanedKeys } });
 }
 
 // ── Companies ──────────────────────────────────────────────────────────────

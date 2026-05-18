@@ -74,6 +74,10 @@ export async function eraseUser(
   for (const k of keys) {
     try { await deleteObject(k); objectsDeleted++; } catch { orphanedKeys.push(k); }
   }
+  // M-1: consent_log.user_id is `on delete set null`, so rows survive erasure.
+  // Scrub identifying metadata + null the link explicitly so no personal data
+  // is retained (the consent FACT/type/time is kept for proof-of-consent).
+  await db().from("consent_log").update({ user_id: null, metadata: null } as never).eq("user_id", userId);
   // Cascades public.users + all child rows + the GoTrue identity (C1 fix).
   await deleteAuthUser(userId);
   return { objectsDeleted, orphanedKeys };
