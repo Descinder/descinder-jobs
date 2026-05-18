@@ -28,6 +28,7 @@ export function evaluateGate(
       return { allowed: true };
     }
     case "instant_alerts": {
+      if (settings.feature_alerts_enabled === false) return { allowed: false, paywallReason: "alerts_disabled" };
       if (settings.instant_alerts_paid === false) return { allowed: true };
       if (hasActiveSub(sub)) return { allowed: true };
       return { allowed: false, paywallReason: "subscribe_for_instant_alerts" };

@@ -598,7 +598,9 @@ export type Database = {
           frequency: Database["public"]["Enums"]["alert_frequency"]
           id: string
           is_premium: boolean
+          last_run_at: string | null
           name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -607,7 +609,9 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_premium?: boolean
+          last_run_at?: string | null
           name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -616,7 +620,9 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_premium?: boolean
+          last_run_at?: string | null
           name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [

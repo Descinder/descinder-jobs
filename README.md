@@ -205,3 +205,14 @@ Deferred: notification/marketing/email-change/delete-account + AI-CV PDF export 
 **PLAN 3 COMPLETE**: 3a public+auth · 3b seeker · 3c employer · 3d admin. Full prototype→production frontend translation done; both Plan-1 quarantined specs cleared (0 skipped); e2e runs against the production server with retries (deterministic). The whole product (backend Plans 1–2d + frontend Plan 3) is built, reviewed, and gated.
 
 Next: deployment (R2, GitHub, Cloudflare Pages, remote Supabase London, all API keys + CRON_SECRET/RESEND/RATE_LIMIT_IP_ENABLED/Stripe/AI/ingestion, pg_cron schedule SQL, ICO, DPAs) + the dedicated instant-alerts plan (unbuilt alerts data model + matching + throttled fan-out + digests).
+
+## Plan 4a — Job Alerts: model + CRUD + matching (complete, reviewed, remediated)
+
+- Migration 00018 (idempotent ALTER over the pre-existing 00001/00002 `job_alerts`/`alert_deliveries`: +`last_run_at`/`updated_at`/name-check/freq+sent+alert indexes/updated_at trigger) — replayable `db reset` proven
+- `alertFiltersSchema.strict()` (feed-filter subset, no sort/page) + DTO; **matching IS the live feed query** (`listJobs` + internal `posted_after`) — zero matching-divergence
+- Gating: `feature_alerts_enabled` kill-switch added to `instant_alerts`; free-instant→daily downgrade (`{downgraded}`), instant-entitled → `is_premium=true` grandfather (create AND PATCH), pending-seeker create block
+- Owner-scoped CRUD endpoints (`/api/me/alerts` + `/[id]`, CSRF, 404-no-leak); `recordDelivery` idempotent (4b-ready)
+- Review verdict SOUND after remediation (commit dbebcb3): **C1** (00018 was a non-replayable bare CREATE colliding with 00001 — would abort every fresh deploy) + **H1** (PATCH→instant didn't grandfather) fixed; new e2e closes the untested grandfather path; matching/injection/authz/idempotency/data-min all SAFE
+- Screen-map §9e reconciled. Tests: unit (schemas-alerts, alerts-dto, gating-alerts; gating no-regression) + e2e (alerts-repo, alerts-api incl. grandfather)
+
+Next: Plan 4b (cron `process_instant_alerts`/digests/`purge_alert_deliveries` + Resend templates) then 4c (frontend alerts).

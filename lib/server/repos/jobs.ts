@@ -17,7 +17,12 @@ export type JobRepoRow = {
   [key: string]: unknown;
 };
 
-export async function listJobs(f: JobFilters): Promise<{ rows: JobRepoRow[]; total: number }> {
+// `posted_after` is an internal matcher-only param (alert matching), NEVER added
+// to the public jobFiltersSchema — the feed never sends it so feed behaviour is
+// unchanged. JobFilters is imported from the shared schema, so we widen here.
+type JobFiltersInternal = JobFilters & { posted_after?: string };
+
+export async function listJobs(f: JobFiltersInternal): Promise<{ rows: JobRepoRow[]; total: number }> {
   let q = db().from("jobs").select(JOB_SELECT, { count: "exact" }).eq("status", "published");
   if (f.q) q = q.textSearch("search_vector", f.q, { type: "websearch" });
   if (f.country) q = q.eq("country", f.country);
@@ -25,6 +30,7 @@ export async function listJobs(f: JobFilters): Promise<{ rows: JobRepoRow[]; tot
   if (f.employment_type) q = q.eq("employment_type", f.employment_type);
   if (f.experience_level) q = q.eq("experience_level", f.experience_level);
   if (f.source) q = q.eq("source", f.source);
+  if (f.posted_after) q = q.gte("posted_at", f.posted_after); // internal: alert matcher only
   // Salary filters keep jobs whose range overlaps the requested range, AND jobs
   // with no disclosed salary (NULL) — most ingested Adzuna/Reed listings have no
   // salary, and hiding them on any salary filter would silently drop a large
