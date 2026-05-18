@@ -12,10 +12,14 @@ import type { Json } from "@/lib/supabase/types";
 const consentSchema = z.object({
   event_type: z.enum(["terms_accepted", "privacy_accepted", "marketing_opt_in", "cookie_analytics_opt_in"]),
   policy_version: z.string().max(40).optional(),
-  metadata: z.record(z.string().max(40), z.string().max(200)).refine(
-    (m) => Object.keys(m).length <= 10,
-    { message: "metadata too large" },
-  ).optional(),
+  // Bounded scalars only (string≤200 / number / boolean), ≤10 keys — enough
+  // for the real client shape (cookie-banner sends `{ analytics: boolean }`)
+  // while still preventing unbounded-blob / nested-PII storage. NOT string-
+  // only: that silently 422'd every cookie-consent and lost the GDPR record.
+  metadata: z.record(
+    z.string().max(40),
+    z.union([z.string().max(200), z.number(), z.boolean()]),
+  ).refine((m) => Object.keys(m).length <= 10, { message: "metadata too large" }).optional(),
 });
 
 export async function POST(req: Request) {
