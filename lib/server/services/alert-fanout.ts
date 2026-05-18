@@ -58,16 +58,24 @@ export async function processAlerts(
     if (freq === "instant" && !(await instantAllowed(a, email))) { skipped++; continue; }
 
     const since = a.last_run_at ?? "1970-01-01T00:00:00Z";
-    const matches = (await matchJobsForAlert(a, since)).slice(0, MAX_MATCHES_PER_ALERT);
-    // recordDelivery is idempotent (unique alert_id,job_id) — but we only email
-    // the jobs not already delivered, so a re-run sends nothing new.
-    const fresh: { id: string; title: string }[] = [];
-    for (const m of matches) {
+    // Oldest-first (chronological cursor). Dedup the WHOLE fetched window
+    // first, THEN take the oldest MAX — so a run always delivers a full batch
+    // of genuinely-new jobs (boundary jobs already delivered don't waste the
+    // cap), and any fresh matches beyond the cap are NOT dropped: they are
+    // newer than the watermark we set below, so the next run picks them up.
+    // recordDelivery is also idempotent (unique alert_id,job_id) belt-and-braces.
+    const matched = await matchJobsForAlert(a, since);
+    const freshAll: { id: string; title: string; posted_at: string }[] = [];
+    for (const m of matched) {
       const before = await db().from("alert_deliveries").select("id", { count: "exact", head: true })
         .eq("alert_id", a.id).eq("job_id", m.id);
-      if ((before.count ?? 0) === 0) fresh.push(m);
+      if ((before.count ?? 0) === 0) freshAll.push(m);
     }
+    const fresh = freshAll.slice(0, MAX_MATCHES_PER_ALERT);
 
+    // No fresh matches → safe to skip the boundary forward to `now` (nothing
+    // pending; avoids re-scanning the same already-delivered window forever).
+    let newWatermark = now.toISOString();
     if (fresh.length > 0) {
       const items = fresh.map((m) => `• ${m.title}`).join("\n");
       const r = await send({
@@ -84,10 +92,15 @@ export async function processAlerts(
       if (sendFailed) { failed++; continue; } // retry this alert next run (watermark unchanged)
       if (r.sent) emailed++;
       for (const m of fresh) { await recordDelivery(a.id, m.id); delivered++; }
+      // Cursor advance: ONLY to the newest job we actually delivered (fresh is
+      // oldest-first, so the last element is the newest delivered). Any match
+      // newer than this — including freshAll past the cap — is re-matched next
+      // run (gte is inclusive; the exact-boundary job is caught by the per-job
+      // dedup above). A run can therefore never skip past an undelivered match.
+      newWatermark = fresh[fresh.length - 1].posted_at || now.toISOString();
     }
-    // Advance the watermark so the next run only considers newer jobs (also
-    // when there were no fresh matches). Skipped above on a real send failure.
-    await setAlertLastRun(a.id, now.toISOString());
+    // Skipped above on a real send failure (continue → watermark unchanged).
+    await setAlertLastRun(a.id, newWatermark);
   }
   return { alerts: alerts.length, emailed, delivered, skipped, failed };
 }
