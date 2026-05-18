@@ -46,12 +46,12 @@ async function instantAllowed(a: AlertRow, email: string): Promise<boolean> {
 // spy; prod passes the real Resend sendEmail — itself a no-op without a key).
 export async function processAlerts(
   freq: "instant" | "daily" | "weekly", now: Date, send: SendFn,
-): Promise<{ alerts: number; emailed: number; delivered: number; skipped: number }> {
+): Promise<{ alerts: number; emailed: number; delivered: number; skipped: number; failed: number }> {
   if (!(await alertsGloballyEnabled())) {
-    return { alerts: 0, emailed: 0, delivered: 0, skipped: 0 }; // feature kill-switch (all freqs)
+    return { alerts: 0, emailed: 0, delivered: 0, skipped: 0, failed: 0 }; // feature kill-switch (all freqs)
   }
   const alerts = await listAlertsByFrequency(freq);
-  let emailed = 0, delivered = 0, skipped = 0;
+  let emailed = 0, delivered = 0, skipped = 0, failed = 0;
   for (const a of alerts) {
     const email = await ownerEmail(a.user_id);
     if (!email) { skipped++; continue; }
@@ -67,20 +67,29 @@ export async function processAlerts(
         .eq("alert_id", a.id).eq("job_id", m.id);
       if ((before.count ?? 0) === 0) fresh.push(m);
     }
+
     if (fresh.length > 0) {
       const items = fresh.map((m) => `• ${m.title}`).join("\n");
       const r = await send({
         to: email, template: "job_alert",
         data: { count: String(fresh.length), alertName: a.name, frequency: freq, items, manageUrl: manageUrl() },
       });
+      // A genuine send FAILURE (Resend 5xx/network) is transient → do NOT
+      // record those jobs and do NOT advance the watermark, so the next run
+      // retries them (no silent drop). `not_configured` (no RESEND key) is a
+      // deliberate no-op, NOT a failure: record + advance as if delivered
+      // (otherwise a no-email deployment / CI would never make progress and
+      // would re-send forever once a key is added).
+      const sendFailed = !r.sent && r.reason !== "not_configured";
+      if (sendFailed) { failed++; continue; } // retry this alert next run (watermark unchanged)
       if (r.sent) emailed++;
       for (const m of fresh) { await recordDelivery(a.id, m.id); delivered++; }
     }
-    // Always advance the watermark so the next run only considers newer jobs,
-    // even when there were no fresh matches (idempotent, bounded work).
+    // Advance the watermark so the next run only considers newer jobs (also
+    // when there were no fresh matches). Skipped above on a real send failure.
     await setAlertLastRun(a.id, now.toISOString());
   }
-  return { alerts: alerts.length, emailed, delivered, skipped };
+  return { alerts: alerts.length, emailed, delivered, skipped, failed };
 }
 
 export async function purgeOldDeliveries(now: Date): Promise<{ purged: number }> {
