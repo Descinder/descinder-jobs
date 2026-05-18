@@ -3,16 +3,24 @@ import { ok, fail } from "@/lib/server/http";
 import { parseBody, getSession, assertCsrf } from "@/app/api/_lib/handler";
 import { db } from "@/lib/server/repos/db";
 import { AppError } from "@/lib/shared/errors";
+import { rateLimitIp } from "@/lib/server/rate-ip";
 import type { Json } from "@/lib/supabase/types";
 
+// H-4/M-1: this endpoint is reachable UNAUTHENTICATED. Bound `metadata`
+// (capped string values, ≤10 keys) so it can't be used to store unbounded
+// blobs / PII, and rate-limit by IP so it can't be spammed into table-bloat.
 const consentSchema = z.object({
   event_type: z.enum(["terms_accepted", "privacy_accepted", "marketing_opt_in", "cookie_analytics_opt_in"]),
-  policy_version: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  policy_version: z.string().max(40).optional(),
+  metadata: z.record(z.string().max(40), z.string().max(200)).refine(
+    (m) => Object.keys(m).length <= 10,
+    { message: "metadata too large" },
+  ).optional(),
 });
 
 export async function POST(req: Request) {
   try {
+    await rateLimitIp(req, "consent", 30, 3600); // 30 / hr / IP
     const { event_type, policy_version, metadata } = await parseBody(req, consentSchema);
     const ctx = await getSession();
 
