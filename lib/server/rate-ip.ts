@@ -28,8 +28,11 @@ export async function rateLimitIp(
   req: Request, bucket: string, limit: number, windowSeconds: number,
 ): Promise<void> {
   if (!ipRateLimitingEnabled()) return;
+  // M-3: align with net.ts's stated "fail CLOSED to a shared sentinel" intent.
+  // When IP-limiting is ENABLED (prod, CF-fronted) an "unknown" IP means the
+  // edge was bypassed — bucket all such requests together (conservative)
+  // rather than skipping the limit entirely (which was fail-OPEN).
   const ip = ipFrom(req);
-  if (ip === "unknown") return;
   const { allowed } = await checkRateLimit(`ip:${bucket}`, ip, limit, windowSeconds);
   if (!allowed) throw new AppError("RATE_LIMITED", "Too many requests from this network — try again later");
 }
