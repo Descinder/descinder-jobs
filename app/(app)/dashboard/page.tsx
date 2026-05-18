@@ -10,7 +10,8 @@ import { Loading, ErrorState, EmptyState } from "@/components/shell/screen-state
 // Verified GET /api/me/dashboard shape (lib/server/services/profile.ts#myDashboard):
 // { name, role, matchedJobs, subscription:{status,plan_key,current_period_end}|null,
 //   canApplyNative }. No applications[]/alerts[]/ai_cv_recent[] (screen-map §9
-//   reconcile: applications live on their own page; alerts are a future plan).
+//   reconcile: applications AND alerts have their own pages — the dashboard
+//   only links out to them, it does not embed their lists; alerts shipped 4c).
 type Dash = {
   name: string | null;
   role: string;
@@ -93,12 +94,20 @@ function SeekerDashboard({ d }: { d: Dash }) {
           <JobCard key={j.id} job={j} saved={false} onToggleSave={() => {}} />
         ))}
       </div>
-      <Link
-        href="/applications"
-        className="mt-6 inline-block text-sm font-medium text-[oklch(0.32_0.07_264)] hover:underline"
-      >
-        My applications →
-      </Link>
+      <div className="mt-6 flex gap-5 text-sm">
+        <Link
+          href="/applications"
+          className="font-medium text-[oklch(0.32_0.07_264)] hover:underline"
+        >
+          My applications →
+        </Link>
+        <Link
+          href="/alerts"
+          className="font-medium text-[oklch(0.32_0.07_264)] hover:underline"
+        >
+          Job alerts →
+        </Link>
+      </div>
     </main>
   );
 }
