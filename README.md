@@ -226,3 +226,14 @@ Next: Plan 4b (cron `process_instant_alerts`/digests/`purge_alert_deliveries` + 
 - Screen-map §9f reconciled (supersedes §9e matcher note). Tests: 120 unit green + `cron-alerts.spec.ts` (2 e2e) green
 
 Next: Plan 4c — frontend alerts (`/alerts` management: create/list/edit/delete + free-instant→daily upsell; dashboard instant-alert surface; un-defer the 3b/3c "alerts future plan" note).
+
+## Plan 4c — Job Alerts: frontend (complete, reviewed, remediated)
+
+- `/alerts` management screen (`app/(app)/alerts/page.tsx`, single client file per the `applications/page.tsx` convention): list / create / edit / delete over the **unchanged, already-reviewed 4a API** — no backend/schema/endpoint change
+- **Server-authoritative downgrade**: the session carries no entitlement signal, so the UI never guesses instant-vs-daily — it reacts to the response `downgraded` flag (informational upsell → `/pricing`) and re-reads the DTO so the row always shows the true stored frequency
+- Strict-filter payload (empty fields omitted — `alertFiltersSchema.strict()`); client-side field validation (2-letter country, integer ≥0 salary, min≤max) for friendly messages, server still authoritative; CSRF via `apiSend`, `(app)` AuthGate + per-endpoint owner-scoped 404-no-leak
+- Alerts nav link for authed job-seekers; `SeekerDashboard` links out to `/alerts`; the long-standing "alerts are a future plan" note is **retired**
+- Review verdict (commit 52b76cc): **HIGH** server-state-honesty bug fixed — `filterSummary` truthiness hid a stored `salary_*: 0`; now `!= null`. **MEDIUM** test-honesty fixed — e2e was coupled to a shared `app_settings` default it never set; now deterministically sets/restores `instant_alerts_paid`/`feature_alerts_enabled` so the downgrade is reproducibly exercised. Plus concurrent-mutation guard + validation. Server-authoritative entitlement, strict-schema omission, name-only-edit filter preservation, authz/CSRF, error/empty/loading all verified SOUND
+- Screen-map §9g reconciled. Tests: 120 unit green + `tests/e2e/fe-alerts.spec.ts` (real authed UI, asserts authoritative DB state) green
+
+Next: Deployment (separate, user-credential work — R2, GitHub, Cloudflare Pages, remote Supabase London, API keys incl. `CRON_SECRET`/`RESEND_API_KEY`, pg_cron schedule, ICO/DPAs). NOT started without the user.

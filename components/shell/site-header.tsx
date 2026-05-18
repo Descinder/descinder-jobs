@@ -29,6 +29,7 @@ export function SiteHeader() {
           {s.status === "authed" && (
             <>
               {s.user.role === "admin" && <Link href="/admin" className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Admin</Link>}
+              {s.user.role === "job_seeker" && <Link href="/alerts" className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Alerts</Link>}
               <Link href="/dashboard" className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Dashboard</Link>
               <button onClick={logout} className="text-[oklch(0.50_0.03_264)] hover:text-[oklch(0.22_0.08_264)]">Log out</button>
             </>
