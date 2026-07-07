@@ -1,0 +1,19 @@
+name = "descinder-purge-monitor"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+# Hourly at :07 — offset so signals don't overlap with the app's cron ticks.
+[triggers]
+crons = ["7 * * * *"]
+
+# Non-secret config. Secrets (`CRON_SECRET`, `SLACK_WEBHOOK_URL`) go via
+# `wrangler secret put` — see workers/purge-monitor/README.md.
+[vars]
+HEALTH_URL = "https://descinder.com/api/health/purge"
+STALE_HOURS_OVERRIDE = ""    # blank → use server's threshold; set to a number to override client-side
+
+# Uncomment + edit if you want Cloudflare Email Workers as the alert channel
+# instead of (or in addition to) the Slack webhook. See README for setup.
+# [[send_email]]
+name = "cloudflare.worker@descinder.com"
+destination_address = "seyi@descinder.com"

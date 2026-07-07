@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*.local
+.env*.prod
 *.local
 
 # vercel
@@ -41,3 +42,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 test-results/
+
+.wrangler
