@@ -1,0 +1,38 @@
+name = "descinder-cron-dispatcher"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+# One Worker fires ALL 10 backend crons on their individual schedules.
+# `scheduled` handler dispatches based on `event.cron` (Cloudflare sets it to
+# the exact string that matched). Times are UTC.
+#
+# Cron layout (offset so they don't stampede a single minute):
+#   :07 hourly   process_instant_alerts    (kept away from :05 of the purge-monitor Worker)
+#   03:00        purge_sessions
+#   03:10        purge_stale_tailored_cvs
+#   03:20        retention_purge           (GDPR-critical — this is what purge-monitor watches)
+#   03:30        purge_alert_deliveries
+#   04:00        digest_daily
+#   04:15        daily_ingestion           (Adzuna/Reed → jobs)
+#   04:30        expiry_sweep
+#   04:45        reset_ai_cv_counters
+#   Mon 05:00    digest_weekly
+[triggers]
+crons = [
+  "7 * * * *",
+  "0 3 * * *",
+  "10 3 * * *",
+  "20 3 * * *",
+  "30 3 * * *",
+  "0 4 * * *",
+  "15 4 * * *",
+  "30 4 * * *",
+  "45 4 * * *",
+  "0 5 * * 1"
+]
+
+# Non-secret config. CRON_SECRET goes via `wrangler secret put` (see README).
+[vars]
+CRON_ENDPOINT_BASE = "https://descinder.com/api/internal/cron"
+# Optional: Slack webhook to receive a message when a job FAILS (non-2xx or
+# {ok:false}). Set via `wrangler secret put ALERT_SLACK_URL` if desired.

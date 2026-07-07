@@ -26,10 +26,11 @@ import { SESSION_COOKIE, CSRF_COOKIE } from "@/lib/server/auth/session";
 //  - the existing eraseUser cascade (R2 blobs + auth.users cascade + consent scrub)
 // Two audits bracket the destructive work (M1). Per-user rate limit is bumped
 // only on FAILED password verification so 3 typos don't lock the account (M2).
-// KNOWN GAP (H4, deferred): magic-link users created via `sendMagicLink`
-// (`create_user:true`) have NO password → this endpoint rejects them. Fix
-// requires GoTrue admin probing to detect password-less users; punting until
-// magic-link user creation is actually surfaced in the UI (currently not).
+// H4 (addressed via UX): magic-link users created via `sendMagicLink`
+// (`create_user:true`) have NO password. Server-side detection would require
+// a GoTrue admin probe that isn't reliably exposed by the admin API; instead
+// the 401 error text guides the user to /forgot-password to set a password
+// then retry. Uniform message doesn't reveal whether the account has one.
 const bodySchema = z.object({ password: z.string().min(1) });
 
 // Terminal Stripe subscription states — safe to skip the cancel API call.
@@ -87,7 +88,17 @@ export async function DELETE(req: Request) {
       // M2: only failed password attempts count against the 24h bucket.
       const rl = await checkRateLimit("account_delete_fail", ctx.user.id, 5, 86400);
       if (!rl.allowed) throw new AppError("RATE_LIMITED", "Too many failed attempts — try again later");
-      throw new AppError("UNAUTHENTICATED", "Invalid email or password");
+      // H4: users who signed in via magic-link have no password. GoTrue
+      // returns invalid_credentials for both "wrong password" and "no
+      // password set" (deliberately, to avoid enumeration) — so we can't
+      // distinguish server-side without an admin probe. Point the user at
+      // the reset flow, which lets a magic-link user set a password and
+      // then retry deletion. Message is uniform so it doesn't reveal
+      // whether the account has a password.
+      throw new AppError(
+        "UNAUTHENTICATED",
+        "Invalid credentials. If you usually sign in with a magic link, use Forgot password to set one first, then retry.",
+      );
     }
 
     // H2 (part 1): a user who is a member of a company with a live sub cannot
